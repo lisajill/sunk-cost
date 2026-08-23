@@ -27,6 +27,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(1.4)
                     .foregroundStyle(Theme.inkSecondary)
+                    .help("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.")
 
                 Text(formatted(store.totals.totalSpent))
                     .font(Theme.totalNumeral(scale: store.textScale))
