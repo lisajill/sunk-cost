@@ -176,7 +176,8 @@ final class AppStore {
             appreciationPercent: homeAppreciationPercent ?? 3,
             newMortgageAnnualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
             newMortgageTermYears: newMortgageTermYears ?? 30,
-            projectionYears: projectionYears
+            projectionYears: projectionYears,
+            leftoverCashInvestmentReturnPercent: investmentReturnPercent ?? 6
         )
     }
 

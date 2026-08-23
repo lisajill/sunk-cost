@@ -53,8 +53,30 @@ struct LongTermScenariosTests {
             appreciationPercent: 0,
             newMortgageAnnualRatePercent: 0,
             newMortgageTermYears: 25,
-            projectionYears: 2
+            projectionYears: 2,
+            leftoverCashInvestmentReturnPercent: 10
         )
-        #expect(netWorth == 124_000) // 400,000 - 276,000
+        #expect(netWorth == 124_000) // 400,000 - 276,000, no leftover cash
+    }
+
+    @Test("buying elsewhere credits leftover cash when the down payment exceeds the new home's price")
+    func buyingElsewhereNetWorthWithLeftoverCash() {
+        // A $300,000 down payment on a $250,000 home means $50,000 never
+        // goes into the house -- paid outright in cash, no mortgage, and
+        // that $50,000 should still count, invested and compounding same
+        // as it would in the Renting scenario.
+        let netWorth = projectBuyingElsewhereNetWorth(
+            newHomePrice: 250_000,
+            downPayment: 300_000,
+            appreciationPercent: 0,
+            newMortgageAnnualRatePercent: 5,
+            newMortgageTermYears: 30,
+            projectionYears: 2,
+            leftoverCashInvestmentReturnPercent: 10
+        )
+        // No mortgage (paid outright): home value stays $250,000 (0%
+        // appreciation). Leftover $50,000 compounds at 10% for 2 years:
+        // 50,000 * 1.1 * 1.1 = 60,500. Total: 310,500.
+        #expect(netWorth == 310_500)
     }
 }

@@ -34,21 +34,29 @@ public func projectRentingNetWorth(
 
 /// Ending home equity in a new home after `projectionYears`, bought today
 /// with `downPayment` toward `newHomePrice` and a fresh mortgage for the
-/// rest.
+/// rest -- plus, if `downPayment` exceeds `newHomePrice` (a cheaper home
+/// than what the sale proceeds cover), the leftover cash invested and
+/// compounding rather than silently discarded.
 public func projectBuyingElsewhereNetWorth(
     newHomePrice: Decimal,
     downPayment: Decimal,
     appreciationPercent: Decimal,
     newMortgageAnnualRatePercent: Decimal,
     newMortgageTermYears: Int,
-    projectionYears: Int
+    projectionYears: Int,
+    leftoverCashInvestmentReturnPercent: Decimal
 ) -> Decimal {
+    let actualDownPayment = min(downPayment, newHomePrice)
+    let leftoverCash = max(downPayment - newHomePrice, 0)
+
     let appreciatedValue = compoundedValue(principal: newHomePrice, annualRatePercent: appreciationPercent, years: projectionYears)
     let balance = MortgageMath.remainingBalance(
-        principal: newHomePrice - downPayment,
+        principal: newHomePrice - actualDownPayment,
         annualRatePercent: newMortgageAnnualRatePercent,
         termYears: newMortgageTermYears,
         monthsElapsed: projectionYears * 12
     )
-    return appreciatedValue - balance
+    let compoundedLeftoverCash = compoundedValue(principal: leftoverCash, annualRatePercent: leftoverCashInvestmentReturnPercent, years: projectionYears)
+
+    return appreciatedValue - balance + compoundedLeftoverCash
 }
