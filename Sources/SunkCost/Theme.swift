@@ -94,17 +94,17 @@ enum Theme {
     static let taupeFill = Color(red: 0.350, green: 0.320, blue: 0.340)
     static let ledgerRedFill = Color(red: 0.700, green: 0.080, blue: 0.120)
 
-    /// A third set, for a colored graphic *element* on top of the page
-    /// background itself (a chart ring, a legend icon) -- as opposed to
-    /// `positive`/etc. (text on the page background) or `*Fill` (a solid
-    /// badge with *white* text on top of it). Those two don't work here:
-    /// the plain adaptive colors get brightened way up in dark mode for
-    /// text-on-black contrast, which reads as pastel/washed-out sitting
-    /// right next to the deep `*Fill` badges -- but `*Fill` itself is too
-    /// dark to be visible against the app's own near-black dark
-    /// background. These are tuned against WCAG's graphical-object 3:1
-    /// minimum specifically (looser than text's 4.5:1, appropriate for a
-    /// chart segment, not a sentence) -- checked by hand, not eyeballed.
+    /// A fourth set, for a colored graphic *element* directly on the page
+    /// background (a chart ring, a legend icon). A dedicated light card
+    /// just for the chart was tried and reverted -- a bright card glowing
+    /// inside an otherwise dark app was a worse problem than the one it
+    /// fixed. These won't look pixel-identical to the deep `*Fill` badges
+    /// (there's no color that's simultaneously as deep as those *and*
+    /// clearly visible on the app's own near-black background -- that's
+    /// not a tuning gap, those two goals are in direct tension), but they
+    /// stay in the same color family and clear WCAG's 3:1 graphical-object
+    /// minimum against the actual dark-mode background -- checked by hand,
+    /// not eyeballed.
     static let chartPositive = adaptive(
         light: NSColor(calibratedRed: 0.212, green: 0.035, blue: 0.498, alpha: 1.0),
         dark: NSColor(calibratedRed: 0.580, green: 0.240, blue: 0.960, alpha: 1.0)
