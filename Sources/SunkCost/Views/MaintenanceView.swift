@@ -103,9 +103,17 @@ struct MaintenanceView: View {
 
     private func categoryRow(for category: MaintenanceCategory) -> some View {
         HStack {
-            Text(category.name)
-                .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
-                .foregroundStyle(Theme.ink)
+            HStack(spacing: 5) {
+                Text(category.name)
+                    .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
+                    .foregroundStyle(Theme.ink)
+                if let notes = category.notes, !notes.isEmpty {
+                    Image(systemName: "note.text")
+                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                        .help(notes)
+                }
+            }
             Spacer()
             Text("\(formatted(category.monthlyAmount))/mo")
                 .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
@@ -128,6 +136,7 @@ private struct MaintenanceCategoryFormView: View {
 
     @State private var name: String = ""
     @State private var monthlyAmountText: String = ""
+    @State private var notes: String = ""
 
     private var isEditing: Bool { category != nil }
 
@@ -157,6 +166,32 @@ private struct MaintenanceCategoryFormView: View {
                     TextField("e.g. 200", text: $monthlyAmountText)
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
+                }
+
+                labeledField("Notes") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        TextEditor(text: $notes)
+                            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                            .frame(height: 60)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(Theme.ledgerBorder, lineWidth: 1)
+                            )
+
+                        Text("Supports **bold**, *italic*, [links](url), and #hashtags")
+                            .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                            .foregroundStyle(Theme.inkSecondary)
+
+                        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.terracotta))
+                                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                                .foregroundStyle(Theme.ink)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(8)
+                                .background(Theme.ledgerPaper)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                    }
                 }
             }
 
@@ -190,6 +225,7 @@ private struct MaintenanceCategoryFormView: View {
             guard let category else { return }
             name = category.name
             monthlyAmountText = NSDecimalNumber(decimal: category.monthlyAmount).stringValue
+            notes = category.notes ?? ""
         }
         // Button(.defaultAction) alone doesn't reliably fire on Return while
         // a TextField in this sheet has focus -- onSubmit is what actually
@@ -211,13 +247,16 @@ private struct MaintenanceCategoryFormView: View {
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty, let monthlyAmount else { return }
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalNotes = trimmedNotes.isEmpty ? nil : trimmedNotes
 
         if var existing = category {
             existing.name = trimmedName
             existing.monthlyAmount = monthlyAmount
+            existing.notes = finalNotes
             store.updateMaintenanceCategory(existing)
         } else {
-            store.addMaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount)
+            store.addMaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: finalNotes)
         }
         dismiss()
     }

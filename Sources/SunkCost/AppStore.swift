@@ -336,10 +336,10 @@ final class AppStore {
         save()
     }
 
-    func addMaintenanceCategory(name: String, monthlyAmount: Decimal) {
+    func addMaintenanceCategory(name: String, monthlyAmount: Decimal, notes: String? = nil) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
-        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount))
+        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: notes))
         save()
     }
 
