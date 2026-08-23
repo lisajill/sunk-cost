@@ -41,6 +41,24 @@ enum BackupManager {
         }
     }
 
+    /// The dates and file locations of currently-kept backups, newest
+    /// first -- lets the UI offer "restore to this day" without the user
+    /// having to go find the file in Finder themselves.
+    static func availableBackups(in storageFolder: URL) -> [(date: Date, url: URL)] {
+        let folder = backupsFolder(in: storageFolder)
+        guard let existingFiles = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return [] }
+
+        var results: [(date: Date, url: URL)] = []
+        for fileURL in existingFiles {
+            let baseName = fileURL.deletingPathExtension().lastPathComponent
+            guard baseName.hasPrefix("items-") else { continue }
+            let dateString = String(baseName.dropFirst("items-".count))
+            guard let date = dateFormatter.date(from: dateString) else { continue }
+            results.append((date, fileURL))
+        }
+        return results.sorted { $0.date > $1.date }
+    }
+
     private static func prune(folder: URL, fileManager: FileManager) {
         guard let existingFiles = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
 

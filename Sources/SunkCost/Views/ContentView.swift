@@ -57,18 +57,32 @@ struct ContentView: View {
                 ItemListHeaderView()
                     .id(store.appearanceMode)
 
-                List {
-                    ForEach(store.filteredItems) { item in
-                        ItemRowView(
-                            item: item,
-                            isStatusFilterActive: store.filter.status == item.status,
-                            onTapName: { editingItem = item },
-                            onTapStatus: { store.toggleStatusFilter(item.status) }
+                if store.filteredItems.isEmpty {
+                    ContentUnavailableView(
+                        store.items.isEmpty ? "No Items Yet" : "No Matching Items",
+                        systemImage: store.items.isEmpty ? "tray" : "magnifyingglass",
+                        description: Text(
+                            store.items.isEmpty
+                                ? "Add your first item to start tracking what the house costs."
+                                : "Try a different search or filter."
                         )
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .id(store.appearanceMode)
+                } else {
+                    List {
+                        ForEach(store.filteredItems) { item in
+                            ItemRowView(
+                                item: item,
+                                isStatusFilterActive: store.filter.status == item.status,
+                                onTapName: { editingItem = item },
+                                onTapStatus: { store.toggleStatusFilter(item.status) }
+                            )
+                        }
                     }
+                    .listStyle(.inset)
+                    .id(store.appearanceMode)
                 }
-                .listStyle(.inset)
-                .id(store.appearanceMode)
 
                 ItemListFooterView()
                     .id(store.appearanceMode)
@@ -89,6 +103,7 @@ struct ContentView: View {
                     Image(systemName: "textformat.size.smaller")
                 }
                 .help("Decrease Font Size (⌘-)")
+                .accessibilityLabel("Decrease Font Size")
 
                 Button {
                     store.increaseTextSize()
@@ -96,6 +111,7 @@ struct ContentView: View {
                     Image(systemName: "textformat.size.larger")
                 }
                 .help("Increase Font Size (⌘+)")
+                .accessibilityLabel("Increase Font Size")
 
                 Button {
                     store.cycleAppearanceMode()
@@ -103,6 +119,7 @@ struct ContentView: View {
                     Image(systemName: store.appearanceMode.symbolName)
                 }
                 .help("Appearance: \(store.appearanceMode.label) (click to change)")
+                .accessibilityLabel("Appearance: \(store.appearanceMode.label). Click to change.")
 
                 Button {
                     store.togglePrivacyMode()
@@ -112,6 +129,11 @@ struct ContentView: View {
                 .help(
                     store.isPrivacyModeEnabled
                         ? "Privacy mode is on — dollar amounts are hidden for screenshots. Click to show them again."
+                        : "Hide dollar amounts for a screenshot"
+                )
+                .accessibilityLabel(
+                    store.isPrivacyModeEnabled
+                        ? "Privacy mode is on. Click to show dollar amounts again."
                         : "Hide dollar amounts for a screenshot"
                 )
             }

@@ -20,6 +20,13 @@ struct SettingsView: View {
 
     @State private var pendingImport: (url: URL, data: AppData)?
     @State private var pendingCSVImport: (url: URL, items: [Item])?
+    @State private var pendingRestore: (date: Date, data: AppData)?
+
+    private static let backupDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        return formatter
+    }()
 
     @State private var showMortgageSavedConfirmation = false
     @State private var showPurchasePriceSavedConfirmation = false
@@ -140,12 +147,31 @@ struct SettingsView: View {
 
             Divider()
 
-            Text("The app also keeps its own automatic daily backups (the last 14 days) without you doing anything — a recovery path if something gets accidentally deleted or edited wrong.")
+            Text("The app also keeps its own automatic daily backups (the last 14 days) without you doing anything — including saved Compare scenarios — so you can restore to an earlier day if something gets accidentally deleted or edited wrong.")
                 .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
-            Button("Show Backups Folder…") {
-                store.revealBackupsFolder()
+            HStack {
+                Button("Show Backups Folder…") {
+                    store.revealBackupsFolder()
+                }
+
+                let backups = store.availableBackups()
+                Menu("Restore from Backup…") {
+                    if backups.isEmpty {
+                        Text("No backups yet")
+                    } else {
+                        ForEach(backups, id: \.date) { backup in
+                            Button(Self.backupDateFormatter.string(from: backup.date)) {
+                                if let data = store.readBackup(at: backup.url) {
+                                    pendingRestore = (backup.date, data)
+                                }
+                            }
+                        }
+                    }
+                }
+                .disabled(backups.isEmpty)
+                .fixedSize()
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
         }
@@ -184,6 +210,24 @@ struct SettingsView: View {
             }
         } message: { pending in
             Text("This replaces your current \(store.items.count) item\(store.items.count == 1 ? "" : "s") with \(pending.items.count) from \"\(pending.url.lastPathComponent)\". Home value and mortgage info are untouched. This can't be undone.")
+        }
+        .alert(
+            "Restore This Backup?",
+            isPresented: Binding(
+                get: { pendingRestore != nil },
+                set: { if !$0 { pendingRestore = nil } }
+            ),
+            presenting: pendingRestore
+        ) { pending in
+            Button("Restore", role: .destructive) {
+                store.applyImportedData(pending.data)
+                pendingRestore = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingRestore = nil
+            }
+        } message: { pending in
+            Text("This replaces everything currently here with the \(Self.backupDateFormatter.string(from: pending.date)) backup (\(pending.data.items.count) item\(pending.data.items.count == 1 ? "" : "s")). This can't be undone.")
         }
     }
 

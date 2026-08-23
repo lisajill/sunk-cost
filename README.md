@@ -9,7 +9,9 @@ once the mortgage is accounted for.
 Local-first and private by design: your data lives in a plain JSON file on
 your own Mac by default (nothing is ever sent anywhere), and you can point
 storage at any folder you choose instead — including one that syncs via
-iCloud Drive, Dropbox, etc. — if you want that.
+iCloud Drive, Dropbox, etc. — if you want that. The app also keeps its own
+rolling 14-day local backup automatically, restorable from Settings if
+something gets edited or deleted by mistake.
 
 ## Running it
 
@@ -66,7 +68,16 @@ all built at once:
    scenario's projected ending net worth. Each scenario is computed
    independently; it doesn't additionally reinvest the month-to-month
    cash-flow *difference* between scenarios into each other (a real
-   refinement some calculators add, left out of this pass).
+   refinement some calculators add, left out of this pass) — Renting's
+   ending number in particular only reflects investing today's sale
+   proceeds, not what you spend on rent along the way.
+
+   The Compare assumptions can be saved as a named scenario (with
+   optional notes) and reloaded later — useful for flipping between a
+   few different what-ifs without retyping. A toolbar **Copy Summary**
+   button copies all the Sell Scenario and Compare numbers as plain text,
+   for pasting into a spreadsheet or a chat to play with the numbers
+   further, without the app itself ever making a network call.
 
 ### Someday / maybe
 
