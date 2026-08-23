@@ -75,7 +75,12 @@ struct LongTermComparisonView: View {
 
             comparisonTable
 
-            VStack(alignment: .leading, spacing: 14) {
+            Text("ASSUMPTIONS")
+                .font(Theme.ledgerLabel(scale: store.textScale))
+                .tracking(0.6)
+                .foregroundStyle(Theme.inkSecondary)
+
+            HStack(alignment: .top, spacing: 24) {
                 assumptionGroup("Staying") {
                     percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
                     percentField("Property Tax (per year)", text: $propertyTaxText, field: .propertyTax)
@@ -208,6 +213,7 @@ struct LongTermComparisonView: View {
                 .foregroundStyle(Theme.terracotta)
             content()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func percentField(_ title: String, text: Binding<String>, field: Field) -> some View {
