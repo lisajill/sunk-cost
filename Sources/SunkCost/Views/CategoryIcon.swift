@@ -21,6 +21,7 @@ enum CategoryIcon {
         (["roof"], "house.fill"),
         (["upgrade", "renovation", "improvement", "property"], "hammer.fill"),
         (["repair", "maintenance"], "wrench.and.screwdriver.fill"),
+        (["fitness", "gym", "exercise", "workout"], "dumbbell.fill"),
     ]
 
     static func symbol(for category: String) -> String {
@@ -28,6 +29,6 @@ enum CategoryIcon {
         for entry in keywordMap where entry.keywords.contains(where: { lowered.contains($0) }) {
             return entry.symbol
         }
-        return "square.grid.2x2.fill"
+        return "tag.fill"
     }
 }

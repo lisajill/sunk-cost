@@ -8,13 +8,23 @@ import AppKit
 /// and fonts through `Theme`, so redefining the values here re-skins the
 /// whole app without touching each view file individually.
 ///
-/// Status colors still carry meaning rather than being arbitrary: blue
-/// reads as "in the black" (an asset you still hold), terracotta as
-/// pending/warm (echoes the app icon), taupe as settled/past -- same
-/// semantics as before, just turned up in saturation and brightness.
+/// Status colors still carry meaning rather than being arbitrary:
+/// `positive` reads as "in the black" (an asset you still hold),
+/// terracotta as pending/warm (echoes the app icon), taupe as
+/// settled/past -- same semantics as v1, just turned up in saturation
+/// and brightness.
 ///
-/// The status trio (blue / taupe / terracotta) is still chosen to stay
-/// distinguishable under protanopia, deuteranopia, and tritanopia --
+/// `positive` is a rich indigo/violet, not blue -- Lisa's favorite color,
+/// and it's the app's main accent (house graphic, tint, "Owned" status),
+/// so this one choice makes purple show up everywhere at once. Still
+/// colorblind-safe: a *blue-leaning* violet reads mostly through the same
+/// blue channel that made plain blue safe in v1, staying well clear of
+/// the red/orange/yellow cluster that's genuinely risky for red-green
+/// colorblindness. A red-leaning purple (magenta, orchid) would have
+/// been the wrong choice here -- that's the one to avoid.
+///
+/// The status trio (`positive` / taupe / terracotta) is still chosen to
+/// stay distinguishable under protanopia, deuteranopia, and tritanopia --
 /// deliberately not red-vs-green, which is the one pairing colorblind
 /// users most often can't tell apart. Color is also never the only
 /// signal: every status has a text label alongside it. `terracotta` and
@@ -53,14 +63,12 @@ enum Theme {
         light: NSColor(calibratedRed: 0.588, green: 0.545, blue: 0.573, alpha: 1.0),
         dark: NSColor(calibratedRed: 0.722, green: 0.686, blue: 0.710, alpha: 1.0)
     )
-    /// "Positive / in the black" color, and the app's accent/tint. A blue
-    /// (not green) specifically so it stays distinguishable from
-    /// `terracotta` for red-green colorblind users -- blue-vs-orange is one
-    /// of the safest hue pairings across all common forms of color
-    /// blindness.
+    /// "Positive / in the black" color, and the app's accent/tint -- see
+    /// the type-level doc comment for why this is a blue-leaning violet
+    /// rather than plain blue or green.
     static let positive = adaptive(
-        light: NSColor(calibratedRed: 0.086, green: 0.463, blue: 0.914, alpha: 1.0),
-        dark: NSColor(calibratedRed: 0.443, green: 0.667, blue: 0.965, alpha: 1.0)
+        light: NSColor(calibratedRed: 0.424, green: 0.310, blue: 0.820, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.667, green: 0.557, blue: 0.980, alpha: 1.0)
     )
     /// "In the red" -- classic bookkeeping color for a deficit. Blue-vs-red
     /// stays distinguishable even for red-green colorblind users, since it's
