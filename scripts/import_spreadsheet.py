@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-One-off seed generator for The Money Pit.
+One-off seed generator for Sunk Cost.
 
-Reads the Furniture and Property Upgrades tabs from Lisa's existing
-"Doolittle Cost Tracker.xlsx" and produces the app's items.json seed file.
+Reads the Furniture and Property Upgrades tabs from an existing house
+cost-tracking spreadsheet and produces the app's items.json seed file.
 Not part of the app itself -- run once during setup.
 
 Mapping rules:
@@ -134,7 +134,7 @@ def build_items(xlsx_path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("xlsx_path", type=Path, help="Path to Doolittle Cost Tracker.xlsx")
+    parser.add_argument("xlsx_path", type=Path, help="Path to the source .xlsx spreadsheet")
     parser.add_argument("output_path", type=Path, help="Where to write the seed items.json")
     args = parser.parse_args()
 
