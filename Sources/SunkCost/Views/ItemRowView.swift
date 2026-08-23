@@ -1,18 +1,6 @@
 import SwiftUI
 import SunkCostCore
 
-/// Shared column widths so `ItemListHeaderView`'s clickable column labels
-/// line up with the values each row actually shows. Every trailing column
-/// -- including Status, which has no header label -- must reserve the same
-/// fixed width in both places; otherwise the flexible Item column soaks up
-/// a different amount of space in the header (no Status pill) than in a
-/// row (has one), and Date/Amount drift out of alignment.
-enum ItemListColumn {
-    static let date: CGFloat = 92
-    static let amount: CGFloat = 90
-    static let status: CGFloat = 92
-}
-
 struct ItemRowView: View {
     @Environment(AppStore.self) private var store
 
@@ -46,12 +34,19 @@ struct ItemRowView: View {
     }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 14) {
+            Image(systemName: CategoryIcon.symbol(for: item.category))
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                .foregroundStyle(statusColor)
+                .frame(width: 36 * store.textScale, height: 36 * store.textScale)
+                .background(statusColor.opacity(0.15))
+                .clipShape(Circle())
+
             Button(action: onTapName) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 5) {
                         Text(item.name)
-                            .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
+                            .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
                             .foregroundStyle(Theme.ink)
                         Image(systemName: item.type == .value ? "house.fill" : "shippingbox.fill")
                             .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
@@ -73,18 +68,16 @@ struct ItemRowView: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.trailing, 8)
 
-            Text(dateText ?? "—")
-                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
-                .foregroundStyle(Theme.inkSecondary)
-                .frame(width: ItemListColumn.date * store.textScale, alignment: .trailing)
-
-            Text(costText)
-                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                .monospacedDigit()
-                .foregroundStyle(Theme.inkSecondary)
-                .frame(width: ItemListColumn.amount * store.textScale, alignment: .trailing)
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(costText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.ink)
+                Text(dateText ?? "—")
+                    .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                    .foregroundStyle(Theme.inkSecondary)
+            }
 
             Button(action: onTapStatus) {
                 Text(statusLabel)
@@ -101,9 +94,14 @@ struct ItemRowView: View {
             }
             .buttonStyle(.plain)
             .help(statusTooltip)
-            .frame(width: ItemListColumn.status * store.textScale, alignment: .trailing)
         }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .background(Theme.ledgerPaper.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding(.vertical, 4)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
 
     private var statusTooltip: String {

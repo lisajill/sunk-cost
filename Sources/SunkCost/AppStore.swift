@@ -92,6 +92,17 @@ final class AppStore {
             (category, items.filter { $0.category == category }.count)
         }
     }
+    /// Total actually-spent (Owned + Gone, matching `Totals.totalSpent`'s
+    /// definition -- Planned items aren't "spent" yet) cost per category,
+    /// largest first, for the Overview screen's spend-by-category chart.
+    var spendByCategory: [(category: String, total: Decimal)] {
+        let spentItems = items.filter { $0.status == .owned || $0.status == .gone }
+        let grouped = Dictionary(grouping: spentItems, by: \.category)
+        return grouped
+            .map { category, items in (category, items.reduce(Decimal(0)) { $0 + ($1.cost ?? 0) }) }
+            .filter { $0.total > 0 }
+            .sorted { $0.total > $1.total }
+    }
     var equity: Decimal? { computeEquity(homeValue: homeValue, mortgageBalance: mortgageBalance) }
     /// Everything actually invested in the house as an asset -- what was
     /// paid for it, plus Value-type item spending (things that stay with

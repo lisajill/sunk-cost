@@ -11,7 +11,7 @@ struct SunkCostApp: App {
                 .environment(\.appTextScale, store.textScale)
                 .preferredColorScheme(store.appearanceMode.colorScheme)
         }
-        .defaultSize(width: 720, height: 780)
+        .defaultSize(width: 900, height: 780)
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(after: .toolbar) {

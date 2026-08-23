@@ -1,55 +1,45 @@
 import SwiftUI
 import SunkCostCore
 
-/// Clickable column headers (Item, Date, Amount) above the item list --
-/// replaces a separate Sort dropdown. Clicking a column sorts by it;
-/// clicking the active column again flips its direction.
+/// Sort control above the item list -- rows are now cards rather than a
+/// column-aligned table, so this is a row of chips (matching the
+/// hashtag-filter and saved-scenario chip style elsewhere) instead of
+/// clickable column labels that had to stay pixel-aligned with each row.
 struct ItemListHeaderView: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        HStack {
-            columnButton(title: "Item", column: .item)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.trailing, 8)
-            columnButton(title: "Date", column: .date)
-                .frame(width: ItemListColumn.date * store.textScale, alignment: .trailing)
-            columnButton(title: "Amount", column: .amount)
-                .frame(width: ItemListColumn.amount * store.textScale, alignment: .trailing)
-            // Invisible placeholder reserving the same width as the row's
-            // Status pill, which has no header label of its own (Status
-            // isn't sortable here) -- without this, the Item column above
-            // soaks up that width instead, and Date/Amount drift left of
-            // where the rows actually put them.
-            Color.clear
-                .frame(width: ItemListColumn.status * store.textScale, height: 1)
+        HStack(spacing: 8) {
+            Text("SORT BY")
+                .font(Theme.ledgerLabel(scale: store.textScale))
+                .tracking(0.6)
+                .foregroundStyle(Theme.inkSecondary)
+            sortChip(title: "Item", column: .item)
+            sortChip(title: "Date", column: .date)
+            sortChip(title: "Amount", column: .amount)
+            Spacer()
         }
         .padding(.horizontal)
         .padding(.top, 10)
+        .padding(.bottom, 6)
     }
 
-    // A tightly-sized label (no internal Spacer) so the outer .frame's
-    // alignment is what positions it -- an earlier version used an internal
-    // Spacer(minLength: 0) to fake trailing alignment, which let long labels
-    // (e.g. "AMOUNT") render past their column's bounds with nothing to
-    // clip them, and made the button's actual hit-test area drift from
-    // what was visibly drawn.
-    private func columnButton(title: String, column: SortColumn) -> some View {
+    private func sortChip(title: String, column: SortColumn) -> some View {
         Button {
             store.sortOption = toggledSortOption(current: store.sortOption, tapped: column)
         } label: {
             HStack(spacing: 3) {
-                Text(title.uppercased())
-                    .font(Theme.ledgerLabel(scale: store.textScale))
-                    .tracking(0.6)
+                Text(title)
                 if let indicator = sortIndicator(for: column) {
                     Image(systemName: indicator)
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .bold, scale: store.textScale))
                 }
             }
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(isActive(column) ? Theme.ink : Theme.inkSecondary)
+        .font(Theme.scaledFont(Theme.FontSize.caption, weight: isActive(column) ? .bold : .regular, scale: store.textScale))
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .tint(isActive(column) ? Theme.positive : nil)
         .help("Sort by \(title)")
     }
 
