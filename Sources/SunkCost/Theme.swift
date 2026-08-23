@@ -10,7 +10,7 @@ import AppKit
 ///
 /// Status colors still carry meaning rather than being arbitrary:
 /// `positive` reads as "in the black" (an asset you still hold),
-/// terracotta as pending/warm (echoes the app icon), taupe as
+/// gold as pending/warm, taupe as
 /// settled/past -- same semantics as v1, just turned up in saturation
 /// and brightness.
 ///
@@ -23,14 +23,14 @@ import AppKit
 /// colorblindness. A red-leaning purple (magenta, orchid) would have
 /// been the wrong choice here -- that's the one to avoid.
 ///
-/// The status trio (`positive` / taupe / terracotta) is still chosen to
+/// The status trio (`positive` / taupe / gold) is still chosen to
 /// stay distinguishable under protanopia, deuteranopia, and tritanopia --
 /// deliberately not red-vs-green, which is the one pairing colorblind
 /// users most often can't tell apart. Color is also never the only
-/// signal: every status has a text label alongside it. `terracotta` and
+/// signal: every status has a text label alongside it. `gold` and
 /// `ledgerRed` sit closer together in hue (both warm), which is fine
 /// since they're never shown as adjacent choices needing direct
-/// discrimination -- terracotta is a status color, ledgerRed only
+/// discrimination -- gold is a status color, ledgerRed only
 /// appears on a net-loss figure.
 enum Theme {
     private static func adaptive(light: NSColor, dark: NSColor) -> Color {
@@ -55,9 +55,9 @@ enum Theme {
         light: NSColor(calibratedRed: 0.420, green: 0.396, blue: 0.443, alpha: 1.0),
         dark: NSColor(calibratedRed: 0.686, green: 0.655, blue: 0.702, alpha: 1.0)
     )
-    static let terracotta = adaptive(
-        light: NSColor(calibratedRed: 1.000, green: 0.475, blue: 0.208, alpha: 1.0),
-        dark: NSColor(calibratedRed: 1.000, green: 0.616, blue: 0.376, alpha: 1.0)
+    static let gold = adaptive(
+        light: NSColor(calibratedRed: 0.500, green: 0.420, blue: 0.020, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.850, green: 0.720, blue: 0.250, alpha: 1.0)
     )
     static let taupe = adaptive(
         light: NSColor(calibratedRed: 0.588, green: 0.545, blue: 0.573, alpha: 1.0),
@@ -90,7 +90,7 @@ enum Theme {
     /// on top clears WCAG AA's 4.5:1 contrast minimum -- verified by hand
     /// against these exact values, not just eyeballed.
     static let positiveFill = Color(red: 0.212, green: 0.035, blue: 0.498)
-    static let terracottaFill = Color(red: 0.720, green: 0.280, blue: 0.060)
+    static let goldFill = Color(red: 0.500, green: 0.420, blue: 0.020)
     static let taupeFill = Color(red: 0.350, green: 0.320, blue: 0.340)
     static let ledgerRedFill = Color(red: 0.700, green: 0.080, blue: 0.120)
 

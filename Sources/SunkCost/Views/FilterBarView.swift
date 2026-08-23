@@ -72,7 +72,7 @@ struct FilterBarView: View {
                 .font(Theme.scaledFont(Theme.FontSize.caption, weight: isActive ? .semibold : .regular, scale: store.textScale))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .tint(isActive ? Theme.terracotta : nil)
+                .tint(isActive ? Theme.gold : nil)
                 .help("Filter to items tagged \(hashtag)")
             }
         }

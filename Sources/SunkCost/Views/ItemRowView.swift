@@ -128,7 +128,7 @@ struct ItemRowView: View {
         switch item.status {
         case .owned: return Theme.positive
         case .gone: return Theme.taupe
-        case .planned: return Theme.terracotta
+        case .planned: return Theme.gold
         }
     }
 }

@@ -123,7 +123,7 @@ struct ItemFormView: View {
                             .foregroundStyle(Theme.inkSecondary)
 
                         if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.terracotta))
+                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.gold))
                                 .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                                 .foregroundStyle(Theme.ink)
                                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -130,7 +130,7 @@ struct MaintenanceView: View {
                     Spacer()
                     Text("Save \(formatted(store.optionalMonthlyCost))/mo by cutting Optional costs")
                         .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
-                        .foregroundStyle(Theme.terracotta)
+                        .foregroundStyle(Theme.gold)
                 }
             }
         }
@@ -158,10 +158,10 @@ struct MaintenanceView: View {
                     Text("OPTIONAL")
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .semibold, scale: store.textScale))
                         .tracking(0.5)
-                        .foregroundStyle(Theme.terracotta)
+                        .foregroundStyle(Theme.gold)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Theme.terracotta.opacity(0.15))
+                        .background(Theme.gold.opacity(0.15))
                         .clipShape(Capsule())
                         .help("Discretionary -- counted out when viewing Required Only")
                 }
@@ -253,7 +253,7 @@ private struct MaintenanceCategoryFormView: View {
                             .foregroundStyle(Theme.inkSecondary)
 
                         if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.terracotta))
+                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.gold))
                                 .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                                 .foregroundStyle(Theme.ink)
                                 .frame(maxWidth: .infinity, alignment: .leading)

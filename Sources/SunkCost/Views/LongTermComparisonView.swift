@@ -199,7 +199,7 @@ struct LongTermComparisonView: View {
                     Text("IN PLAIN ENGLISH")
                         .font(Theme.ledgerLabel(scale: store.textScale))
                         .tracking(0.6)
-                        .foregroundStyle(Theme.terracotta)
+                        .foregroundStyle(Theme.gold)
                     ForEach(explanationLines, id: \.self) { line in
                         Text(line)
                             .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
@@ -357,7 +357,7 @@ struct LongTermComparisonView: View {
             Text(title.uppercased())
                 .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
-                .foregroundStyle(Theme.terracotta)
+                .foregroundStyle(Theme.gold)
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)

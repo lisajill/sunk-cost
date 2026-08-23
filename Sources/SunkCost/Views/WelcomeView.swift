@@ -70,7 +70,7 @@ struct WelcomeView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                .foregroundStyle(Theme.terracotta)
+                .foregroundStyle(Theme.gold)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)

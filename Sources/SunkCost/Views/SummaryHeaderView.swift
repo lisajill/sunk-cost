@@ -65,7 +65,7 @@ struct SummaryHeaderView: View {
                     statTile(
                         title: "Planned Ahead",
                         value: store.totals.plannedNotSpent,
-                        color: Theme.terracottaFill,
+                        color: Theme.goldFill,
                         tooltip: "Items marked Planned — not spent yet, so not counted in Total Spent to Date."
                     )
                 }
