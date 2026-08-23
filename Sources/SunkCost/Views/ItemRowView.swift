@@ -2,10 +2,15 @@ import SwiftUI
 import SunkCostCore
 
 /// Shared column widths so `ItemListHeaderView`'s clickable column labels
-/// line up with the values each row actually shows.
+/// line up with the values each row actually shows. Every trailing column
+/// -- including Status, which has no header label -- must reserve the same
+/// fixed width in both places; otherwise the flexible Item column soaks up
+/// a different amount of space in the header (no Status pill) than in a
+/// row (has one), and Date/Amount drift out of alignment.
 enum ItemListColumn {
     static let date: CGFloat = 92
     static let amount: CGFloat = 90
+    static let status: CGFloat = 92
 }
 
 struct ItemRowView: View {
@@ -67,8 +72,8 @@ struct ItemRowView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-
-            Spacer(minLength: 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 8)
 
             Text(dateText ?? "—")
                 .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
@@ -96,6 +101,7 @@ struct ItemRowView: View {
             }
             .buttonStyle(.plain)
             .help("Filter the list to \(statusLabel) items")
+            .frame(width: ItemListColumn.status * store.textScale, alignment: .trailing)
         }
         .padding(.vertical, 4)
     }

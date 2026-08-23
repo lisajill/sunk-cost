@@ -10,11 +10,19 @@ struct ItemListHeaderView: View {
     var body: some View {
         HStack {
             columnButton(title: "Item", column: .item)
-            Spacer(minLength: 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, 8)
             columnButton(title: "Date", column: .date)
                 .frame(width: ItemListColumn.date * store.textScale, alignment: .trailing)
             columnButton(title: "Amount", column: .amount)
                 .frame(width: ItemListColumn.amount * store.textScale, alignment: .trailing)
+            // Invisible placeholder reserving the same width as the row's
+            // Status pill, which has no header label of its own (Status
+            // isn't sortable here) -- without this, the Item column above
+            // soaks up that width instead, and Date/Amount drift left of
+            // where the rows actually put them.
+            Color.clear
+                .frame(width: ItemListColumn.status * store.textScale, height: 1)
         }
         .padding(.horizontal)
         .padding(.top, 10)
