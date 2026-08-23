@@ -21,6 +21,13 @@ public struct AppData: Codable, Equatable, Sendable {
 
     public var maintenanceCategories: [MaintenanceCategory]
 
+    /// Assumed cost of selling, as percentages of Home Value -- the Sell
+    /// Scenario tab's editable inputs. nil until the user sets them, at
+    /// which point AppStore falls back to reasonable defaults (6% / 2%)
+    /// rather than baking a fabricated default into the data itself.
+    public var realtorCommissionPercent: Decimal?
+    public var closingCostsPercent: Decimal?
+
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
@@ -31,7 +38,9 @@ public struct AppData: Codable, Equatable, Sendable {
         mortgageBalance: Decimal? = nil,
         mortgageTermYears: Int? = nil,
         monthlyPaymentOverride: Decimal? = nil,
-        maintenanceCategories: [MaintenanceCategory] = []
+        maintenanceCategories: [MaintenanceCategory] = [],
+        realtorCommissionPercent: Decimal? = nil,
+        closingCostsPercent: Decimal? = nil
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -43,12 +52,14 @@ public struct AppData: Codable, Equatable, Sendable {
         self.mortgageTermYears = mortgageTermYears
         self.monthlyPaymentOverride = monthlyPaymentOverride
         self.maintenanceCategories = maintenanceCategories
+        self.realtorCommissionPercent = realtorCommissionPercent
+        self.closingCostsPercent = closingCostsPercent
     }
 
     private enum CodingKeys: String, CodingKey {
         case items, homeValue, purchasePrice, mortgageOriginalAmount, mortgageInterestRatePercent,
              mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
-             maintenanceCategories
+             maintenanceCategories, realtorCommissionPercent, closingCostsPercent
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -66,5 +77,7 @@ public struct AppData: Codable, Equatable, Sendable {
         mortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .mortgageTermYears)
         monthlyPaymentOverride = try container.decodeIfPresent(Decimal.self, forKey: .monthlyPaymentOverride)
         maintenanceCategories = try container.decodeIfPresent([MaintenanceCategory].self, forKey: .maintenanceCategories) ?? []
+        realtorCommissionPercent = try container.decodeIfPresent(Decimal.self, forKey: .realtorCommissionPercent)
+        closingCostsPercent = try container.decodeIfPresent(Decimal.self, forKey: .closingCostsPercent)
     }
 }

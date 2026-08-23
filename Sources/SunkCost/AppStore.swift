@@ -18,6 +18,8 @@ final class AppStore {
     var mortgageTermYears: Int?
     var monthlyPaymentOverride: Decimal?
     var maintenanceCategories: [MaintenanceCategory] = []
+    var realtorCommissionPercent: Decimal?
+    var closingCostsPercent: Decimal?
     var filter = ItemFilter()
     var sortOption: SortOption {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
@@ -69,13 +71,33 @@ final class AppStore {
         }
     }
     var equity: Decimal? { computeEquity(homeValue: homeValue, mortgageBalance: mortgageBalance) }
+    /// Everything actually invested in the house as an asset -- what was
+    /// paid for it, plus Value-type item spending (things that stay with
+    /// the house). Shared by `netHouseGain` and the Sell Scenario tab so
+    /// both use one definition of "what you put in."
+    var totalInvested: Decimal? {
+        guard let purchasePrice else { return nil }
+        return purchasePrice + valueSpent.totalSpent
+    }
     /// Home Value minus everything actually invested in the house as an
-    /// asset -- what was paid for it, plus Value-type item spending (things
-    /// that stay with the house). The true gain/loss on the house itself,
-    /// separate from Moveable spending or day-to-day Maintenance.
+    /// asset. The true gain/loss on the house itself, separate from
+    /// Moveable spending or day-to-day Maintenance.
     var netHouseGain: Decimal? {
-        guard let homeValue, let purchasePrice else { return nil }
-        return homeValue - (purchasePrice + valueSpent.totalSpent)
+        guard let homeValue, let totalInvested else { return nil }
+        return homeValue - totalInvested
+    }
+    /// What selling today would net, after assumed selling costs pay off
+    /// the mortgage -- falls back to 6%/2% commission/closing when the
+    /// user hasn't set their own assumptions yet, so the Sell Scenario tab
+    /// always shows a usable estimate.
+    var sellScenario: SellScenario? {
+        computeSellScenario(
+            homeValue: homeValue,
+            mortgageBalance: mortgageBalance,
+            realtorCommissionPercent: realtorCommissionPercent ?? 6,
+            closingCostsPercent: closingCostsPercent ?? 2,
+            totalInvested: totalInvested
+        )
     }
 
     /// The manually-entered payment if there is one; otherwise a calculated
@@ -139,6 +161,8 @@ final class AppStore {
             mortgageTermYears = data.mortgageTermYears
             monthlyPaymentOverride = data.monthlyPaymentOverride
             maintenanceCategories = data.maintenanceCategories
+            realtorCommissionPercent = data.realtorCommissionPercent
+            closingCostsPercent = data.closingCostsPercent
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
@@ -222,6 +246,12 @@ final class AppStore {
         save()
     }
 
+    func setSellingCostAssumptions(commissionPercent: Decimal?, closingPercent: Decimal?) {
+        realtorCommissionPercent = commissionPercent
+        closingCostsPercent = closingPercent
+        save()
+    }
+
     func setMortgage(
         originalAmount: Decimal?,
         interestRatePercent: Decimal?,
@@ -299,6 +329,8 @@ final class AppStore {
         mortgageTermYears = data.mortgageTermYears
         monthlyPaymentOverride = data.monthlyPaymentOverride
         maintenanceCategories = data.maintenanceCategories
+        realtorCommissionPercent = data.realtorCommissionPercent
+        closingCostsPercent = data.closingCostsPercent
         save()
     }
 
@@ -313,7 +345,9 @@ final class AppStore {
             mortgageBalance: mortgageBalance,
             mortgageTermYears: mortgageTermYears,
             monthlyPaymentOverride: monthlyPaymentOverride,
-            maintenanceCategories: maintenanceCategories
+            maintenanceCategories: maintenanceCategories,
+            realtorCommissionPercent: realtorCommissionPercent,
+            closingCostsPercent: closingCostsPercent
         )
     }
 

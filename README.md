@@ -44,23 +44,24 @@ swift test              # run the test suite
 - `scripts/import_spreadsheet.py` — a one-off converter for importing an
   existing spreadsheet's data (not part of the app itself).
 
-## Future plans
+## What it tracks
 
-The app tracks money already put into the house (one-time items, split into
-Value and Moveable) and what it costs to keep it running (a recurring
-monthly amount per Maintenance category, under the Maintenance tab — set
-once and updated only when the rate changes, not a payment log). One more
-layer is planned:
+Three layers, each sequenced after the last was actually used rather than
+all built at once:
 
-- **Cost to leave** — a sell-scenario calculator: given a purchase price,
-  mortgage payoff balance, and assumed selling costs (realtor commission,
-  closing costs), show whether selling today would be a loss, break-even,
-  or profit — so staying can be weighed against selling-and-renting or
-  selling-and-buying-elsewhere.
-
-It's intentionally sequenced after the rest of the tracker (this repo)
-rather than built all at once, so it gets designed against real usage
-instead of a guess.
+1. **Cost to improve** — one-time items (furniture, upgrades), split into
+   Value (stays with the house if sold) and Moveable (goes with you).
+2. **Cost to keep** — a recurring monthly amount per Maintenance category
+   under the Maintenance tab, each marked Required or Optional so you can
+   see what you'd actually save by cutting the discretionary ones. Set
+   once and updated only when the rate changes, not a payment log.
+3. **Cost to leave** — under the Sell Scenario tab: given Home Value,
+   mortgage payoff balance, and assumed selling costs (realtor commission
+   + closing costs, both editable percentages), shows Net Proceeds if
+   sold today and the profit/loss against everything actually invested in
+   the house. Doesn't yet compare against renting or buying elsewhere —
+   that would need its own set of assumptions and is a separate future
+   pass.
 
 ### Someday / maybe
 

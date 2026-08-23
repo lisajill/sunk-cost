@@ -4,6 +4,7 @@ import SunkCostCore
 private enum MainTab: String, CaseIterable {
     case items = "Items"
     case maintenance = "Maintenance"
+    case sellScenario = "Sell Scenario"
 }
 
 struct ContentView: View {
@@ -42,7 +43,7 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 240)
+            .frame(maxWidth: 360)
             .padding(.horizontal)
             .padding(.top, 8)
 
@@ -72,6 +73,9 @@ struct ContentView: View {
                     .id(store.appearanceMode)
             case .maintenance:
                 MaintenanceView()
+                    .id(store.appearanceMode)
+            case .sellScenario:
+                SellScenarioView()
                     .id(store.appearanceMode)
             }
         }
@@ -135,7 +139,15 @@ struct ContentView: View {
                 set: { store.filter.searchText = $0.isEmpty ? nil : $0 }
             ),
             placement: .toolbar,
-            prompt: selectedTab == .items ? "Search name, category, or notes" : "Search categories or notes"
+            prompt: searchPrompt
         )
+    }
+
+    private var searchPrompt: String {
+        switch selectedTab {
+        case .items: return "Search name, category, or notes"
+        case .maintenance: return "Search categories or notes"
+        case .sellScenario: return "Search"
+        }
     }
 }
