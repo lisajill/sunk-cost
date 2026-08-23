@@ -44,6 +44,7 @@ final class AppStore {
     var totals: Totals { Totals(items: items) }
     var filteredItems: [Item] { items.filtered(by: filter).sorted(using: sortOption) }
     var availableCategories: [String] { items.distinctCategories }
+    var availableHashtags: [String] { items.distinctHashtags }
     var categoriesWithCounts: [(category: String, count: Int)] {
         availableCategories.map { category in
             (category, items.filter { $0.category == category }.count)
@@ -151,6 +152,13 @@ final class AppStore {
 
     func toggleStatusFilter(_ status: Status) {
         filter.status = toggledStatusFilter(current: filter.status, tapped: status)
+    }
+
+    /// Tapping a hashtag filters the list to items whose notes mention it;
+    /// tapping the same one again clears the search.
+    func toggleHashtagFilter(_ hashtag: String) {
+        let trimmedCurrent = filter.searchText?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        filter.searchText = (trimmedCurrent == hashtag) ? nil : hashtag
     }
 
     /// Renames a category across every item that uses it. Renaming into an

@@ -17,7 +17,17 @@ struct ContentView: View {
                     .background(.red.opacity(0.1))
             }
 
+            // Custom colors built from NSColor(name:dynamicProvider:) --
+            // Theme.ink, .positive, etc. -- can go stale mid-toggle when
+            // .preferredColorScheme flips live, the same class of bug as
+            // the dropdown Pickers below. Forcing these three to fully
+            // rebuild on appearance change fixes both. Scoped to these
+            // subviews rather than all of ContentView specifically so
+            // toggling appearance can't reset the sheet-presentation state
+            // (isShowingAddForm/editingItem) and dismiss an open Add/Edit
+            // sheet out from under whoever's mid-edit.
             SummaryHeaderView()
+                .id(store.appearanceMode)
 
             FilterBarView()
                 .padding(.horizontal)
@@ -34,6 +44,7 @@ struct ContentView: View {
                 }
             }
             .listStyle(.inset)
+            .id(store.appearanceMode)
         }
         .frame(minWidth: 560, minHeight: 480)
         .toolbar {

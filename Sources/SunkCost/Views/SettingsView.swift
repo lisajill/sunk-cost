@@ -59,6 +59,11 @@ struct SettingsView: View {
         .environment(\.appTextScale, store.textScale)
         .onAppear { populateMortgageFields() }
         .onExitCommand { NSApp.keyWindow?.close() }
+        // Same stale-color fix as the main window: Theme's custom
+        // NSColor(dynamicProvider:)-based colors can lag behind a live
+        // .preferredColorScheme flip. Settings has its own appearance
+        // picker, so it needs the same forced-rebuild treatment.
+        .id(store.appearanceMode)
     }
 
     private var appearanceSection: some View {

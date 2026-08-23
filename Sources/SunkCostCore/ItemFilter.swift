@@ -36,6 +36,19 @@ public extension Array where Element == Item {
         return Set(categories).sorted()
     }
 
+    /// Every distinct #hashtag used across all items' notes, lowercased so
+    /// "#Urgent" and "#urgent" collapse into one tag.
+    var distinctHashtags: [String] {
+        var tags = Set<String>()
+        for item in self {
+            guard let notes = item.notes else { continue }
+            for range in hashtagRanges(in: notes) {
+                tags.insert(notes[range].lowercased())
+            }
+        }
+        return tags.sorted()
+    }
+
     private func matches(_ item: Item, search: String) -> Bool {
         item.name.lowercased().contains(search)
             || item.category.lowercased().contains(search)
