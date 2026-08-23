@@ -50,6 +50,10 @@ public struct AppData: Codable, Equatable, Sendable {
     public var newPropertyTaxPercent: Decimal?
     public var newHomeownersInsuranceAnnual: Decimal?
 
+    /// Named, saved snapshots of the Compare assumptions -- lets the user
+    /// flip between several what-ifs without retyping.
+    public var savedComparisonScenarios: [ComparisonScenario]
+
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
@@ -75,7 +79,8 @@ public struct AppData: Codable, Equatable, Sendable {
         propertyTaxPercent: Decimal? = nil,
         homeownersInsuranceAnnual: Decimal? = nil,
         newPropertyTaxPercent: Decimal? = nil,
-        newHomeownersInsuranceAnnual: Decimal? = nil
+        newHomeownersInsuranceAnnual: Decimal? = nil,
+        savedComparisonScenarios: [ComparisonScenario] = []
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -102,6 +107,7 @@ public struct AppData: Codable, Equatable, Sendable {
         self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
         self.newPropertyTaxPercent = newPropertyTaxPercent
         self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+        self.savedComparisonScenarios = savedComparisonScenarios
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -111,7 +117,8 @@ public struct AppData: Codable, Equatable, Sendable {
              comparisonProjectionYears, homeAppreciationPercent, investmentReturnPercent,
              monthlyRent, rentAnnualIncreasePercent, newHomePrice, newHomeDownPayment,
              newMortgageRatePercent, newMortgageTermYears, propertyTaxPercent,
-             homeownersInsuranceAnnual, newPropertyTaxPercent, newHomeownersInsuranceAnnual
+             homeownersInsuranceAnnual, newPropertyTaxPercent, newHomeownersInsuranceAnnual,
+             savedComparisonScenarios
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -144,5 +151,6 @@ public struct AppData: Codable, Equatable, Sendable {
         homeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .homeownersInsuranceAnnual)
         newPropertyTaxPercent = try container.decodeIfPresent(Decimal.self, forKey: .newPropertyTaxPercent)
         newHomeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .newHomeownersInsuranceAnnual)
+        savedComparisonScenarios = try container.decodeIfPresent([ComparisonScenario].self, forKey: .savedComparisonScenarios) ?? []
     }
 }

@@ -44,6 +44,7 @@ final class AppStore {
     var homeownersInsuranceAnnual: Decimal?
     var newPropertyTaxPercent: Decimal?
     var newHomeownersInsuranceAnnual: Decimal?
+    var savedComparisonScenarios: [ComparisonScenario] = []
     var filter = ItemFilter()
     var sortOption: SortOption {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
@@ -296,6 +297,7 @@ final class AppStore {
             homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
             newPropertyTaxPercent = data.newPropertyTaxPercent
             newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
+            savedComparisonScenarios = data.savedComparisonScenarios
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
@@ -496,6 +498,58 @@ final class AppStore {
         save()
     }
 
+    /// Saves the 13 live Compare assumption fields as a named, reloadable
+    /// snapshot -- lets the user flip between several what-ifs without
+    /// retyping. Doesn't capture Home Value, mortgage balance, Purchase
+    /// Price, or Sell Scenario's selling-cost percentages, which are facts
+    /// about the house/sale rather than "what-if" assumptions.
+    func saveCurrentScenarioAsPreset(name: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        let scenario = ComparisonScenario(
+            name: trimmedName,
+            projectionYears: comparisonProjectionYears,
+            homeAppreciationPercent: homeAppreciationPercent,
+            investmentReturnPercent: investmentReturnPercent,
+            monthlyRent: monthlyRent,
+            rentAnnualIncreasePercent: rentAnnualIncreasePercent,
+            newHomePrice: newHomePrice,
+            newHomeDownPayment: newHomeDownPayment,
+            newMortgageRatePercent: newMortgageRatePercent,
+            newMortgageTermYears: newMortgageTermYears,
+            propertyTaxPercent: propertyTaxPercent,
+            homeownersInsuranceAnnual: homeownersInsuranceAnnual,
+            newPropertyTaxPercent: newPropertyTaxPercent,
+            newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual
+        )
+        savedComparisonScenarios.append(scenario)
+        save()
+    }
+
+    /// Overwrites the 13 live Compare assumption fields from a saved
+    /// scenario, so the table/results update immediately.
+    func loadScenario(_ scenario: ComparisonScenario) {
+        comparisonProjectionYears = scenario.projectionYears
+        homeAppreciationPercent = scenario.homeAppreciationPercent
+        investmentReturnPercent = scenario.investmentReturnPercent
+        monthlyRent = scenario.monthlyRent
+        rentAnnualIncreasePercent = scenario.rentAnnualIncreasePercent
+        newHomePrice = scenario.newHomePrice
+        newHomeDownPayment = scenario.newHomeDownPayment
+        newMortgageRatePercent = scenario.newMortgageRatePercent
+        newMortgageTermYears = scenario.newMortgageTermYears
+        propertyTaxPercent = scenario.propertyTaxPercent
+        homeownersInsuranceAnnual = scenario.homeownersInsuranceAnnual
+        newPropertyTaxPercent = scenario.newPropertyTaxPercent
+        newHomeownersInsuranceAnnual = scenario.newHomeownersInsuranceAnnual
+        save()
+    }
+
+    func deleteScenario(_ scenario: ComparisonScenario) {
+        savedComparisonScenarios.removeAll { $0.id == scenario.id }
+        save()
+    }
+
     func setMortgage(
         originalAmount: Decimal?,
         interestRatePercent: Decimal?,
@@ -588,6 +642,7 @@ final class AppStore {
         homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
         newPropertyTaxPercent = data.newPropertyTaxPercent
         newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
+        savedComparisonScenarios = data.savedComparisonScenarios
         save()
     }
 
@@ -617,7 +672,8 @@ final class AppStore {
             propertyTaxPercent: propertyTaxPercent,
             homeownersInsuranceAnnual: homeownersInsuranceAnnual,
             newPropertyTaxPercent: newPropertyTaxPercent,
-            newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual
+            newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual,
+            savedComparisonScenarios: savedComparisonScenarios
         )
     }
 

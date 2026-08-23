@@ -25,6 +25,9 @@ struct LongTermComparisonView: View {
     @State private var newPropertyTaxText = ""
     @State private var newInsuranceText = ""
 
+    @State private var isShowingSaveScenarioAlert = false
+    @State private var newScenarioName = ""
+
     private enum Field: Hashable {
         case years, appreciation, investmentReturn, rent, rentIncrease
         case newHomePrice, newHomeDownPayment, newMortgageRate, newMortgageTerm
@@ -130,7 +133,34 @@ struct LongTermComparisonView: View {
                     Text("years from now")
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .foregroundStyle(Theme.inkSecondary)
+
+                    Spacer()
+
+                    Button("Save Scenario") {
+                        newScenarioName = ""
+                        isShowingSaveScenarioAlert = true
+                    }
+                    .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Save the assumptions below as a named snapshot you can reload later.")
                 }
+            }
+            .alert("Save Scenario", isPresented: $isShowingSaveScenarioAlert) {
+                TextField("Scenario name", text: $newScenarioName)
+                Button("Save") {
+                    store.saveCurrentScenarioAsPreset(name: newScenarioName)
+                    newScenarioName = ""
+                }
+                Button("Cancel", role: .cancel) {
+                    newScenarioName = ""
+                }
+            } message: {
+                Text("Saves the Years, appreciation, rent, and new-home assumptions below so you can reload them later.")
+            }
+
+            if !store.savedComparisonScenarios.isEmpty {
+                savedScenariosRow
             }
 
             comparisonTable
@@ -353,6 +383,26 @@ struct LongTermComparisonView: View {
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
             content()
+        }
+    }
+
+    private var savedScenariosRow: some View {
+        FlowLayout(spacing: 6) {
+            ForEach(store.savedComparisonScenarios) { scenario in
+                Button(scenario.name) {
+                    store.loadScenario(scenario)
+                    syncFields()
+                }
+                .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help("Load the \"\(scenario.name)\" scenario")
+                .contextMenu {
+                    Button("Delete", role: .destructive) {
+                        store.deleteScenario(scenario)
+                    }
+                }
+            }
         }
     }
 
