@@ -21,13 +21,17 @@ struct SummaryHeaderView: View {
     }
 
     var body: some View {
-        VStack(spacing: 10) {
-            VStack(spacing: 3) {
-                Text("TOTAL SPENT TO DATE")
-                    .font(Theme.ledgerLabel(scale: store.textScale))
-                    .tracking(1.4)
-                    .foregroundStyle(Theme.inkSecondary)
-                    .infoTooltip("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.", scale: store.textScale)
+        VStack(spacing: 16) {
+            VStack(spacing: 4) {
+                HStack(spacing: 5) {
+                    Image(systemName: "house.fill")
+                        .foregroundStyle(Theme.positive)
+                    Text("TOTAL SPENT TO DATE")
+                        .font(Theme.ledgerLabel(scale: store.textScale))
+                        .tracking(1.4)
+                        .foregroundStyle(Theme.inkSecondary)
+                        .infoTooltip("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.", scale: store.textScale)
+                }
 
                 Text(formatted(store.totals.totalSpent))
                     .font(Theme.totalNumeral(scale: store.textScale))
@@ -35,33 +39,29 @@ struct SummaryHeaderView: View {
                     .foregroundStyle(Theme.ink)
                     .help("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.")
 
-                // A bookkeeper's double rule under the final total.
-                VStack(spacing: 2) {
-                    Rectangle().fill(Theme.ledgerBorder).frame(width: 180, height: 1.25)
-                    Rectangle().fill(Theme.ledgerBorder).frame(width: 180, height: 1.25)
-                }
-                .padding(.top, 1)
+                Capsule()
+                    .fill(Theme.positive)
+                    .frame(width: 48, height: 4)
+                    .padding(.top, 2)
 
                 costToKeepRow
-                    .padding(.top, 2)
+                    .padding(.top, 4)
             }
 
             if !isCollapsed {
-                HStack(spacing: 0) {
+                HStack(spacing: 10) {
                     statTile(
                         title: "In the House",
                         value: store.totals.inTheHouse,
                         color: Theme.positive,
                         tooltip: "Items marked Owned — still in the house and paid for."
                     )
-                    ledgerDivider
                     statTile(
                         title: "Gone, Paid For",
                         value: store.totals.goneButPaidFor,
                         color: Theme.taupe,
                         tooltip: "Items marked Gone — paid for, but no longer in the house (sold, replaced, disposed of)."
                     )
-                    ledgerDivider
                     statTile(
                         title: "Planned Ahead",
                         value: store.totals.plannedNotSpent,
@@ -75,7 +75,7 @@ struct SummaryHeaderView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(14)
+        .padding(18)
         .frame(maxWidth: 720)
         .background(Theme.ledgerPaper)
         .overlay(alignment: .topTrailing) {
@@ -93,10 +93,10 @@ struct SummaryHeaderView: View {
             .help(isCollapsed ? "Show spending details" : "Collapse to just the totals")
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Theme.ledgerBorder, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .frame(maxWidth: .infinity)
         .padding([.horizontal, .top], 8)
         .onAppear { syncHomeValueText() }
@@ -119,35 +119,28 @@ struct SummaryHeaderView: View {
         .infoTooltip("Total recurring monthly (and projected yearly) cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.", scale: store.textScale)
     }
 
-    private var ledgerDivider: some View {
-        // An unconstrained Rectangle expands to fill all available height in
-        // an HStack -- without this cap, the divider was stretching the
-        // whole card open to fill the window, leaving a huge gap of empty
-        // paper between the stat row and Home Value below it.
-        Rectangle()
-            .fill(Theme.ledgerBorder)
-            .frame(width: 1, height: 40 * store.textScale)
-    }
-
     private func statTile(title: String, value: Decimal, color: Color, tooltip: String) -> some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 5) {
             HStack(spacing: 3) {
                 Text(title.uppercased())
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(0.6)
-                    .foregroundStyle(Theme.inkSecondary)
+                    .foregroundStyle(color)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Image(systemName: "info.circle")
                     .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                    .foregroundStyle(Theme.inkSecondary)
+                    .foregroundStyle(color.opacity(0.75))
             }
             Text(formatted(value))
-                .font(Theme.scaledFont(Theme.FontSize.title3, weight: .semibold, scale: store.textScale))
+                .font(Theme.scaledFont(Theme.FontSize.title2, weight: .bold, scale: store.textScale))
                 .monospacedDigit()
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.14))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .help(tooltip)
     }
 
@@ -180,11 +173,16 @@ struct SummaryHeaderView: View {
 
             if let netHouseGain = store.netHouseGain {
                 let sign = netHouseGain >= 0 ? "+" : ""
+                let color = netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed
                 Text("Net Gain: \(sign)\(formatted(netHouseGain))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .bold, scale: store.textScale))
                     .monospacedDigit()
-                    .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .foregroundStyle(color)
                     .infoTooltip("Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value.", scale: store.textScale)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(color.opacity(0.14))
+                    .clipShape(Capsule())
             } else if store.homeValue != nil {
                 Text("Add your Purchase Price in Settings to see Net Gain")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
@@ -192,11 +190,16 @@ struct SummaryHeaderView: View {
             }
 
             if let equity = store.equity {
+                let color = equity >= 0 ? Theme.positive : Theme.ledgerRed
                 Text("Equity: \(formatted(equity))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .bold, scale: store.textScale))
                     .monospacedDigit()
-                    .foregroundStyle(equity >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .foregroundStyle(color)
                     .infoTooltip("Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs.", scale: store.textScale)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(color.opacity(0.14))
+                    .clipShape(Capsule())
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
