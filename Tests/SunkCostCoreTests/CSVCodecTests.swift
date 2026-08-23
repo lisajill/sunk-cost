@@ -26,6 +26,18 @@ struct CSVCodecTests {
         #expect(lines[1].hasPrefix("Ceiling Fan,Property Upgrades,,Planned,"))
     }
 
+    @Test("blank date round-trips as nil")
+    func blankDateRoundTripsAsNil() throws {
+        let item = Item(name: "TV", category: "Furniture", cost: 999, status: .owned, dateAdded: nil)
+
+        let csv = CSVCodec.encode([item])
+        let lines = csv.components(separatedBy: "\r\n")
+        #expect(lines[1] == "TV,Furniture,999,Owned,")
+
+        let decoded = try CSVCodec.decode(csv)
+        #expect(decoded[0].dateAdded == nil)
+    }
+
     @Test("a name containing a comma is quoted")
     func nameContainingCommaIsQuoted() {
         let item = Item(name: "Sofa, Reclining", category: "Furniture", cost: 500, status: .owned)

@@ -17,6 +17,7 @@ struct FilterBarView: View {
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             .frame(maxWidth: 220)
+            .help("Show only items in one category")
 
             Picker("Status", selection: Binding(
                 get: { store.filter.status },
@@ -29,6 +30,19 @@ struct FilterBarView: View {
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             .frame(maxWidth: 200)
+            .help("Show only items with one status — tapping a status pill on a row does this too")
+
+            Picker("Sort", selection: Binding(
+                get: { store.sortOption },
+                set: { store.sortOption = $0 }
+            )) {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Text(option.label).tag(option)
+                }
+            }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+            .frame(maxWidth: 220)
+            .help("Change how the list below is ordered")
 
             Spacer()
         }

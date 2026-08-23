@@ -30,12 +30,13 @@ public enum CSVCodec {
 
         for item in items {
             let costField = item.cost.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
+            let dateField = item.dateAdded.map { dateFormatter.string(from: $0) } ?? ""
             let fields = [
                 item.name,
                 item.category,
                 costField,
                 item.status.rawValue.capitalized,
-                dateFormatter.string(from: item.dateAdded),
+                dateField,
             ]
             lines.append(fields.map(escapeField).joined(separator: ","))
         }
@@ -69,7 +70,7 @@ public enum CSVCodec {
 
             let cost = costText.isEmpty ? nil : Decimal(string: costText)
             let status = Status(rawValue: statusText) ?? .owned
-            let date = dateFormatter.date(from: dateText) ?? Date()
+            let date = dateText.isEmpty ? nil : dateFormatter.date(from: dateText)
 
             return Item(name: name, category: category, cost: cost, status: status, dateAdded: date)
         }

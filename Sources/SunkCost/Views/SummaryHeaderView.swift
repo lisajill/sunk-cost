@@ -32,6 +32,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.totalNumeral(scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(Theme.ink)
+                    .help("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.")
 
                 // A bookkeeper's double rule under the final total.
                 VStack(spacing: 2) {
@@ -43,11 +44,26 @@ struct SummaryHeaderView: View {
 
             if !isCollapsed {
                 HStack(spacing: 0) {
-                    statTile(title: "In the House", value: store.totals.inTheHouse, color: Theme.positive)
+                    statTile(
+                        title: "In the House",
+                        value: store.totals.inTheHouse,
+                        color: Theme.positive,
+                        tooltip: "Items marked Owned — still in the house and paid for."
+                    )
                     ledgerDivider
-                    statTile(title: "Gone, Paid For", value: store.totals.goneButPaidFor, color: Theme.taupe)
+                    statTile(
+                        title: "Gone, Paid For",
+                        value: store.totals.goneButPaidFor,
+                        color: Theme.taupe,
+                        tooltip: "Items marked Gone — paid for, but no longer in the house (sold, replaced, disposed of)."
+                    )
                     ledgerDivider
-                    statTile(title: "Planned Ahead", value: store.totals.plannedNotSpent, color: Theme.terracotta)
+                    statTile(
+                        title: "Planned Ahead",
+                        value: store.totals.plannedNotSpent,
+                        color: Theme.terracotta,
+                        tooltip: "Items marked Planned — not spent yet, so not counted in Total Spent to Date."
+                    )
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
 
@@ -95,7 +111,7 @@ struct SummaryHeaderView: View {
             .frame(width: 1, height: 40 * store.textScale)
     }
 
-    private func statTile(title: String, value: Decimal, color: Color) -> some View {
+    private func statTile(title: String, value: Decimal, color: Color, tooltip: String) -> some View {
         VStack(spacing: 3) {
             Text(title.uppercased())
                 .font(Theme.ledgerLabel(scale: store.textScale))
@@ -109,6 +125,7 @@ struct SummaryHeaderView: View {
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
+        .help(tooltip)
     }
 
     private var homeValueRow: some View {
@@ -117,6 +134,7 @@ struct SummaryHeaderView: View {
                 Text("Home Value")
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
+                    .help("Your own estimate of what the house is worth now — type in a number anytime you get a new one (Zillow, appraisal, etc.).")
                 if store.isPrivacyModeEnabled {
                     Text(homeValueText.isEmpty ? "—" : Theme.mask(homeValueText))
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
@@ -144,6 +162,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(difference >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .help("Home Value minus Total Spent to Date. Positive means the house is worth more than you've put into it.")
             }
 
             if let equity = store.equity {
@@ -151,6 +170,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(equity >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .help("Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs.")
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))

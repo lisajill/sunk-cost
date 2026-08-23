@@ -20,7 +20,10 @@ public struct Item: Identifiable, Codable, Sendable {
     public var category: String
     public var cost: Decimal?
     public var status: Status
-    public var dateAdded: Date
+    /// When this item was added, if known. Blank for anything imported
+    /// without a real date on record (e.g. from a spreadsheet that didn't
+    /// track purchase dates) rather than defaulting to a fabricated one.
+    public var dateAdded: Date?
 
     public init(
         id: UUID = UUID(),
@@ -28,7 +31,7 @@ public struct Item: Identifiable, Codable, Sendable {
         category: String,
         cost: Decimal?,
         status: Status,
-        dateAdded: Date = Date()
+        dateAdded: Date? = Date()
     ) {
         self.id = id
         self.name = name
@@ -44,11 +47,22 @@ extension Item: Equatable {
     // dates through a fractional-seconds ISO 8601 string, which truncates
     // finer precision than that.
     public static func == (lhs: Item, rhs: Item) -> Bool {
-        lhs.id == rhs.id
-            && lhs.name == rhs.name
-            && lhs.category == rhs.category
-            && lhs.cost == rhs.cost
-            && lhs.status == rhs.status
-            && abs(lhs.dateAdded.timeIntervalSince(rhs.dateAdded)) < 0.001
+        guard
+            lhs.id == rhs.id,
+            lhs.name == rhs.name,
+            lhs.category == rhs.category,
+            lhs.cost == rhs.cost,
+            lhs.status == rhs.status
+        else {
+            return false
+        }
+        switch (lhs.dateAdded, rhs.dateAdded) {
+        case let (l?, r?):
+            return abs(l.timeIntervalSince(r)) < 0.001
+        case (nil, nil):
+            return true
+        default:
+            return false
+        }
     }
 }

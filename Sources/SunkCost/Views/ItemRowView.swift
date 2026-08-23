@@ -29,8 +29,8 @@ struct ItemRowView: View {
         return store.isPrivacyModeEnabled ? Theme.mask(text) : text
     }
 
-    private var dateText: String {
-        Self.dateFormatter.string(from: item.dateAdded)
+    private var dateText: String? {
+        item.dateAdded.map { Self.dateFormatter.string(from: $0) }
     }
 
     var body: some View {
@@ -40,7 +40,7 @@ struct ItemRowView: View {
                     Text(item.name)
                         .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
                         .foregroundStyle(Theme.ink)
-                    Text("\(item.category.uppercased()) · \(dateText)")
+                    Text(dateText.map { "\(item.category.uppercased()) · \($0)" } ?? item.category.uppercased())
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .medium, scale: store.textScale))
                         .tracking(0.5)
                         .foregroundStyle(Theme.inkSecondary)

@@ -39,14 +39,4 @@ struct FilteringTests {
     func distinctCategoriesAreUniqueAndSorted() {
         #expect(items.distinctCategories == ["Furniture", "Property Upgrades"])
     }
-
-    @Test("sortedNewestFirst orders by dateAdded descending")
-    func sortedNewestFirstOrdersDescending() {
-        let older = Item(name: "Old", category: "Furniture", cost: 1, status: .owned, dateAdded: Date(timeIntervalSince1970: 0))
-        let newer = Item(name: "New", category: "Furniture", cost: 1, status: .owned, dateAdded: Date(timeIntervalSince1970: 1000))
-
-        let result = [older, newer].sortedNewestFirst()
-
-        #expect(result.map(\.name) == ["New", "Old"])
-    }
 }

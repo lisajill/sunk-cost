@@ -25,10 +25,6 @@ public extension Array where Element == Item {
         }
     }
 
-    func sortedNewestFirst() -> [Item] {
-        sorted { $0.dateAdded > $1.dateAdded }
-    }
-
     var distinctCategories: [String] {
         let categories: [String] = self.map { $0.category }
         return Set(categories).sorted()

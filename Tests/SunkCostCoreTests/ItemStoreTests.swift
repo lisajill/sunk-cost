@@ -72,6 +72,18 @@ struct ItemStoreTests {
         #expect(loaded.items.first?.cost == nil)
     }
 
+    @Test("blank date round-trips as nil")
+    func blankDateRoundTripsAsNil() throws {
+        let url = makeTempFileURL()
+        let item = Item(name: "TV", category: "Furniture", cost: 999, status: .owned, dateAdded: nil)
+        let original = AppData(items: [item], homeValue: nil)
+
+        try ItemStore.save(original, to: url)
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.items.first?.dateAdded == nil)
+    }
+
     @Test("loading corrupt JSON throws instead of silently losing data")
     func loadingCorruptJSONThrows() throws {
         let url = makeTempFileURL()

@@ -12,6 +12,7 @@ struct ItemFormView: View {
     @State private var costText: String = ""
     @State private var status: Status = .owned
     @State private var date: Date = Date()
+    @State private var hasDate = true
 
     private var isEditing: Bool { item != nil }
 
@@ -53,10 +54,16 @@ struct ItemFormView: View {
                 }
 
                 labeledField("Date") {
-                    DatePicker("", selection: $date, displayedComponents: .date)
-                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                        .labelsHidden()
-                        .datePickerStyle(.field)
+                    HStack {
+                        Toggle("", isOn: $hasDate)
+                            .labelsHidden()
+                            .help(hasDate ? "Turn off if you don't know the date" : "Turn on to set a date")
+                        DatePicker("", selection: $date, displayedComponents: .date)
+                            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                            .labelsHidden()
+                            .datePickerStyle(.field)
+                            .disabled(!hasDate)
+                    }
                 }
 
                 if !store.availableCategories.isEmpty {
@@ -119,7 +126,12 @@ struct ItemFormView: View {
         name = item.name
         category = item.category
         status = item.status
-        date = item.dateAdded
+        if let itemDate = item.dateAdded {
+            date = itemDate
+            hasDate = true
+        } else {
+            hasDate = false
+        }
         if let cost = item.cost {
             costText = NSDecimalNumber(decimal: cost).stringValue
         }
@@ -131,15 +143,17 @@ struct ItemFormView: View {
         let digitsAndDot = costText.filter { $0.isNumber || $0 == "." }
         let cost = digitsAndDot.isEmpty ? nil : Decimal(string: digitsAndDot)
 
+        let dateAdded = hasDate ? date : nil
+
         if var existing = item {
             existing.name = trimmedName
             existing.category = trimmedCategory
             existing.cost = cost
             existing.status = status
-            existing.dateAdded = date
+            existing.dateAdded = dateAdded
             store.updateItem(existing)
         } else {
-            let newItem = Item(name: trimmedName, category: trimmedCategory, cost: cost, status: status, dateAdded: date)
+            let newItem = Item(name: trimmedName, category: trimmedCategory, cost: cost, status: status, dateAdded: dateAdded)
             store.addItem(newItem)
         }
         dismiss()

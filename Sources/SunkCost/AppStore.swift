@@ -17,6 +17,10 @@ final class AppStore {
     var mortgageTermYears: Int?
     var monthlyPaymentOverride: Decimal?
     var filter = ItemFilter()
+    var sortOption: SortOption {
+        didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
+    }
+    private static let sortOptionKey = "SunkCost.SortOption"
     private(set) var storageFolderURL: URL
     var loadError: String?
 
@@ -38,7 +42,7 @@ final class AppStore {
     private var stopAccessingCurrentFolder: (() -> Void)?
 
     var totals: Totals { Totals(items: items) }
-    var filteredItems: [Item] { items.filtered(by: filter).sortedNewestFirst() }
+    var filteredItems: [Item] { items.filtered(by: filter).sorted(using: sortOption) }
     var availableCategories: [String] { items.distinctCategories }
     var categoriesWithCounts: [(category: String, count: Int)] {
         availableCategories.map { category in
@@ -70,6 +74,8 @@ final class AppStore {
             ?? TextSizeControl.defaultIndex
         self.appearanceMode = UserDefaults.standard.string(forKey: AppearanceMode.userDefaultsKey)
             .flatMap(AppearanceMode.init(rawValue:)) ?? .system
+        self.sortOption = UserDefaults.standard.string(forKey: AppStore.sortOptionKey)
+            .flatMap(SortOption.init(rawValue:)) ?? .dateNewest
         load()
     }
 
