@@ -94,6 +94,11 @@ Not committed, no timeline — just ideas worth remembering:
   to the data file and referencing them by name, but it's a real
   tradeoff: the data stops being one portable JSON file, and a backup or
   move to another Mac means copying the whole folder instead of one file.
+- **Refinance modeling** — not something the current maintainer needs
+  (her mortgage isn't going anywhere), but a plausible ask from someone
+  else: comparing the current loan against a hypothetical refinance
+  (new rate/term/closing costs) the way Compare already does for
+  Stay/Rent/Buy Elsewhere.
 
 ## License
 
