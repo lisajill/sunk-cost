@@ -115,10 +115,10 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button("Export CSV…") {
+                Button("Export Data (CSV)…") {
                     store.exportCSV()
                 }
-                Button("Import CSV…") {
+                Button("Import Data (CSV)…") {
                     if let picked = store.pickCSVFileToImport() {
                         pendingCSVImport = picked
                     }
