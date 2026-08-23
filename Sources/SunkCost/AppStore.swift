@@ -51,6 +51,15 @@ final class AppStore {
     /// the "cost to keep the house running," a peer total to Total Spent,
     /// not folded into it. A monthly figure, not all-time.
     var costToKeep: Decimal { maintenanceCategories.reduce(0) { $0 + $1.monthlyAmount } }
+    var costToKeepAnnual: Decimal { costToKeep * 12 }
+    /// Sum of monthly costs marked Required -- utilities and the like,
+    /// effectively fixed.
+    var requiredMonthlyCost: Decimal {
+        maintenanceCategories.filter(\.isRequired).reduce(0) { $0 + $1.monthlyAmount }
+    }
+    /// What cutting every Optional (discretionary) Maintenance category
+    /// would save per month.
+    var optionalMonthlyCost: Decimal { costToKeep - requiredMonthlyCost }
     var filteredItems: [Item] { items.filtered(by: filter).sorted(using: sortOption) }
     var availableCategories: [String] { items.distinctCategories }
     var availableHashtags: [String] { items.distinctHashtags }
@@ -336,10 +345,10 @@ final class AppStore {
         save()
     }
 
-    func addMaintenanceCategory(name: String, monthlyAmount: Decimal, notes: String? = nil) {
+    func addMaintenanceCategory(name: String, monthlyAmount: Decimal, notes: String? = nil, isRequired: Bool = true) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
-        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: notes))
+        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: notes, isRequired: isRequired))
         save()
     }
 

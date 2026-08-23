@@ -9,6 +9,11 @@ struct MaintenanceView: View {
     @Environment(AppStore.self) private var store
     @State private var isShowingAddCategory = false
     @State private var editingCategory: MaintenanceCategory?
+    @State private var showRequiredOnly = false
+
+    private var visibleCategories: [MaintenanceCategory] {
+        showRequiredOnly ? store.maintenanceCategories.filter(\.isRequired) : store.maintenanceCategories
+    }
 
     private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -29,7 +34,7 @@ struct MaintenanceView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(store.maintenanceCategories) { category in
+                    ForEach(visibleCategories) { category in
                         categoryRow(for: category)
                     }
                 }
@@ -82,16 +87,39 @@ struct MaintenanceView: View {
     }
 
     private var totalsFooter: some View {
-        HStack {
-            Text("TOTAL")
-                .font(Theme.ledgerLabel(scale: store.textScale))
-                .tracking(0.6)
-                .foregroundStyle(Theme.inkSecondary)
-            Spacer()
-            Text("\(formatted(store.costToKeep))/mo")
-                .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
-                .monospacedDigit()
-                .foregroundStyle(Theme.ink)
+        VStack(spacing: 6) {
+            HStack {
+                Picker("", selection: $showRequiredOnly) {
+                    Text("All").tag(false)
+                    Text("Required Only").tag(true)
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 220)
+                .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(formatted(showRequiredOnly ? store.requiredMonthlyCost : store.costToKeep))/mo")
+                        .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.ink)
+                    Text("\(formatted((showRequiredOnly ? store.requiredMonthlyCost : store.costToKeep) * 12))/yr")
+                        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.inkSecondary)
+                }
+            }
+
+            if showRequiredOnly && store.optionalMonthlyCost > 0 {
+                HStack {
+                    Spacer()
+                    Text("Save \(formatted(store.optionalMonthlyCost))/mo by cutting Optional costs")
+                        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                        .foregroundStyle(Theme.terracotta)
+                }
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
@@ -112,6 +140,17 @@ struct MaintenanceView: View {
                         .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
                         .foregroundStyle(Theme.inkSecondary)
                         .help(notes)
+                }
+                if !category.isRequired {
+                    Text("OPTIONAL")
+                        .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .semibold, scale: store.textScale))
+                        .tracking(0.5)
+                        .foregroundStyle(Theme.terracotta)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Theme.terracotta.opacity(0.15))
+                        .clipShape(Capsule())
+                        .help("Discretionary -- counted out when viewing Required Only")
                 }
             }
             Spacer()
@@ -137,6 +176,7 @@ private struct MaintenanceCategoryFormView: View {
     @State private var name: String = ""
     @State private var monthlyAmountText: String = ""
     @State private var notes: String = ""
+    @State private var isRequired: Bool = true
 
     private var isEditing: Bool { category != nil }
 
@@ -166,6 +206,22 @@ private struct MaintenanceCategoryFormView: View {
                     TextField("e.g. 200", text: $monthlyAmountText)
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
+                }
+
+                labeledField("Required or Optional") {
+                    Picker("", selection: $isRequired) {
+                        Text("Required").tag(true)
+                        Text("Optional").tag(false)
+                    }
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+
+                    Text(isRequired
+                        ? "Effectively fixed -- still counted when viewing Required Only"
+                        : "Discretionary -- cut out when viewing Required Only, to see the savings")
+                        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
                 }
 
                 labeledField("Notes") {
@@ -226,6 +282,7 @@ private struct MaintenanceCategoryFormView: View {
             name = category.name
             monthlyAmountText = NSDecimalNumber(decimal: category.monthlyAmount).stringValue
             notes = category.notes ?? ""
+            isRequired = category.isRequired
         }
         // Button(.defaultAction) alone doesn't reliably fire on Return while
         // a TextField in this sheet has focus -- onSubmit is what actually
@@ -254,9 +311,10 @@ private struct MaintenanceCategoryFormView: View {
             existing.name = trimmedName
             existing.monthlyAmount = monthlyAmount
             existing.notes = finalNotes
+            existing.isRequired = isRequired
             store.updateMaintenanceCategory(existing)
         } else {
-            store.addMaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: finalNotes)
+            store.addMaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: finalNotes, isRequired: isRequired)
         }
         dismiss()
     }

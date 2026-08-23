@@ -45,4 +45,33 @@ struct MaintenanceTests {
 
         #expect(decoded.notes == nil)
     }
+
+    @Test("isRequired round-trips through JSON")
+    func isRequiredRoundTrips() throws {
+        let category = MaintenanceCategory(name: "Landscaping", monthlyAmount: 190, isRequired: false)
+        let data = try JSONEncoder().encode(category)
+        let decoded = try JSONDecoder().decode(MaintenanceCategory.self, from: data)
+
+        #expect(decoded.isRequired == false)
+    }
+
+    @Test("category defaults to required")
+    func categoryDefaultsToRequired() {
+        let category = MaintenanceCategory(name: "Oil", monthlyAmount: 200)
+        #expect(category.isRequired == true)
+    }
+
+    @Test("decoding JSON saved before isRequired existed defaults to required")
+    func decodingPreIsRequiredJSONDefaultsToRequired() throws {
+        let json = """
+        {
+            "id": "\(UUID().uuidString)",
+            "name": "Oil",
+            "monthlyAmount": 200
+        }
+        """
+        let decoded = try JSONDecoder().decode(MaintenanceCategory.self, from: Data(json.utf8))
+
+        #expect(decoded.isRequired == true)
+    }
 }

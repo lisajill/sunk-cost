@@ -111,12 +111,12 @@ struct SummaryHeaderView: View {
                 .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
-            Text("\(formatted(store.costToKeep))/mo")
+            Text("\(formatted(store.costToKeep))/mo (\(formatted(store.costToKeepAnnual))/yr)")
                 .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .semibold, scale: store.textScale))
                 .monospacedDigit()
                 .foregroundStyle(Theme.ink)
         }
-        .help("Total recurring monthly cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
+        .help("Total recurring monthly (and projected yearly) cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
     }
 
     private var ledgerDivider: some View {
