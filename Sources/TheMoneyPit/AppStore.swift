@@ -204,7 +204,7 @@ final class AppStore {
     /// -- for backups, or to hand data to another Mac.
     func exportData() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "The Money Pit Export.json"
+        panel.nameFieldStringValue = "Sunk Cost Export.json"
         panel.allowedContentTypes = [.json]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
@@ -260,7 +260,7 @@ final class AppStore {
     /// Numbers, and Google Sheets, all of which open/save CSV natively.
     func exportCSV() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "The Money Pit Export.csv"
+        panel.nameFieldStringValue = "Sunk Cost Export.csv"
         panel.allowedContentTypes = [.commaSeparatedText]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {

@@ -25,6 +25,17 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // Invisible button bound to Escape. `.onExitCommand` alone
+                // was unreliable for closing this window; a button with
+                // `.keyboardShortcut(.cancelAction)` is the mechanism macOS
+                // actually guarantees works for "Escape = cancel/close",
+                // regardless of which control currently has focus.
+                Button("") { NSApp.keyWindow?.close() }
+                    .keyboardShortcut(.cancelAction)
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+
                 appearanceSection
                 Divider()
                 storageSection
@@ -86,10 +97,10 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button("Export Data…") {
+                Button("Export Data (JSON)…") {
                     store.exportData()
                 }
-                Button("Import Data…") {
+                Button("Import Data (JSON)…") {
                     if let picked = store.pickFileToImport() {
                         pendingImport = picked
                     }
