@@ -20,10 +20,15 @@ struct LongTermComparisonView: View {
     @State private var newHomeDownPaymentText = ""
     @State private var newMortgageRateText = ""
     @State private var newMortgageTermText = ""
+    @State private var propertyTaxText = ""
+    @State private var insuranceText = ""
+    @State private var newPropertyTaxText = ""
+    @State private var newInsuranceText = ""
 
     private enum Field: Hashable {
         case years, appreciation, investmentReturn, rent, rentIncrease
         case newHomePrice, newHomeDownPayment, newMortgageRate, newMortgageTerm
+        case propertyTax, insurance, newPropertyTax, newInsurance
     }
     @FocusState private var focusedField: Field?
 
@@ -38,19 +43,6 @@ struct LongTermComparisonView: View {
     private func formatted(_ value: Decimal) -> String {
         let text = Self.currencyFormatter.string(from: value as NSDecimalNumber) ?? "$0"
         return store.isPrivacyModeEnabled ? Theme.mask(text) : text
-    }
-
-    /// Reference-only monthly payment for the hypothetical new mortgage in
-    /// Buying Elsewhere -- computed straight from the existing MortgageMath
-    /// utility, not fed into the net-worth projection itself.
-    private var newMortgagePaymentEstimate: Decimal? {
-        guard let newHomePrice = store.newHomePrice else { return nil }
-        let downPayment = store.newHomeDownPayment ?? store.sellScenario?.netProceeds ?? 0
-        return MortgageMath.monthlyPayment(
-            principal: newHomePrice - downPayment,
-            annualRatePercent: store.newMortgageRatePercent ?? store.mortgageInterestRatePercent ?? 6,
-            termYears: store.newMortgageTermYears ?? 30
-        )
     }
 
     var body: some View {
@@ -81,30 +73,13 @@ struct LongTermComparisonView: View {
                 }
             }
 
-            HStack(alignment: .top, spacing: 16) {
-                resultCard(
-                    title: "Staying",
-                    value: store.stayingNetWorthProjection,
-                    monthlyCost: (store.monthlyPayment).map { $0 + store.costToKeep },
-                    missingHint: "Needs your full mortgage details (original amount, rate, term, start date) in Settings"
-                )
-                resultCard(
-                    title: "Renting",
-                    value: store.rentingNetWorthProjection,
-                    monthlyCost: store.monthlyRent,
-                    missingHint: "Enter an assumed monthly rent below"
-                )
-                resultCard(
-                    title: "Buying Elsewhere",
-                    value: store.buyingElsewhereNetWorthProjection,
-                    monthlyCost: newMortgagePaymentEstimate,
-                    missingHint: "Enter a new home price below"
-                )
-            }
+            comparisonTable
 
             VStack(alignment: .leading, spacing: 14) {
                 assumptionGroup("Staying") {
                     percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
+                    percentField("Property Tax (per year)", text: $propertyTaxText, field: .propertyTax)
+                    dollarField("Insurance (per year)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
                 }
                 assumptionGroup("Renting") {
                     percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
@@ -115,6 +90,8 @@ struct LongTermComparisonView: View {
                     dollarField("New Home Price", text: $newHomePriceText, placeholder: "required", field: .newHomePrice)
                     dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds", field: .newHomeDownPayment)
                     percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
+                    percentField("Property Tax (per year)", text: $newPropertyTaxText, field: .newPropertyTax)
+                    dollarField("Insurance (per year)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
                     HStack(spacing: 4) {
                         Text("MORTGAGE TERM".uppercased())
                             .font(Theme.ledgerLabel(scale: store.textScale))
@@ -143,33 +120,83 @@ struct LongTermComparisonView: View {
         }
     }
 
-    private func resultCard(title: String, value: Decimal?, monthlyCost: Decimal?, missingHint: String) -> some View {
-        VStack(spacing: 4) {
-            Text(title.uppercased())
-                .font(Theme.ledgerLabel(scale: store.textScale))
-                .tracking(0.6)
-                .foregroundStyle(Theme.inkSecondary)
-                .multilineTextAlignment(.center)
+    private var comparisonTable: some View {
+        let keep = store.stayingMonthlyBreakdown
+        let rent = store.rentingMonthlyBreakdown
+        let buy = store.buyingElsewhereMonthlyBreakdown
 
-            if let value {
-                Text(formatted(value))
-                    .font(Theme.scaledFont(Theme.FontSize.title3, weight: .semibold, scale: store.textScale))
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.ink)
-                if let monthlyCost {
-                    Text("\(formatted(monthlyCost))/mo now")
-                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                        .foregroundStyle(Theme.inkSecondary)
+        return VStack(alignment: .leading, spacing: 10) {
+            Grid(alignment: .trailing, horizontalSpacing: 24, verticalSpacing: 6) {
+                GridRow {
+                    Text("")
+                    columnHeader("Keep")
+                    columnHeader("Rent")
+                    columnHeader("Buy")
                 }
-            } else {
-                Text(missingHint)
-                    .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                    .foregroundStyle(Theme.inkSecondary)
-                    .multilineTextAlignment(.center)
+
+                Divider().gridCellColumns(4)
+
+                tableRow("Principal & Interest", keep?.principalAndInterest, rent?.principalAndInterest, buy?.principalAndInterest)
+                tableRow("Property Tax", keep?.propertyTax, rent?.propertyTax, buy?.propertyTax)
+                tableRow("Insurance", keep?.insurance, rent?.insurance, buy?.insurance)
+                tableRow("Maintenance / Rent", keep?.maintenanceOrRent, rent?.maintenanceOrRent, buy?.maintenanceOrRent)
+
+                Divider().gridCellColumns(4)
+
+                tableRow("Total Monthly", keep?.total, rent?.total, buy?.total, bold: true)
+
+                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical]).frame(height: 6).gridCellColumns(4)
+
+                tableRow(
+                    "Ending Net Worth (\(store.projectionYears) yr)",
+                    store.stayingNetWorthProjection,
+                    store.rentingNetWorthProjection,
+                    store.buyingElsewhereNetWorthProjection,
+                    bold: true
+                )
             }
+
+            VStack(alignment: .leading, spacing: 2) {
+                if keep == nil {
+                    Text("Keep needs your full mortgage details (original amount, rate, term, start date) in Settings.")
+                }
+                if rent == nil {
+                    Text("Rent needs an assumed monthly rent below.")
+                }
+                if buy == nil {
+                    Text("Buy needs a new home price below.")
+                }
+                Text("Buy's Maintenance/Rent reuses today's Maintenance total as a stand-in for the new home's upkeep.")
+            }
+            .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+            .foregroundStyle(Theme.inkSecondary)
         }
-        .frame(maxWidth: .infinity)
-        .help("Projected net worth \(store.projectionYears) years from now")
+    }
+
+    private func columnHeader(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(Theme.ledgerLabel(scale: store.textScale))
+            .tracking(0.6)
+            .foregroundStyle(Theme.inkSecondary)
+    }
+
+    private func tableRow(_ label: String, _ keep: Decimal?, _ rent: Decimal?, _ buy: Decimal?, bold: Bool = false) -> some View {
+        GridRow {
+            Text(label)
+                .font(Theme.scaledFont(Theme.FontSize.callout, weight: bold ? .semibold : .regular, scale: store.textScale))
+                .foregroundStyle(Theme.inkSecondary)
+                .gridColumnAlignment(.leading)
+            tableCell(keep, bold: bold)
+            tableCell(rent, bold: bold)
+            tableCell(buy, bold: bold)
+        }
+    }
+
+    private func tableCell(_ value: Decimal?, bold: Bool) -> some View {
+        Text(value.map(formatted) ?? "—")
+            .font(Theme.scaledFont(Theme.FontSize.callout, weight: bold ? .semibold : .regular, scale: store.textScale))
+            .monospacedDigit()
+            .foregroundStyle(value == nil ? Theme.inkSecondary : Theme.ink)
     }
 
     @ViewBuilder
@@ -231,6 +258,10 @@ struct LongTermComparisonView: View {
         newHomeDownPaymentText = store.newHomeDownPayment.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
         newMortgageRateText = NSDecimalNumber(decimal: store.newMortgageRatePercent ?? store.mortgageInterestRatePercent ?? 6).stringValue
         newMortgageTermText = String(store.newMortgageTermYears ?? 30)
+        propertyTaxText = NSDecimalNumber(decimal: store.propertyTaxPercent ?? 1.2).stringValue
+        insuranceText = NSDecimalNumber(decimal: store.homeownersInsuranceAnnual ?? 1500).stringValue
+        newPropertyTaxText = NSDecimalNumber(decimal: store.newPropertyTaxPercent ?? 1.2).stringValue
+        newInsuranceText = NSDecimalNumber(decimal: store.newHomeownersInsuranceAnnual ?? 1500).stringValue
     }
 
     private func commit() {
@@ -251,7 +282,11 @@ struct LongTermComparisonView: View {
             newHomePrice: decimal(newHomePriceText),
             newHomeDownPayment: decimal(newHomeDownPaymentText),
             newMortgageRatePercent: decimal(newMortgageRateText),
-            newMortgageTermYears: int(newMortgageTermText)
+            newMortgageTermYears: int(newMortgageTermText),
+            propertyTaxPercent: decimal(propertyTaxText),
+            homeownersInsuranceAnnual: decimal(insuranceText),
+            newPropertyTaxPercent: decimal(newPropertyTaxText),
+            newHomeownersInsuranceAnnual: decimal(newInsuranceText)
         )
         syncFields()
     }

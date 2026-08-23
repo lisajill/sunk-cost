@@ -42,6 +42,14 @@ public struct AppData: Codable, Equatable, Sendable {
     public var newMortgageRatePercent: Decimal?
     public var newMortgageTermYears: Int?
 
+    /// PITI's Taxes and Insurance -- property tax as %/year of home value
+    /// (scales with the assumed home value), insurance as a flat $/year.
+    /// Separate figures for the current home and the hypothetical new one.
+    public var propertyTaxPercent: Decimal?
+    public var homeownersInsuranceAnnual: Decimal?
+    public var newPropertyTaxPercent: Decimal?
+    public var newHomeownersInsuranceAnnual: Decimal?
+
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
@@ -63,7 +71,11 @@ public struct AppData: Codable, Equatable, Sendable {
         newHomePrice: Decimal? = nil,
         newHomeDownPayment: Decimal? = nil,
         newMortgageRatePercent: Decimal? = nil,
-        newMortgageTermYears: Int? = nil
+        newMortgageTermYears: Int? = nil,
+        propertyTaxPercent: Decimal? = nil,
+        homeownersInsuranceAnnual: Decimal? = nil,
+        newPropertyTaxPercent: Decimal? = nil,
+        newHomeownersInsuranceAnnual: Decimal? = nil
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -86,6 +98,10 @@ public struct AppData: Codable, Equatable, Sendable {
         self.newHomeDownPayment = newHomeDownPayment
         self.newMortgageRatePercent = newMortgageRatePercent
         self.newMortgageTermYears = newMortgageTermYears
+        self.propertyTaxPercent = propertyTaxPercent
+        self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
+        self.newPropertyTaxPercent = newPropertyTaxPercent
+        self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -94,7 +110,8 @@ public struct AppData: Codable, Equatable, Sendable {
              maintenanceCategories, realtorCommissionPercent, closingCostsPercent,
              comparisonProjectionYears, homeAppreciationPercent, investmentReturnPercent,
              monthlyRent, rentAnnualIncreasePercent, newHomePrice, newHomeDownPayment,
-             newMortgageRatePercent, newMortgageTermYears
+             newMortgageRatePercent, newMortgageTermYears, propertyTaxPercent,
+             homeownersInsuranceAnnual, newPropertyTaxPercent, newHomeownersInsuranceAnnual
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -123,5 +140,9 @@ public struct AppData: Codable, Equatable, Sendable {
         newHomeDownPayment = try container.decodeIfPresent(Decimal.self, forKey: .newHomeDownPayment)
         newMortgageRatePercent = try container.decodeIfPresent(Decimal.self, forKey: .newMortgageRatePercent)
         newMortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .newMortgageTermYears)
+        propertyTaxPercent = try container.decodeIfPresent(Decimal.self, forKey: .propertyTaxPercent)
+        homeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .homeownersInsuranceAnnual)
+        newPropertyTaxPercent = try container.decodeIfPresent(Decimal.self, forKey: .newPropertyTaxPercent)
+        newHomeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .newHomeownersInsuranceAnnual)
     }
 }

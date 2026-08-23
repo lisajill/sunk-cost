@@ -5,6 +5,17 @@ import AppKit
 import UniformTypeIdentifiers
 import SunkCostCore
 
+/// PITI-style monthly cost breakdown for one Compare scenario -- Renting
+/// only ever populates `maintenanceOrRent`, since it has no mortgage, tax,
+/// or insurance of its own.
+struct MonthlyCostBreakdown {
+    var principalAndInterest: Decimal = 0
+    var propertyTax: Decimal = 0
+    var insurance: Decimal = 0
+    var maintenanceOrRent: Decimal = 0
+    var total: Decimal { principalAndInterest + propertyTax + insurance + maintenanceOrRent }
+}
+
 @Observable
 @MainActor
 final class AppStore {
@@ -29,6 +40,10 @@ final class AppStore {
     var newHomeDownPayment: Decimal?
     var newMortgageRatePercent: Decimal?
     var newMortgageTermYears: Int?
+    var propertyTaxPercent: Decimal?
+    var homeownersInsuranceAnnual: Decimal?
+    var newPropertyTaxPercent: Decimal?
+    var newHomeownersInsuranceAnnual: Decimal?
     var filter = ItemFilter()
     var sortOption: SortOption {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
@@ -165,6 +180,43 @@ final class AppStore {
         )
     }
 
+    /// Today's PITI breakdown for each Compare scenario -- nil under the
+    /// same gating as the net-worth projections above (this is about
+    /// *today's* monthly cost, so it doesn't need the projection horizon).
+    var stayingMonthlyBreakdown: MonthlyCostBreakdown? {
+        guard let homeValue, let principalAndInterest = monthlyPayment else { return nil }
+        return MonthlyCostBreakdown(
+            principalAndInterest: principalAndInterest,
+            propertyTax: monthlyPropertyTax(homeValue: homeValue, annualTaxPercent: propertyTaxPercent ?? 1.2),
+            insurance: (homeownersInsuranceAnnual ?? 1500) / 12,
+            maintenanceOrRent: costToKeep
+        )
+    }
+
+    var rentingMonthlyBreakdown: MonthlyCostBreakdown? {
+        guard let monthlyRent else { return nil }
+        return MonthlyCostBreakdown(maintenanceOrRent: monthlyRent)
+    }
+
+    /// Maintenance reuses today's `costToKeep` as a stand-in for the new
+    /// home's upkeep -- a second full Maintenance estimate for a home she
+    /// hasn't picked wasn't part of what was scoped.
+    var buyingElsewhereMonthlyBreakdown: MonthlyCostBreakdown? {
+        guard let newHomePrice else { return nil }
+        let downPayment = newHomeDownPayment ?? sellScenario?.netProceeds ?? 0
+        let principalAndInterest = MortgageMath.monthlyPayment(
+            principal: newHomePrice - downPayment,
+            annualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
+            termYears: newMortgageTermYears ?? 30
+        ) ?? 0
+        return MonthlyCostBreakdown(
+            principalAndInterest: principalAndInterest,
+            propertyTax: monthlyPropertyTax(homeValue: newHomePrice, annualTaxPercent: newPropertyTaxPercent ?? 1.2),
+            insurance: (newHomeownersInsuranceAnnual ?? 1500) / 12,
+            maintenanceOrRent: costToKeep
+        )
+    }
+
     /// The manually-entered payment if there is one; otherwise a calculated
     /// estimate from amount/rate/term, if all three are present.
     var monthlyPayment: Decimal? {
@@ -237,6 +289,10 @@ final class AppStore {
             newHomeDownPayment = data.newHomeDownPayment
             newMortgageRatePercent = data.newMortgageRatePercent
             newMortgageTermYears = data.newMortgageTermYears
+            propertyTaxPercent = data.propertyTaxPercent
+            homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
+            newPropertyTaxPercent = data.newPropertyTaxPercent
+            newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
@@ -335,7 +391,11 @@ final class AppStore {
         newHomePrice: Decimal?,
         newHomeDownPayment: Decimal?,
         newMortgageRatePercent: Decimal?,
-        newMortgageTermYears: Int?
+        newMortgageTermYears: Int?,
+        propertyTaxPercent: Decimal?,
+        homeownersInsuranceAnnual: Decimal?,
+        newPropertyTaxPercent: Decimal?,
+        newHomeownersInsuranceAnnual: Decimal?
     ) {
         self.comparisonProjectionYears = projectionYears
         self.homeAppreciationPercent = homeAppreciationPercent
@@ -346,6 +406,10 @@ final class AppStore {
         self.newHomeDownPayment = newHomeDownPayment
         self.newMortgageRatePercent = newMortgageRatePercent
         self.newMortgageTermYears = newMortgageTermYears
+        self.propertyTaxPercent = propertyTaxPercent
+        self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
+        self.newPropertyTaxPercent = newPropertyTaxPercent
+        self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
         save()
     }
 
@@ -437,6 +501,10 @@ final class AppStore {
         newHomeDownPayment = data.newHomeDownPayment
         newMortgageRatePercent = data.newMortgageRatePercent
         newMortgageTermYears = data.newMortgageTermYears
+        propertyTaxPercent = data.propertyTaxPercent
+        homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
+        newPropertyTaxPercent = data.newPropertyTaxPercent
+        newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
         save()
     }
 
@@ -462,7 +530,11 @@ final class AppStore {
             newHomePrice: newHomePrice,
             newHomeDownPayment: newHomeDownPayment,
             newMortgageRatePercent: newMortgageRatePercent,
-            newMortgageTermYears: newMortgageTermYears
+            newMortgageTermYears: newMortgageTermYears,
+            propertyTaxPercent: propertyTaxPercent,
+            homeownersInsuranceAnnual: homeownersInsuranceAnnual,
+            newPropertyTaxPercent: newPropertyTaxPercent,
+            newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual
         )
     }
 
