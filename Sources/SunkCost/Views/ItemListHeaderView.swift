@@ -9,23 +9,28 @@ struct ItemListHeaderView: View {
 
     var body: some View {
         HStack {
-            columnButton(title: "Item", column: .item, alignment: .leading)
+            columnButton(title: "Item", column: .item)
             Spacer(minLength: 8)
-            columnButton(title: "Date", column: .date, alignment: .trailing)
+            columnButton(title: "Date", column: .date)
                 .frame(width: ItemListColumn.date * store.textScale, alignment: .trailing)
-            columnButton(title: "Amount", column: .amount, alignment: .trailing)
+            columnButton(title: "Amount", column: .amount)
                 .frame(width: ItemListColumn.amount * store.textScale, alignment: .trailing)
         }
         .padding(.horizontal)
         .padding(.top, 10)
     }
 
-    private func columnButton(title: String, column: SortColumn, alignment: Alignment) -> some View {
+    // A tightly-sized label (no internal Spacer) so the outer .frame's
+    // alignment is what positions it -- an earlier version used an internal
+    // Spacer(minLength: 0) to fake trailing alignment, which let long labels
+    // (e.g. "AMOUNT") render past their column's bounds with nothing to
+    // clip them, and made the button's actual hit-test area drift from
+    // what was visibly drawn.
+    private func columnButton(title: String, column: SortColumn) -> some View {
         Button {
             store.sortOption = toggledSortOption(current: store.sortOption, tapped: column)
         } label: {
             HStack(spacing: 3) {
-                if alignment == .trailing { Spacer(minLength: 0) }
                 Text(title.uppercased())
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(0.6)
@@ -33,7 +38,6 @@ struct ItemListHeaderView: View {
                     Image(systemName: indicator)
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .bold, scale: store.textScale))
                 }
-                if alignment == .leading { Spacer(minLength: 0) }
             }
         }
         .buttonStyle(.plain)

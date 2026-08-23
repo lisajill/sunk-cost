@@ -174,11 +174,17 @@ struct SummaryHeaderView: View {
 
             if let netHouseGain = store.netHouseGain {
                 let sign = netHouseGain >= 0 ? "+" : ""
-                Text("Net Gain: \(sign)\(formatted(netHouseGain))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
-                    .monospacedDigit()
-                    .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
-                    .help("Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value.")
+                let netGainTooltip = "Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value."
+                HStack(spacing: 3) {
+                    Text("Net Gain: \(sign)\(formatted(netHouseGain))")
+                        .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
+                        .monospacedDigit()
+                        .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
+                    Image(systemName: "info.circle")
+                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                }
+                .help(netGainTooltip)
             } else if store.homeValue != nil {
                 Text("Add your Purchase Price in Settings to see Net Gain")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))

@@ -67,6 +67,9 @@ struct ContentView: View {
                 }
                 .listStyle(.inset)
                 .id(store.appearanceMode)
+
+                ItemListFooterView()
+                    .id(store.appearanceMode)
             case .maintenance:
                 MaintenanceView()
                     .id(store.appearanceMode)

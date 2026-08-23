@@ -35,6 +35,8 @@ struct MaintenanceView: View {
                 }
                 .listStyle(.inset)
                 .id(store.appearanceMode)
+
+                totalsFooter
             }
         }
         .frame(minWidth: 560, minHeight: 480)
@@ -77,6 +79,26 @@ struct MaintenanceView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+
+    private var totalsFooter: some View {
+        HStack {
+            Text("TOTAL")
+                .font(Theme.ledgerLabel(scale: store.textScale))
+                .tracking(0.6)
+                .foregroundStyle(Theme.inkSecondary)
+            Spacer()
+            Text("\(formatted(store.costToKeep))/mo")
+                .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
+                .monospacedDigit()
+                .foregroundStyle(Theme.ink)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(Theme.ledgerPaper)
+        .overlay(alignment: .top) {
+            Rectangle().fill(Theme.ledgerBorder).frame(height: 1)
+        }
     }
 
     private func categoryRow(for category: MaintenanceCategory) -> some View {
