@@ -124,6 +124,18 @@ for a value that isn't set. Don't backfill a fabricated default (e.g.
 "today") when one is missing; the spreadsheet-import script and one
 production data-cleanup already had to walk that back once.
 
+**Return key in sheet forms**: `Button(...).keyboardShortcut(.defaultAction)`
+alone does not reliably submit a form when a `TextField` in the same sheet
+has focus — pressing Return can silently do nothing. Every save/add sheet
+(`ItemFormView`, the Maintenance category/payment sheets, the Settings
+Purchase Price and Mortgage sections) also has `.onSubmit { save() }` on
+the containing view, which is what actually wires Return to the save
+action; the button's `.keyboardShortcut(.defaultAction)` is still kept so
+Return works even when nothing has focus yet. Since `.onSubmit` bypasses
+whatever `.disabled(...)` condition guards the button, each `save()`
+re-checks that same condition (e.g. name/category non-empty) and returns
+early instead of saving invalid state.
+
 **Packaging (`AppPackaging/`)**: `build_app.sh` does `swift build -c
 release`, copies the resulting binary + `Info.plist` + `AppIcon.icns` into
 a hand-built `.app` bundle skeleton, then codesigns ad-hoc
