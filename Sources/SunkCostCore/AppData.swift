@@ -3,6 +3,9 @@ import Foundation
 public struct AppData: Codable, Equatable, Sendable {
     public var items: [Item]
     public var homeValue: Decimal?
+    /// What was actually paid for the house -- distinct from Home Value
+    /// (today's estimate), lets the app compute real appreciation.
+    public var purchasePrice: Decimal?
 
     // Original loan details are kept for reference; the balance is what
     // actually feeds the equity calculation, and is meant to be updated by
@@ -22,6 +25,7 @@ public struct AppData: Codable, Equatable, Sendable {
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
+        purchasePrice: Decimal? = nil,
         mortgageOriginalAmount: Decimal? = nil,
         mortgageInterestRatePercent: Decimal? = nil,
         mortgageStartDate: Date? = nil,
@@ -33,6 +37,7 @@ public struct AppData: Codable, Equatable, Sendable {
     ) {
         self.items = items
         self.homeValue = homeValue
+        self.purchasePrice = purchasePrice
         self.mortgageOriginalAmount = mortgageOriginalAmount
         self.mortgageInterestRatePercent = mortgageInterestRatePercent
         self.mortgageStartDate = mortgageStartDate
@@ -44,7 +49,7 @@ public struct AppData: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case items, homeValue, mortgageOriginalAmount, mortgageInterestRatePercent,
+        case items, homeValue, purchasePrice, mortgageOriginalAmount, mortgageInterestRatePercent,
              mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
              maintenanceCategories, maintenancePayments
     }
@@ -56,6 +61,7 @@ public struct AppData: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         items = try container.decodeIfPresent([Item].self, forKey: .items) ?? []
         homeValue = try container.decodeIfPresent(Decimal.self, forKey: .homeValue)
+        purchasePrice = try container.decodeIfPresent(Decimal.self, forKey: .purchasePrice)
         mortgageOriginalAmount = try container.decodeIfPresent(Decimal.self, forKey: .mortgageOriginalAmount)
         mortgageInterestRatePercent = try container.decodeIfPresent(Decimal.self, forKey: .mortgageInterestRatePercent)
         mortgageStartDate = try container.decodeIfPresent(Date.self, forKey: .mortgageStartDate)

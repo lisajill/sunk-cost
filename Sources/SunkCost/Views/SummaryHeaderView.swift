@@ -182,6 +182,15 @@ struct SummaryHeaderView: View {
                     .help("Home Value minus spending on Value-type items only (things that stay with the house, like a fence or a deck) — Moveable items like furniture aren't counted here since they don't raise the home's value.")
             }
 
+            if let appreciation = store.appreciation {
+                let sign = appreciation >= 0 ? "+" : ""
+                Text("Appreciation: \(sign)\(formatted(appreciation))")
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
+                    .monospacedDigit()
+                    .foregroundStyle(appreciation >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .help("Home Value minus Purchase Price — how much the house itself has gained or lost in value since you bought it, separate from money you've put into it.")
+            }
+
             if let equity = store.equity {
                 Text("Equity: \(formatted(equity))")
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))

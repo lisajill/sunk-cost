@@ -5,6 +5,7 @@ import SunkCostCore
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
 
+    @State private var purchasePriceText: String = ""
     @State private var mortgageOriginalAmountText: String = ""
     @State private var mortgageInterestRateText: String = ""
     @State private var mortgageStartDate: Date = Date()
@@ -21,6 +22,7 @@ struct SettingsView: View {
     @State private var pendingCSVImport: (url: URL, items: [Item])?
 
     @State private var showMortgageSavedConfirmation = false
+    @State private var showPurchasePriceSavedConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -44,6 +46,8 @@ struct SettingsView: View {
                 Divider()
                 categoriesSection
                 Divider()
+                purchasePriceSection
+                Divider()
                 mortgageSection
 
                 if let error = store.loadError {
@@ -57,7 +61,10 @@ struct SettingsView: View {
         .frame(minWidth: 480, idealWidth: 480, minHeight: 620, idealHeight: 620)
         .tint(Theme.positive)
         .environment(\.appTextScale, store.textScale)
-        .onAppear { populateMortgageFields() }
+        .onAppear {
+            populateMortgageFields()
+            populatePurchasePriceField()
+        }
         .onExitCommand { NSApp.keyWindow?.close() }
         // Same stale-color fix as the main window: Theme's custom
         // NSColor(dynamicProvider:)-based colors can lag behind a live
@@ -301,6 +308,39 @@ struct SettingsView: View {
         store.availableCategories.filter { $0 != category }
     }
 
+    private var purchasePriceSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Home Purchase")
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
+                .foregroundStyle(Theme.ink)
+
+            Text("What you actually paid for the house. Used to show Appreciation (Home Value minus Purchase Price) alongside Equity on the main screen.")
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
+                .foregroundStyle(.secondary)
+
+            labeledField("Purchase Price") {
+                TextField("e.g. 380000", text: $purchasePriceText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
+            }
+
+            HStack(spacing: 8) {
+                Button("Save Purchase Price") {
+                    savePurchasePrice()
+                }
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+
+                if showPurchasePriceSavedConfirmation {
+                    Label("Saved", systemImage: "checkmark.circle.fill")
+                        .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
+                        .foregroundStyle(Theme.positive)
+                        .transition(.opacity)
+                }
+            }
+        }
+    }
+
     private var mortgageSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Mortgage")
@@ -387,6 +427,26 @@ struct SettingsView: View {
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
             content()
+        }
+    }
+
+    private func populatePurchasePriceField() {
+        if let price = store.purchasePrice {
+            purchasePriceText = NSDecimalNumber(decimal: price).stringValue
+        }
+    }
+
+    private func savePurchasePrice() {
+        store.setPurchasePrice(decimal(from: purchasePriceText))
+
+        withAnimation {
+            showPurchasePriceSavedConfirmation = true
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            withAnimation {
+                showPurchasePriceSavedConfirmation = false
+            }
         }
     }
 

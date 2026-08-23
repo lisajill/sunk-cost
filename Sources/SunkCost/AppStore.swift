@@ -10,6 +10,7 @@ import SunkCostCore
 final class AppStore {
     var items: [Item] = []
     var homeValue: Decimal?
+    var purchasePrice: Decimal?
     var mortgageOriginalAmount: Decimal?
     var mortgageInterestRatePercent: Decimal?
     var mortgageStartDate: Date?
@@ -59,6 +60,12 @@ final class AppStore {
         }
     }
     var equity: Decimal? { computeEquity(homeValue: homeValue, mortgageBalance: mortgageBalance) }
+    /// Home Value minus what was actually paid for the house -- raw market
+    /// appreciation, separate from Value-type spending.
+    var appreciation: Decimal? {
+        guard let homeValue, let purchasePrice else { return nil }
+        return homeValue - purchasePrice
+    }
 
     /// The manually-entered payment if there is one; otherwise a calculated
     /// estimate from amount/rate/term, if all three are present.
@@ -113,6 +120,7 @@ final class AppStore {
             let data = try ItemStore.load(from: fileURL)
             items = data.items
             homeValue = data.homeValue
+            purchasePrice = data.purchasePrice
             mortgageOriginalAmount = data.mortgageOriginalAmount
             mortgageInterestRatePercent = data.mortgageInterestRatePercent
             mortgageStartDate = data.mortgageStartDate
@@ -189,6 +197,11 @@ final class AppStore {
         save()
     }
 
+    func setPurchasePrice(_ value: Decimal?) {
+        purchasePrice = value
+        save()
+    }
+
     func setMortgage(
         originalAmount: Decimal?,
         interestRatePercent: Decimal?,
@@ -258,6 +271,7 @@ final class AppStore {
     func applyImportedData(_ data: AppData) {
         items = data.items
         homeValue = data.homeValue
+        purchasePrice = data.purchasePrice
         mortgageOriginalAmount = data.mortgageOriginalAmount
         mortgageInterestRatePercent = data.mortgageInterestRatePercent
         mortgageStartDate = data.mortgageStartDate
@@ -273,6 +287,7 @@ final class AppStore {
         AppData(
             items: items,
             homeValue: homeValue,
+            purchasePrice: purchasePrice,
             mortgageOriginalAmount: mortgageOriginalAmount,
             mortgageInterestRatePercent: mortgageInterestRatePercent,
             mortgageStartDate: mortgageStartDate,

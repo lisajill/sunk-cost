@@ -90,6 +90,34 @@ struct ItemStoreTests {
         #expect(loaded.items.first?.dateAdded == nil)
     }
 
+    @Test("purchase price round-trips")
+    func purchasePriceRoundTrips() throws {
+        let url = makeTempFileURL()
+        let original = AppData(homeValue: 450_000, purchasePrice: 380_000)
+
+        try ItemStore.save(original, to: url)
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded == original)
+    }
+
+    @Test("loading JSON saved before purchase price existed gives nil purchase price")
+    func loadingPrePurchasePriceJSONGivesNil() throws {
+        let url = makeTempFileURL()
+        let json = """
+        {
+            "items": [],
+            "homeValue": 450000
+        }
+        """
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.purchasePrice == nil)
+    }
+
     @Test("maintenance categories and payments round-trip")
     func maintenanceRoundTrips() throws {
         let url = makeTempFileURL()
