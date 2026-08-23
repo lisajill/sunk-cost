@@ -92,10 +92,15 @@ struct SellScenarioView: View {
             if let netProfitOrLoss = scenario.netProfitOrLoss {
                 let sign = netProfitOrLoss >= 0 ? "+" : ""
                 VStack(spacing: 2) {
-                    Text(netProfitOrLoss >= 0 ? "PROFIT VS. TOTAL INVESTED" : "LOSS VS. TOTAL INVESTED")
-                        .font(Theme.ledgerLabel(scale: store.textScale))
-                        .tracking(0.6)
-                        .foregroundStyle(Theme.inkSecondary)
+                    HStack(spacing: 3) {
+                        Text(netProfitOrLoss >= 0 ? "PROFIT VS. TOTAL INVESTED" : "LOSS VS. TOTAL INVESTED")
+                            .font(Theme.ledgerLabel(scale: store.textScale))
+                            .tracking(0.6)
+                            .foregroundStyle(Theme.inkSecondary)
+                        Image(systemName: "info.circle")
+                            .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                            .foregroundStyle(Theme.inkSecondary)
+                    }
                     Text("\(sign)\(formatted(netProfitOrLoss))")
                         .font(Theme.scaledFont(Theme.FontSize.title2, weight: .semibold, scale: store.textScale))
                         .monospacedDigit()

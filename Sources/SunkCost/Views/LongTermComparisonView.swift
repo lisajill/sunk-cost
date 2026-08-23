@@ -45,6 +45,46 @@ struct LongTermComparisonView: View {
         return store.isPrivacyModeEnabled ? Theme.mask(text) : text
     }
 
+    /// A short, plain-language walkthrough of what's driving each number
+    /// above -- generated from the same figures already on screen, not a
+    /// separate/hardcoded explanation that could drift out of sync with
+    /// them.
+    private var explanationLines: [String] {
+        var lines: [String] = []
+
+        let results: [(name: String, value: Decimal?)] = [
+            ("Staying", store.stayingNetWorthProjection),
+            ("Renting", store.rentingNetWorthProjection),
+            ("Buying elsewhere", store.buyingElsewhereNetWorthProjection),
+        ]
+        let available = results.compactMap { entry in entry.value.map { (entry.name, $0) } }
+        if let winner = available.max(by: { $0.1 < $1.1 }) {
+            lines.append("Over \(store.projectionYears) years, \(winner.0) comes out ahead in this projection, at \(formatted(winner.1)).")
+        }
+
+        if store.stayingNetWorthProjection != nil {
+            lines.append("Staying grows your net worth two ways: your home's value goes up (the appreciation assumption), and your mortgage balance goes down as you keep paying it off.")
+        }
+
+        if store.rentingNetWorthProjection != nil {
+            lines.append("Renting doesn't build any home equity — all of its growth comes from investing today's sale proceeds and letting that grow instead.")
+        }
+
+        if store.buyingElsewhereNetWorthProjection != nil {
+            let netProceeds = store.sellScenario?.netProceeds ?? 0
+            let newHomePrice = store.newHomePrice ?? 0
+            let downPaymentUsed = min(store.newHomeDownPayment ?? netProceeds, newHomePrice)
+            let leftover = max(netProceeds - downPaymentUsed, 0)
+            if leftover > 0 {
+                lines.append("Buying elsewhere grows two ways too: the new home's own equity, plus \(formatted(leftover)) of today's sale proceeds that isn't going toward the down payment — invested right alongside it, the same way Renting invests its proceeds. That leftover cash can end up doing more of the work than the new mortgage itself.")
+            } else {
+                lines.append("Buying elsewhere grows the same way Staying does — home appreciation plus mortgage paydown — just on a different home and a different loan.")
+            }
+        }
+
+        return lines
+    }
+
     /// New Home Price minus the down payment actually applied to it -- the
     /// size of the new mortgage itself, so the P&I figure above can
     /// actually be sanity-checked instead of requiring mental subtraction.
@@ -93,51 +133,36 @@ struct LongTermComparisonView: View {
                 }
             }
 
-            comparisonTable
+            VStack(alignment: .leading, spacing: 16) {
+                comparisonTable
 
-            Text("ASSUMPTIONS")
-                .font(Theme.ledgerLabel(scale: store.textScale))
-                .tracking(0.6)
-                .foregroundStyle(Theme.inkSecondary)
+                Divider()
 
-            HStack(alignment: .top, spacing: 24) {
-                assumptionGroup("Staying") {
-                    percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
-                    percentField("Property Tax (per year)", text: $propertyTaxText, field: .propertyTax)
-                    dollarField("Insurance (per year)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
-                }
-                assumptionGroup("Renting") {
-                    percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
-                    dollarField("Monthly Rent", text: $rentText, placeholder: "required", field: .rent)
-                    percentField("Rent Increase (per year)", text: $rentIncreaseText, field: .rentIncrease)
-                }
-                assumptionGroup("Buying Elsewhere") {
-                    dollarField("New Home Price", text: $newHomePriceText, placeholder: "required", field: .newHomePrice)
-                    dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds", field: .newHomeDownPayment)
-                    if let newLoanAmount {
-                        Text("→ Loan Amount: \(formatted(newLoanAmount))")
-                            .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                            .foregroundStyle(Theme.inkSecondary)
-                    }
-                    percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
-                    percentField("Property Tax (per year)", text: $newPropertyTaxText, field: .newPropertyTax)
-                    dollarField("Insurance (per year)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
-                    HStack(spacing: 4) {
-                        Text("MORTGAGE TERM".uppercased())
-                            .font(Theme.ledgerLabel(scale: store.textScale))
-                            .tracking(0.6)
-                            .foregroundStyle(Theme.inkSecondary)
-                        TextField("", text: $newMortgageTermText)
-                            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 50)
-                            .focused($focusedField, equals: .newMortgageTerm)
-                            .onSubmit { commit() }
-                        Text("years")
-                            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                            .foregroundStyle(Theme.inkSecondary)
+                Text("ASSUMPTIONS")
+                    .font(Theme.ledgerLabel(scale: store.textScale))
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.inkSecondary)
+
+                assumptionColumns
+            }
+            .padding(20)
+            .background(Theme.ledgerPaper)
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.ledgerBorder, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            if !explanationLines.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("IN PLAIN ENGLISH")
+                        .font(Theme.ledgerLabel(scale: store.textScale))
+                        .tracking(0.6)
+                        .foregroundStyle(Theme.terracotta)
+                    ForEach(explanationLines, id: \.self) { line in
+                        Text(line)
+                            .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
+                            .foregroundStyle(Theme.ink)
                     }
                 }
+                .frame(maxWidth: 640, alignment: .leading)
             }
         }
         .onAppear { syncFields() }
@@ -147,6 +172,48 @@ struct LongTermComparisonView: View {
         // was typed. See CLAUDE.md's Return-key/onSubmit note.
         .onChange(of: focusedField) { oldValue, _ in
             if oldValue != nil { commit() }
+        }
+    }
+
+    private var assumptionColumns: some View {
+        HStack(alignment: .top, spacing: 24) {
+            assumptionGroup("Staying") {
+                percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
+                percentField("Property Tax (per year)", text: $propertyTaxText, field: .propertyTax)
+                dollarField("Insurance (per year)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
+            }
+            assumptionGroup("Renting") {
+                percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
+                dollarField("Monthly Rent", text: $rentText, placeholder: "required", field: .rent)
+                percentField("Rent Increase (per year)", text: $rentIncreaseText, field: .rentIncrease)
+            }
+            assumptionGroup("Buying Elsewhere") {
+                dollarField("New Home Price", text: $newHomePriceText, placeholder: "required", field: .newHomePrice)
+                dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds", field: .newHomeDownPayment)
+                if let newLoanAmount {
+                    Text("→ Loan Amount: \(formatted(newLoanAmount))")
+                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                }
+                percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
+                percentField("Property Tax (per year)", text: $newPropertyTaxText, field: .newPropertyTax)
+                dollarField("Insurance (per year)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
+                HStack(spacing: 4) {
+                    Text("MORTGAGE TERM".uppercased())
+                        .font(Theme.ledgerLabel(scale: store.textScale))
+                        .tracking(0.6)
+                        .foregroundStyle(Theme.inkSecondary)
+                    TextField("", text: $newMortgageTermText)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 50)
+                        .focused($focusedField, equals: .newMortgageTerm)
+                        .onSubmit { commit() }
+                    Text("years")
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                }
+            }
         }
     }
 

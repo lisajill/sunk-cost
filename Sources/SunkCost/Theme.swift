@@ -102,3 +102,19 @@ enum Theme {
         String(text.map { $0.isNumber ? "•" : $0 })
     }
 }
+
+extension View {
+    /// Appends a small "hover for more" info icon and attaches the tooltip
+    /// to the whole group. For plain text/number displays specifically --
+    /// unlike a button or picker, a bare `.help()` on static text gives no
+    /// visual hint that hovering does anything.
+    func infoTooltip(_ text: String, scale: CGFloat) -> some View {
+        HStack(spacing: 3) {
+            self
+            Image(systemName: "info.circle")
+                .font(Theme.scaledFont(Theme.FontSize.caption2, scale: scale))
+                .foregroundStyle(Theme.inkSecondary)
+        }
+        .help(text)
+    }
+}

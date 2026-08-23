@@ -27,7 +27,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(1.4)
                     .foregroundStyle(Theme.inkSecondary)
-                    .help("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.")
+                    .infoTooltip("Owned + Gone items — everything you've actually paid for. Planned items aren't counted yet.", scale: store.textScale)
 
                 Text(formatted(store.totals.totalSpent))
                     .font(Theme.totalNumeral(scale: store.textScale))
@@ -116,7 +116,7 @@ struct SummaryHeaderView: View {
                 .monospacedDigit()
                 .foregroundStyle(Theme.ink)
         }
-        .help("Total recurring monthly (and projected yearly) cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
+        .infoTooltip("Total recurring monthly (and projected yearly) cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.", scale: store.textScale)
     }
 
     private var ledgerDivider: some View {
@@ -131,12 +131,17 @@ struct SummaryHeaderView: View {
 
     private func statTile(title: String, value: Decimal, color: Color, tooltip: String) -> some View {
         VStack(spacing: 3) {
-            Text(title.uppercased())
-                .font(Theme.ledgerLabel(scale: store.textScale))
-                .tracking(0.6)
-                .foregroundStyle(Theme.inkSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+            HStack(spacing: 3) {
+                Text(title.uppercased())
+                    .font(Theme.ledgerLabel(scale: store.textScale))
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.inkSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Image(systemName: "info.circle")
+                    .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                    .foregroundStyle(Theme.inkSecondary)
+            }
             Text(formatted(value))
                 .font(Theme.scaledFont(Theme.FontSize.title3, weight: .semibold, scale: store.textScale))
                 .monospacedDigit()
@@ -152,7 +157,7 @@ struct SummaryHeaderView: View {
                 Text("Home Value")
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
-                    .help("Your own estimate of what the house is worth now — type in a number anytime you get a new one (Zillow, appraisal, etc.).")
+                    .infoTooltip("Your own estimate of what the house is worth now — type in a number anytime you get a new one (Zillow, appraisal, etc.).", scale: store.textScale)
                 if store.isPrivacyModeEnabled {
                     Text(homeValueText.isEmpty ? "—" : Theme.mask(homeValueText))
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
@@ -175,17 +180,11 @@ struct SummaryHeaderView: View {
 
             if let netHouseGain = store.netHouseGain {
                 let sign = netHouseGain >= 0 ? "+" : ""
-                let netGainTooltip = "Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value."
-                HStack(spacing: 3) {
-                    Text("Net Gain: \(sign)\(formatted(netHouseGain))")
-                        .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
-                        .monospacedDigit()
-                        .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
-                    Image(systemName: "info.circle")
-                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                        .foregroundStyle(Theme.inkSecondary)
-                }
-                .help(netGainTooltip)
+                Text("Net Gain: \(sign)\(formatted(netHouseGain))")
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
+                    .monospacedDigit()
+                    .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .infoTooltip("Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value.", scale: store.textScale)
             } else if store.homeValue != nil {
                 Text("Add your Purchase Price in Settings to see Net Gain")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
@@ -197,7 +196,7 @@ struct SummaryHeaderView: View {
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(equity >= 0 ? Theme.positive : Theme.ledgerRed)
-                    .help("Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs.")
+                    .infoTooltip("Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs.", scale: store.textScale)
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))

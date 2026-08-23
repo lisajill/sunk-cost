@@ -27,10 +27,15 @@ struct ItemListFooterView: View {
 
     var body: some View {
         HStack {
-            Text("\(visibleItems.count) ITEM\(visibleItems.count == 1 ? "" : "S")")
-                .font(Theme.ledgerLabel(scale: store.textScale))
-                .tracking(0.6)
-                .foregroundStyle(Theme.inkSecondary)
+            HStack(spacing: 3) {
+                Text("\(visibleItems.count) ITEM\(visibleItems.count == 1 ? "" : "S")")
+                    .font(Theme.ledgerLabel(scale: store.textScale))
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.inkSecondary)
+                Image(systemName: "info.circle")
+                    .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                    .foregroundStyle(Theme.inkSecondary)
+            }
             Spacer()
             Text(formattedTotal)
                 .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
