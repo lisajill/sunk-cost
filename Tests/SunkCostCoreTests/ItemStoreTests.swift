@@ -118,12 +118,11 @@ struct ItemStoreTests {
         #expect(loaded.purchasePrice == nil)
     }
 
-    @Test("maintenance categories and payments round-trip")
+    @Test("maintenance categories round-trip")
     func maintenanceRoundTrips() throws {
         let url = makeTempFileURL()
-        let category = MaintenanceCategory(name: "Oil", expectedMonthlyAmount: 200)
-        let payment = MaintenancePayment(categoryID: category.id, amount: 185.50, notes: "November delivery")
-        let original = AppData(maintenanceCategories: [category], maintenancePayments: [payment])
+        let category = MaintenanceCategory(name: "Oil", monthlyAmount: 200)
+        let original = AppData(maintenanceCategories: [category])
 
         try ItemStore.save(original, to: url)
         let loaded = try ItemStore.load(from: url)
@@ -131,7 +130,7 @@ struct ItemStoreTests {
         #expect(loaded == original)
     }
 
-    @Test("loading JSON saved before Maintenance existed gives empty maintenance arrays")
+    @Test("loading JSON saved before Maintenance existed gives empty maintenance categories")
     func loadingPreMaintenanceJSONGivesEmptyArrays() throws {
         let url = makeTempFileURL()
         let json = """
@@ -146,7 +145,6 @@ struct ItemStoreTests {
         let loaded = try ItemStore.load(from: url)
 
         #expect(loaded.maintenanceCategories.isEmpty)
-        #expect(loaded.maintenancePayments.isEmpty)
         #expect(loaded.homeValue == 450_000)
     }
 

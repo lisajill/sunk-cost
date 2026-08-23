@@ -20,7 +20,6 @@ public struct AppData: Codable, Equatable, Sendable {
     public var monthlyPaymentOverride: Decimal?
 
     public var maintenanceCategories: [MaintenanceCategory]
-    public var maintenancePayments: [MaintenancePayment]
 
     public init(
         items: [Item] = [],
@@ -32,8 +31,7 @@ public struct AppData: Codable, Equatable, Sendable {
         mortgageBalance: Decimal? = nil,
         mortgageTermYears: Int? = nil,
         monthlyPaymentOverride: Decimal? = nil,
-        maintenanceCategories: [MaintenanceCategory] = [],
-        maintenancePayments: [MaintenancePayment] = []
+        maintenanceCategories: [MaintenanceCategory] = []
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -45,13 +43,12 @@ public struct AppData: Codable, Equatable, Sendable {
         self.mortgageTermYears = mortgageTermYears
         self.monthlyPaymentOverride = monthlyPaymentOverride
         self.maintenanceCategories = maintenanceCategories
-        self.maintenancePayments = maintenancePayments
     }
 
     private enum CodingKeys: String, CodingKey {
         case items, homeValue, purchasePrice, mortgageOriginalAmount, mortgageInterestRatePercent,
              mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
-             maintenanceCategories, maintenancePayments
+             maintenanceCategories
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -69,6 +66,5 @@ public struct AppData: Codable, Equatable, Sendable {
         mortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .mortgageTermYears)
         monthlyPaymentOverride = try container.decodeIfPresent(Decimal.self, forKey: .monthlyPaymentOverride)
         maintenanceCategories = try container.decodeIfPresent([MaintenanceCategory].self, forKey: .maintenanceCategories) ?? []
-        maintenancePayments = try container.decodeIfPresent([MaintenancePayment].self, forKey: .maintenancePayments) ?? []
     }
 }

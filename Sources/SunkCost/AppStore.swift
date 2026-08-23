@@ -18,7 +18,6 @@ final class AppStore {
     var mortgageTermYears: Int?
     var monthlyPaymentOverride: Decimal?
     var maintenanceCategories: [MaintenanceCategory] = []
-    var maintenancePayments: [MaintenancePayment] = []
     var filter = ItemFilter()
     var sortOption: SortOption {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
@@ -48,9 +47,10 @@ final class AppStore {
     /// Value-type spending only -- what should actually be compared against
     /// Home Value, since Moveable items don't raise it.
     var valueSpent: Totals { Totals(items: items.filter { $0.type == .value }) }
-    /// All-time sum of every Maintenance payment -- the "cost to keep the
-    /// house running," a peer total to Total Spent, not folded into it.
-    var costToKeep: Decimal { maintenancePayments.reduce(0) { $0 + $1.amount } }
+    /// Total recurring monthly cost across every Maintenance category --
+    /// the "cost to keep the house running," a peer total to Total Spent,
+    /// not folded into it. A monthly figure, not all-time.
+    var costToKeep: Decimal { maintenanceCategories.reduce(0) { $0 + $1.monthlyAmount } }
     var filteredItems: [Item] { items.filtered(by: filter).sorted(using: sortOption) }
     var availableCategories: [String] { items.distinctCategories }
     var availableHashtags: [String] { items.distinctHashtags }
@@ -60,11 +60,13 @@ final class AppStore {
         }
     }
     var equity: Decimal? { computeEquity(homeValue: homeValue, mortgageBalance: mortgageBalance) }
-    /// Home Value minus what was actually paid for the house -- raw market
-    /// appreciation, separate from Value-type spending.
-    var appreciation: Decimal? {
+    /// Home Value minus everything actually invested in the house as an
+    /// asset -- what was paid for it, plus Value-type item spending (things
+    /// that stay with the house). The true gain/loss on the house itself,
+    /// separate from Moveable spending or day-to-day Maintenance.
+    var netHouseGain: Decimal? {
         guard let homeValue, let purchasePrice else { return nil }
-        return homeValue - purchasePrice
+        return homeValue - (purchasePrice + valueSpent.totalSpent)
     }
 
     /// The manually-entered payment if there is one; otherwise a calculated
@@ -128,7 +130,6 @@ final class AppStore {
             mortgageTermYears = data.mortgageTermYears
             monthlyPaymentOverride = data.monthlyPaymentOverride
             maintenanceCategories = data.maintenanceCategories
-            maintenancePayments = data.maintenancePayments
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
@@ -279,7 +280,6 @@ final class AppStore {
         mortgageTermYears = data.mortgageTermYears
         monthlyPaymentOverride = data.monthlyPaymentOverride
         maintenanceCategories = data.maintenanceCategories
-        maintenancePayments = data.maintenancePayments
         save()
     }
 
@@ -294,8 +294,7 @@ final class AppStore {
             mortgageBalance: mortgageBalance,
             mortgageTermYears: mortgageTermYears,
             monthlyPaymentOverride: monthlyPaymentOverride,
-            maintenanceCategories: maintenanceCategories,
-            maintenancePayments: maintenancePayments
+            maintenanceCategories: maintenanceCategories
         )
     }
 
@@ -337,22 +336,10 @@ final class AppStore {
         save()
     }
 
-    /// All-time actual spend per Maintenance category, alongside the
-    /// category itself so the view can show its optional expected-monthly
-    /// figure as reference text next to the total.
-    func maintenanceCategoryTotals() -> [(category: MaintenanceCategory, actual: Decimal)] {
-        maintenanceCategories.map { category in
-            let actual = maintenancePayments
-                .filter { $0.categoryID == category.id }
-                .reduce(Decimal(0)) { $0 + $1.amount }
-            return (category, actual)
-        }
-    }
-
-    func addMaintenanceCategory(name: String, expectedMonthlyAmount: Decimal?) {
+    func addMaintenanceCategory(name: String, monthlyAmount: Decimal) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
-        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, expectedMonthlyAmount: expectedMonthlyAmount))
+        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount))
         save()
     }
 
@@ -362,36 +349,8 @@ final class AppStore {
         save()
     }
 
-    /// Deleting a category that still has payments requires reassigning
-    /// them to another category first -- same "don't silently orphan data"
-    /// stance as the rest of the app. Pass the target category's id via
-    /// `reassigningPaymentsTo`; if payments exist and no target is given,
-    /// nothing is deleted.
-    func deleteMaintenanceCategory(_ category: MaintenanceCategory, reassigningPaymentsTo targetID: UUID? = nil) {
-        let hasPayments = maintenancePayments.contains { $0.categoryID == category.id }
-        if hasPayments {
-            guard let targetID, maintenanceCategories.contains(where: { $0.id == targetID }) else { return }
-            for index in maintenancePayments.indices where maintenancePayments[index].categoryID == category.id {
-                maintenancePayments[index].categoryID = targetID
-            }
-        }
+    func deleteMaintenanceCategory(_ category: MaintenanceCategory) {
         maintenanceCategories.removeAll { $0.id == category.id }
-        save()
-    }
-
-    func addMaintenancePayment(_ payment: MaintenancePayment) {
-        maintenancePayments.append(payment)
-        save()
-    }
-
-    func updateMaintenancePayment(_ payment: MaintenancePayment) {
-        guard let index = maintenancePayments.firstIndex(where: { $0.id == payment.id }) else { return }
-        maintenancePayments[index] = payment
-        save()
-    }
-
-    func deleteMaintenancePayment(_ payment: MaintenancePayment) {
-        maintenancePayments.removeAll { $0.id == payment.id }
         save()
     }
 }

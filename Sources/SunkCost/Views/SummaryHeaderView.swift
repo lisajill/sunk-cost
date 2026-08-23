@@ -110,12 +110,12 @@ struct SummaryHeaderView: View {
                 .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
-            Text(formatted(store.costToKeep))
+            Text("\(formatted(store.costToKeep))/mo")
                 .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .semibold, scale: store.textScale))
                 .monospacedDigit()
                 .foregroundStyle(Theme.ink)
         }
-        .help("All-time Maintenance payments — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
+        .help("Total recurring monthly cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
     }
 
     private var ledgerDivider: some View {
@@ -172,23 +172,17 @@ struct SummaryHeaderView: View {
                 }
             }
 
-            if let homeValue = store.homeValue {
-                let difference = homeValue - store.valueSpent.totalSpent
-                let sign = difference >= 0 ? "+" : ""
-                Text("\(sign)\(formatted(difference)) vs. Value Improvements")
+            if let netHouseGain = store.netHouseGain {
+                let sign = netHouseGain >= 0 ? "+" : ""
+                Text("Net Gain: \(sign)\(formatted(netHouseGain))")
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
-                    .foregroundStyle(difference >= 0 ? Theme.positive : Theme.ledgerRed)
-                    .help("Home Value minus spending on Value-type items only (things that stay with the house, like a fence or a deck) — Moveable items like furniture aren't counted here since they don't raise the home's value.")
-            }
-
-            if let appreciation = store.appreciation {
-                let sign = appreciation >= 0 ? "+" : ""
-                Text("Appreciation: \(sign)\(formatted(appreciation))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
-                    .monospacedDigit()
-                    .foregroundStyle(appreciation >= 0 ? Theme.positive : Theme.ledgerRed)
-                    .help("Home Value minus Purchase Price — how much the house itself has gained or lost in value since you bought it, separate from money you've put into it.")
+                    .foregroundStyle(netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed)
+                    .help("Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value.")
+            } else if store.homeValue != nil {
+                Text("Add your Purchase Price in Settings to see Net Gain")
+                    .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                    .foregroundStyle(Theme.inkSecondary)
             }
 
             if let equity = store.equity {
