@@ -62,6 +62,22 @@ It's intentionally sequenced after the rest of the tracker (this repo)
 rather than built all at once, so it gets designed against real usage
 instead of a guess.
 
+### Someday / maybe
+
+Not committed, no timeline — just ideas worth remembering:
+
+- **Rich text (wysiwyg) notes** — editing notes as formatted text instead
+  of typing markdown by hand. Feasible without a custom rich-text
+  component (macOS 14 has a native SwiftUI editor for this), but the
+  notes would still be *stored* as plain markdown, converting to/from
+  rich text only for editing/display — keeps the JSON portable and
+  human-readable, and keeps CSV export working.
+- **File attachments** (receipts, photos) on items and Maintenance
+  categories — feasible by storing files in an "Attachments" folder next
+  to the data file and referencing them by name, but it's a real
+  tradeoff: the data stops being one portable JSON file, and a backup or
+  move to another Mac means copying the whole folder instead of one file.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
