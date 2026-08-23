@@ -22,6 +22,7 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
     public var homeownersInsuranceAnnual: Decimal?
     public var newPropertyTaxPercent: Decimal?
     public var newHomeownersInsuranceAnnual: Decimal?
+    public var notes: String?
 
     public init(
         id: UUID = UUID(),
@@ -38,7 +39,8 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
         propertyTaxPercent: Decimal? = nil,
         homeownersInsuranceAnnual: Decimal? = nil,
         newPropertyTaxPercent: Decimal? = nil,
-        newHomeownersInsuranceAnnual: Decimal? = nil
+        newHomeownersInsuranceAnnual: Decimal? = nil,
+        notes: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -55,5 +57,6 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
         self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
         self.newPropertyTaxPercent = newPropertyTaxPercent
         self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+        self.notes = notes
     }
 }

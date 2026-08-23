@@ -20,7 +20,8 @@ struct ComparisonScenarioTests {
             propertyTaxPercent: 1.3,
             homeownersInsuranceAnnual: 1500,
             newPropertyTaxPercent: 1.2,
-            newHomeownersInsuranceAnnual: 3000
+            newHomeownersInsuranceAnnual: 3000,
+            notes: "Assumes we refinance the new place at close."
         )
         let data = try JSONEncoder().encode(scenario)
         let decoded = try JSONDecoder().decode(ComparisonScenario.self, from: data)
@@ -33,5 +34,6 @@ struct ComparisonScenarioTests {
         let scenario = ComparisonScenario(name: "Blank")
         #expect(scenario.projectionYears == nil)
         #expect(scenario.newHomePrice == nil)
+        #expect(scenario.notes == nil)
     }
 }

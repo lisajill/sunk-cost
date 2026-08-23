@@ -25,8 +25,9 @@ struct LongTermComparisonView: View {
     @State private var newPropertyTaxText = ""
     @State private var newInsuranceText = ""
 
-    @State private var isShowingSaveScenarioAlert = false
-    @State private var newScenarioName = ""
+    @State private var isShowingSaveScenarioSheet = false
+    @State private var scenarioBeingEdited: ComparisonScenario?
+    @State private var scenarioBeingDeleted: ComparisonScenario?
 
     private enum Field: Hashable {
         case years, appreciation, investmentReturn, rent, rentIncrease
@@ -137,8 +138,7 @@ struct LongTermComparisonView: View {
                     Spacer()
 
                     Button("Save Scenario") {
-                        newScenarioName = ""
-                        isShowingSaveScenarioAlert = true
+                        isShowingSaveScenarioSheet = true
                     }
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                     .buttonStyle(.bordered)
@@ -146,17 +146,29 @@ struct LongTermComparisonView: View {
                     .help("Save the assumptions below as a named snapshot you can reload later.")
                 }
             }
-            .alert("Save Scenario", isPresented: $isShowingSaveScenarioAlert) {
-                TextField("Scenario name", text: $newScenarioName)
-                Button("Save") {
-                    store.saveCurrentScenarioAsPreset(name: newScenarioName)
-                    newScenarioName = ""
+            .sheet(isPresented: $isShowingSaveScenarioSheet) {
+                ScenarioDetailsSheet(existingScenario: nil)
+            }
+            .sheet(item: $scenarioBeingEdited) { scenario in
+                ScenarioDetailsSheet(existingScenario: scenario)
+            }
+            .confirmationDialog(
+                "Delete \"\(scenarioBeingDeleted?.name ?? "")\"?",
+                isPresented: Binding(
+                    get: { scenarioBeingDeleted != nil },
+                    set: { if !$0 { scenarioBeingDeleted = nil } }
+                ),
+                presenting: scenarioBeingDeleted
+            ) { scenario in
+                Button("Delete", role: .destructive) {
+                    store.deleteScenario(scenario)
+                    scenarioBeingDeleted = nil
                 }
                 Button("Cancel", role: .cancel) {
-                    newScenarioName = ""
+                    scenarioBeingDeleted = nil
                 }
-            } message: {
-                Text("Saves the Years, appreciation, rent, and new-home assumptions below so you can reload them later.")
+            } message: { _ in
+                Text("This can't be undone.")
             }
 
             if !store.savedComparisonScenarios.isEmpty {
@@ -217,6 +229,9 @@ struct LongTermComparisonView: View {
             assumptionGroup("Renting") {
                 percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
                 dollarField("Monthly Rent", text: $rentText, placeholder: "required", field: .rent)
+                Text("Affects the monthly total in the table above, not the Ending Net Worth figure — that only reflects investing today's sale proceeds and letting them grow, not what you spend on rent along the way.")
+                    .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                    .foregroundStyle(Theme.inkSecondary)
                 percentField("Rent Increase (per year)", text: $rentIncreaseText, field: .rentIncrease)
             }
             assumptionGroup("Buying Elsewhere") {
@@ -396,14 +411,24 @@ struct LongTermComparisonView: View {
                 .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .help("Load the \"\(scenario.name)\" scenario")
+                .help(scenarioTooltip(scenario))
                 .contextMenu {
+                    Button("Edit…") {
+                        scenarioBeingEdited = scenario
+                    }
                     Button("Delete", role: .destructive) {
-                        store.deleteScenario(scenario)
+                        scenarioBeingDeleted = scenario
                     }
                 }
             }
         }
+    }
+
+    private func scenarioTooltip(_ scenario: ComparisonScenario) -> String {
+        if let notes = scenario.notes, !notes.isEmpty {
+            return notes
+        }
+        return "Load the \"\(scenario.name)\" scenario"
     }
 
     private func syncFields() {
