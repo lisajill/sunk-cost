@@ -109,6 +109,8 @@ struct SellScenarioView: View {
             }
 
             assumptionsSection
+
+            LongTermComparisonView()
         }
         .padding(24)
     }

@@ -28,6 +28,20 @@ public struct AppData: Codable, Equatable, Sendable {
     public var realtorCommissionPercent: Decimal?
     public var closingCostsPercent: Decimal?
 
+    /// Compare: Stay vs. Rent vs. Buy Elsewhere -- all optional, editable
+    /// assumptions for the multi-year projection. nil until the user sets
+    /// them; AppStore supplies UI-level suggested defaults rather than
+    /// baking fabricated figures into the data itself.
+    public var comparisonProjectionYears: Int?
+    public var homeAppreciationPercent: Decimal?
+    public var investmentReturnPercent: Decimal?
+    public var monthlyRent: Decimal?
+    public var rentAnnualIncreasePercent: Decimal?
+    public var newHomePrice: Decimal?
+    public var newHomeDownPayment: Decimal?
+    public var newMortgageRatePercent: Decimal?
+    public var newMortgageTermYears: Int?
+
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
@@ -40,7 +54,16 @@ public struct AppData: Codable, Equatable, Sendable {
         monthlyPaymentOverride: Decimal? = nil,
         maintenanceCategories: [MaintenanceCategory] = [],
         realtorCommissionPercent: Decimal? = nil,
-        closingCostsPercent: Decimal? = nil
+        closingCostsPercent: Decimal? = nil,
+        comparisonProjectionYears: Int? = nil,
+        homeAppreciationPercent: Decimal? = nil,
+        investmentReturnPercent: Decimal? = nil,
+        monthlyRent: Decimal? = nil,
+        rentAnnualIncreasePercent: Decimal? = nil,
+        newHomePrice: Decimal? = nil,
+        newHomeDownPayment: Decimal? = nil,
+        newMortgageRatePercent: Decimal? = nil,
+        newMortgageTermYears: Int? = nil
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -54,12 +77,24 @@ public struct AppData: Codable, Equatable, Sendable {
         self.maintenanceCategories = maintenanceCategories
         self.realtorCommissionPercent = realtorCommissionPercent
         self.closingCostsPercent = closingCostsPercent
+        self.comparisonProjectionYears = comparisonProjectionYears
+        self.homeAppreciationPercent = homeAppreciationPercent
+        self.investmentReturnPercent = investmentReturnPercent
+        self.monthlyRent = monthlyRent
+        self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+        self.newHomePrice = newHomePrice
+        self.newHomeDownPayment = newHomeDownPayment
+        self.newMortgageRatePercent = newMortgageRatePercent
+        self.newMortgageTermYears = newMortgageTermYears
     }
 
     private enum CodingKeys: String, CodingKey {
         case items, homeValue, purchasePrice, mortgageOriginalAmount, mortgageInterestRatePercent,
              mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
-             maintenanceCategories, realtorCommissionPercent, closingCostsPercent
+             maintenanceCategories, realtorCommissionPercent, closingCostsPercent,
+             comparisonProjectionYears, homeAppreciationPercent, investmentReturnPercent,
+             monthlyRent, rentAnnualIncreasePercent, newHomePrice, newHomeDownPayment,
+             newMortgageRatePercent, newMortgageTermYears
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -79,5 +114,14 @@ public struct AppData: Codable, Equatable, Sendable {
         maintenanceCategories = try container.decodeIfPresent([MaintenanceCategory].self, forKey: .maintenanceCategories) ?? []
         realtorCommissionPercent = try container.decodeIfPresent(Decimal.self, forKey: .realtorCommissionPercent)
         closingCostsPercent = try container.decodeIfPresent(Decimal.self, forKey: .closingCostsPercent)
+        comparisonProjectionYears = try container.decodeIfPresent(Int.self, forKey: .comparisonProjectionYears)
+        homeAppreciationPercent = try container.decodeIfPresent(Decimal.self, forKey: .homeAppreciationPercent)
+        investmentReturnPercent = try container.decodeIfPresent(Decimal.self, forKey: .investmentReturnPercent)
+        monthlyRent = try container.decodeIfPresent(Decimal.self, forKey: .monthlyRent)
+        rentAnnualIncreasePercent = try container.decodeIfPresent(Decimal.self, forKey: .rentAnnualIncreasePercent)
+        newHomePrice = try container.decodeIfPresent(Decimal.self, forKey: .newHomePrice)
+        newHomeDownPayment = try container.decodeIfPresent(Decimal.self, forKey: .newHomeDownPayment)
+        newMortgageRatePercent = try container.decodeIfPresent(Decimal.self, forKey: .newMortgageRatePercent)
+        newMortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .newMortgageTermYears)
     }
 }

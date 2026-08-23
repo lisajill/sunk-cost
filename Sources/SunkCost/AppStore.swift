@@ -20,6 +20,15 @@ final class AppStore {
     var maintenanceCategories: [MaintenanceCategory] = []
     var realtorCommissionPercent: Decimal?
     var closingCostsPercent: Decimal?
+    var comparisonProjectionYears: Int?
+    var homeAppreciationPercent: Decimal?
+    var investmentReturnPercent: Decimal?
+    var monthlyRent: Decimal?
+    var rentAnnualIncreasePercent: Decimal?
+    var newHomePrice: Decimal?
+    var newHomeDownPayment: Decimal?
+    var newMortgageRatePercent: Decimal?
+    var newMortgageTermYears: Int?
     var filter = ItemFilter()
     var sortOption: SortOption {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
@@ -100,6 +109,62 @@ final class AppStore {
         )
     }
 
+    /// Compare: Stay vs. Rent vs. Buy Elsewhere -- the horizon (years) for
+    /// all three projections below.
+    var projectionYears: Int { comparisonProjectionYears ?? 10 }
+
+    private var monthsSinceMortgageStart: Int? {
+        guard let mortgageStartDate else { return nil }
+        let months = Calendar.current.dateComponents([.month], from: mortgageStartDate, to: Date()).month ?? 0
+        return max(months, 0)
+    }
+
+    /// Ending home equity if she stays -- nil until the *actual* mortgage
+    /// details (not just the balance) are on record, since there's no
+    /// sensible default for someone's real loan terms the way there is for
+    /// a general assumption like appreciation rate.
+    var stayingNetWorthProjection: Decimal? {
+        guard let homeValue, let mortgageOriginalAmount, let mortgageInterestRatePercent,
+              let mortgageTermYears, let monthsSinceMortgageStart else { return nil }
+        return projectStayingNetWorth(
+            homeValue: homeValue,
+            appreciationPercent: homeAppreciationPercent ?? 3,
+            mortgageOriginalAmount: mortgageOriginalAmount,
+            mortgageAnnualRatePercent: mortgageInterestRatePercent,
+            mortgageTermYears: mortgageTermYears,
+            monthsAlreadyPaid: monthsSinceMortgageStart,
+            projectionYears: projectionYears
+        )
+    }
+
+    /// Ending investment balance if she sells and rents -- nil until a
+    /// rent figure is entered, since no generic default is meaningful
+    /// (unlike the investment-return assumption, which does get one).
+    var rentingNetWorthProjection: Decimal? {
+        guard monthlyRent != nil, let netProceeds = sellScenario?.netProceeds else { return nil }
+        return projectRentingNetWorth(
+            netProceedsToday: netProceeds,
+            investmentReturnPercent: investmentReturnPercent ?? 6,
+            projectionYears: projectionYears
+        )
+    }
+
+    /// Ending home equity in a new home if she sells and buys elsewhere --
+    /// nil until a new home price is entered; down payment/rate/term all
+    /// fall back to reasonable suggestions (today's sale proceeds, her
+    /// current mortgage's rate, a 30-year term).
+    var buyingElsewhereNetWorthProjection: Decimal? {
+        guard let newHomePrice else { return nil }
+        return projectBuyingElsewhereNetWorth(
+            newHomePrice: newHomePrice,
+            downPayment: newHomeDownPayment ?? sellScenario?.netProceeds ?? 0,
+            appreciationPercent: homeAppreciationPercent ?? 3,
+            newMortgageAnnualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
+            newMortgageTermYears: newMortgageTermYears ?? 30,
+            projectionYears: projectionYears
+        )
+    }
+
     /// The manually-entered payment if there is one; otherwise a calculated
     /// estimate from amount/rate/term, if all three are present.
     var monthlyPayment: Decimal? {
@@ -163,6 +228,15 @@ final class AppStore {
             maintenanceCategories = data.maintenanceCategories
             realtorCommissionPercent = data.realtorCommissionPercent
             closingCostsPercent = data.closingCostsPercent
+            comparisonProjectionYears = data.comparisonProjectionYears
+            homeAppreciationPercent = data.homeAppreciationPercent
+            investmentReturnPercent = data.investmentReturnPercent
+            monthlyRent = data.monthlyRent
+            rentAnnualIncreasePercent = data.rentAnnualIncreasePercent
+            newHomePrice = data.newHomePrice
+            newHomeDownPayment = data.newHomeDownPayment
+            newMortgageRatePercent = data.newMortgageRatePercent
+            newMortgageTermYears = data.newMortgageTermYears
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
@@ -252,6 +326,29 @@ final class AppStore {
         save()
     }
 
+    func setComparisonAssumptions(
+        projectionYears: Int?,
+        homeAppreciationPercent: Decimal?,
+        investmentReturnPercent: Decimal?,
+        monthlyRent: Decimal?,
+        rentAnnualIncreasePercent: Decimal?,
+        newHomePrice: Decimal?,
+        newHomeDownPayment: Decimal?,
+        newMortgageRatePercent: Decimal?,
+        newMortgageTermYears: Int?
+    ) {
+        self.comparisonProjectionYears = projectionYears
+        self.homeAppreciationPercent = homeAppreciationPercent
+        self.investmentReturnPercent = investmentReturnPercent
+        self.monthlyRent = monthlyRent
+        self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+        self.newHomePrice = newHomePrice
+        self.newHomeDownPayment = newHomeDownPayment
+        self.newMortgageRatePercent = newMortgageRatePercent
+        self.newMortgageTermYears = newMortgageTermYears
+        save()
+    }
+
     func setMortgage(
         originalAmount: Decimal?,
         interestRatePercent: Decimal?,
@@ -331,6 +428,15 @@ final class AppStore {
         maintenanceCategories = data.maintenanceCategories
         realtorCommissionPercent = data.realtorCommissionPercent
         closingCostsPercent = data.closingCostsPercent
+        comparisonProjectionYears = data.comparisonProjectionYears
+        homeAppreciationPercent = data.homeAppreciationPercent
+        investmentReturnPercent = data.investmentReturnPercent
+        monthlyRent = data.monthlyRent
+        rentAnnualIncreasePercent = data.rentAnnualIncreasePercent
+        newHomePrice = data.newHomePrice
+        newHomeDownPayment = data.newHomeDownPayment
+        newMortgageRatePercent = data.newMortgageRatePercent
+        newMortgageTermYears = data.newMortgageTermYears
         save()
     }
 
@@ -347,7 +453,16 @@ final class AppStore {
             monthlyPaymentOverride: monthlyPaymentOverride,
             maintenanceCategories: maintenanceCategories,
             realtorCommissionPercent: realtorCommissionPercent,
-            closingCostsPercent: closingCostsPercent
+            closingCostsPercent: closingCostsPercent,
+            comparisonProjectionYears: comparisonProjectionYears,
+            homeAppreciationPercent: homeAppreciationPercent,
+            investmentReturnPercent: investmentReturnPercent,
+            monthlyRent: monthlyRent,
+            rentAnnualIncreasePercent: rentAnnualIncreasePercent,
+            newHomePrice: newHomePrice,
+            newHomeDownPayment: newHomeDownPayment,
+            newMortgageRatePercent: newMortgageRatePercent,
+            newMortgageTermYears: newMortgageTermYears
         )
     }
 

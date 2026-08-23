@@ -59,9 +59,14 @@ all built at once:
    mortgage payoff balance, and assumed selling costs (realtor commission
    + closing costs, both editable percentages), shows Net Proceeds if
    sold today and the profit/loss against everything actually invested in
-   the house. Doesn't yet compare against renting or buying elsewhere —
-   that would need its own set of assumptions and is a separate future
-   pass.
+   the house. Below that, a multi-year **Compare: Stay vs. Rent vs. Buy
+   Elsewhere** projection — a chosen time horizon, assumed home
+   appreciation, assumed investment return on sale proceeds, and (for
+   Buying Elsewhere) a new home price/down payment/mortgage — showing each
+   scenario's projected ending net worth. Each scenario is computed
+   independently; it doesn't additionally reinvest the month-to-month
+   cash-flow *difference* between scenarios into each other (a real
+   refinement some calculators add, left out of this pass).
 
 ### Someday / maybe
 

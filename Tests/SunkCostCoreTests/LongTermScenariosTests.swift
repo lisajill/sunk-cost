@@ -1,0 +1,60 @@
+import Testing
+import Foundation
+@testable import SunkCostCore
+
+@Suite("Long-term scenario projections")
+struct LongTermScenariosTests {
+    @Test("staying net worth: appreciated home value minus remaining mortgage balance")
+    func stayingNetWorth() {
+        // $360,000 principal over 30 years (360 months) at 0% is exactly
+        // $1,000/mo. 12 months already paid + a 1-year projection = 24
+        // months elapsed -> $24,000 paid off, $336,000 remaining.
+        // 0% appreciation keeps the home value flat at $360,000.
+        let netWorth = projectStayingNetWorth(
+            homeValue: 360_000,
+            appreciationPercent: 0,
+            mortgageOriginalAmount: 360_000,
+            mortgageAnnualRatePercent: 0,
+            mortgageTermYears: 30,
+            monthsAlreadyPaid: 12,
+            projectionYears: 1
+        )
+        #expect(netWorth == 24_000) // 360,000 - 336,000
+    }
+
+    @Test("staying net worth reflects a fully paid-off mortgage once the horizon exceeds the term")
+    func stayingNetWorthMortgagePaidOff() {
+        let netWorth = projectStayingNetWorth(
+            homeValue: 360_000,
+            appreciationPercent: 0,
+            mortgageOriginalAmount: 360_000,
+            mortgageAnnualRatePercent: 0,
+            mortgageTermYears: 5,
+            monthsAlreadyPaid: 0,
+            projectionYears: 10
+        )
+        #expect(netWorth == 360_000) // mortgage long paid off, full home value
+    }
+
+    @Test("renting net worth is the sale proceeds compounded at the investment return")
+    func rentingNetWorth() {
+        let netWorth = projectRentingNetWorth(netProceedsToday: 100_000, investmentReturnPercent: 10, projectionYears: 2)
+        #expect(netWorth == 121_000) // 100,000 * 1.1 * 1.1
+    }
+
+    @Test("buying elsewhere net worth: appreciated new home value minus remaining new mortgage balance")
+    func buyingElsewhereNetWorth() {
+        // $400,000 new home, $100,000 down -> $300,000 mortgage over 25
+        // years (300 months) at 0% is exactly $1,000/mo. 2-year projection
+        // = 24 months elapsed -> $24,000 paid off, $276,000 remaining.
+        let netWorth = projectBuyingElsewhereNetWorth(
+            newHomePrice: 400_000,
+            downPayment: 100_000,
+            appreciationPercent: 0,
+            newMortgageAnnualRatePercent: 0,
+            newMortgageTermYears: 25,
+            projectionYears: 2
+        )
+        #expect(netWorth == 124_000) // 400,000 - 276,000
+    }
+}
