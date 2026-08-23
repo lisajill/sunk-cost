@@ -85,7 +85,7 @@ struct ContentView: View {
         .sheet(item: $editingItem) { item in
             ItemFormView(item: item)
         }
-        .tint(Theme.ledgerGreen)
+        .tint(Theme.positive)
         .environment(\.appTextScale, store.textScale)
     }
 }

@@ -44,7 +44,7 @@ struct SettingsView: View {
             .padding(24)
         }
         .frame(minWidth: 480, idealWidth: 480, minHeight: 620, idealHeight: 620)
-        .tint(Theme.ledgerGreen)
+        .tint(Theme.positive)
         .environment(\.appTextScale, store.textScale)
         .onAppear { populateMortgageFields() }
         .onExitCommand { NSApp.keyWindow?.close() }
@@ -356,7 +356,7 @@ struct SettingsView: View {
                 if showMortgageSavedConfirmation {
                     Label("Saved", systemImage: "checkmark.circle.fill")
                         .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
-                        .foregroundStyle(Theme.ledgerGreen)
+                        .foregroundStyle(Theme.positive)
                         .transition(.opacity)
                 }
             }

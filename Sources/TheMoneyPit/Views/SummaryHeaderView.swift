@@ -43,7 +43,7 @@ struct SummaryHeaderView: View {
 
             if !isCollapsed {
                 HStack(spacing: 0) {
-                    statTile(title: "In the House", value: store.totals.inTheHouse, color: Theme.ledgerGreen)
+                    statTile(title: "In the House", value: store.totals.inTheHouse, color: Theme.positive)
                     ledgerDivider
                     statTile(title: "Gone, Paid For", value: store.totals.goneButPaidFor, color: Theme.taupe)
                     ledgerDivider
@@ -86,10 +86,13 @@ struct SummaryHeaderView: View {
     }
 
     private var ledgerDivider: some View {
+        // An unconstrained Rectangle expands to fill all available height in
+        // an HStack -- without this cap, the divider was stretching the
+        // whole card open to fill the window, leaving a huge gap of empty
+        // paper between the stat row and Home Value below it.
         Rectangle()
             .fill(Theme.ledgerBorder)
-            .frame(width: 1)
-            .padding(.vertical, 4)
+            .frame(width: 1, height: 40 * store.textScale)
     }
 
     private func statTile(title: String, value: Decimal, color: Color) -> some View {
@@ -140,14 +143,14 @@ struct SummaryHeaderView: View {
                 Text("\(sign)\(formatted(difference)) vs. spent")
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
-                    .foregroundStyle(difference >= 0 ? Theme.ledgerGreen : Theme.ledgerRed)
+                    .foregroundStyle(difference >= 0 ? Theme.positive : Theme.ledgerRed)
             }
 
             if let equity = store.equity {
                 Text("Equity: \(formatted(equity))")
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
-                    .foregroundStyle(equity >= 0 ? Theme.ledgerGreen : Theme.ledgerRed)
+                    .foregroundStyle(equity >= 0 ? Theme.positive : Theme.ledgerRed)
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))

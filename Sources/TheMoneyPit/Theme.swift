@@ -1,11 +1,17 @@
 import SwiftUI
 import AppKit
 
-/// Visual identity for The Money Pit: a household ledger. Old bookkeeping
+/// Visual identity for Sunk Cost: a household ledger. Old bookkeeping
 /// ledgers were printed on pale green paper -- that's where the summary
-/// card's color comes from. Status colors carry meaning rather than being
-/// arbitrary: deep green reads as "in the black" (an asset you still hold),
+/// card's background comes from. Status colors carry meaning rather than
+/// being arbitrary: blue reads as "in the black" (an asset you still hold),
 /// terracotta as pending/warm (echoes the app icon), taupe as settled/past.
+///
+/// The status trio (blue / taupe / terracotta) is chosen to stay
+/// distinguishable under protanopia, deuteranopia, and tritanopia --
+/// deliberately not red-vs-green, which is the one pairing colorblind users
+/// most often can't tell apart. Color is also never the only signal: every
+/// status has a text label alongside it.
 enum Theme {
     private static func adaptive(light: NSColor, dark: NSColor) -> Color {
         Color(NSColor(name: nil) { appearance in
@@ -37,13 +43,18 @@ enum Theme {
         light: NSColor(calibratedRed: 0.541, green: 0.502, blue: 0.447, alpha: 1.0),
         dark: NSColor(calibratedRed: 0.655, green: 0.612, blue: 0.549, alpha: 1.0)
     )
-    /// Deep ledger green: doubles as the "positive / in the black" color and
-    /// the app's accent/tint, replacing the default system blue.
-    static let ledgerGreen = adaptive(
-        light: NSColor(calibratedRed: 0.184, green: 0.357, blue: 0.247, alpha: 1.0),
-        dark: NSColor(calibratedRed: 0.435, green: 0.796, blue: 0.580, alpha: 1.0)
+    /// "Positive / in the black" color, and the app's accent/tint. A blue
+    /// (not green) specifically so it stays distinguishable from
+    /// `terracotta` for red-green colorblind users -- blue-vs-orange is one
+    /// of the safest hue pairings across all common forms of color
+    /// blindness.
+    static let positive = adaptive(
+        light: NSColor(calibratedRed: 0.020, green: 0.400, blue: 0.620, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.443, green: 0.667, blue: 0.898, alpha: 1.0)
     )
-    /// "In the red" -- classic bookkeeping color for a deficit.
+    /// "In the red" -- classic bookkeeping color for a deficit. Blue-vs-red
+    /// stays distinguishable even for red-green colorblind users, since it's
+    /// not a hue pair that relies on the red/green channel confusion.
     static let ledgerRed = adaptive(
         light: NSColor(calibratedRed: 0.690, green: 0.227, blue: 0.180, alpha: 1.0),
         dark: NSColor(calibratedRed: 0.878, green: 0.478, blue: 0.431, alpha: 1.0)

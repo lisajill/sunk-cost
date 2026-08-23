@@ -99,7 +99,7 @@ struct ItemFormView: View {
         }
         .padding(24)
         .frame(minWidth: 440, idealWidth: 440)
-        .tint(Theme.ledgerGreen)
+        .tint(Theme.positive)
         .onAppear { populateFieldsIfEditing() }
     }
 
