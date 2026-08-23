@@ -404,14 +404,34 @@ struct LongTermComparisonView: View {
     private var savedScenariosRow: some View {
         FlowLayout(spacing: 6) {
             ForEach(store.savedComparisonScenarios) { scenario in
-                Button(scenario.name) {
-                    store.loadScenario(scenario)
-                    syncFields()
+                HStack(spacing: 2) {
+                    Button(scenario.name) {
+                        store.loadScenario(scenario)
+                        syncFields()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help(scenarioTooltip(scenario))
+
+                    // A visible, click-to-open menu -- discoverable without
+                    // needing to know that right-clicking a chip does
+                    // anything. Right-click still works too, as a bonus for
+                    // anyone used to that pattern.
+                    Menu {
+                        Button("Edit…") {
+                            scenarioBeingEdited = scenario
+                        }
+                        Button("Delete", role: .destructive) {
+                            scenarioBeingDeleted = scenario
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .frame(width: 20)
+                    .help("Edit or delete this scenario")
                 }
-                .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .help(scenarioTooltip(scenario))
                 .contextMenu {
                     Button("Edit…") {
                         scenarioBeingEdited = scenario
@@ -422,6 +442,7 @@ struct LongTermComparisonView: View {
                 }
             }
         }
+        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
     }
 
     private func scenarioTooltip(_ scenario: ComparisonScenario) -> String {
