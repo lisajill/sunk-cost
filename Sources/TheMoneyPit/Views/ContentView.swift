@@ -10,7 +10,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             if let error = store.loadError {
                 Text(error)
-                    .font(.callout)
+                    .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                     .foregroundStyle(.red)
                     .padding(8)
                     .frame(maxWidth: .infinity)
@@ -86,6 +86,6 @@ struct ContentView: View {
             ItemFormView(item: item)
         }
         .tint(Theme.ledgerGreen)
-        .environment(\.dynamicTypeSize, store.dynamicTypeSize)
+        .environment(\.appTextScale, store.textScale)
     }
 }

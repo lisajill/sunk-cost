@@ -36,22 +36,22 @@ struct SettingsView: View {
 
                 if let error = store.loadError {
                     Text(error)
-                        .font(.callout)
+                        .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                         .foregroundStyle(.red)
                 }
             }
             .padding(24)
         }
-        .frame(width: 480, height: 620)
+        .frame(minWidth: 480, idealWidth: 480, minHeight: 620, idealHeight: 620)
         .tint(Theme.ledgerGreen)
-        .environment(\.dynamicTypeSize, store.dynamicTypeSize)
+        .environment(\.appTextScale, store.textScale)
         .onAppear { populateMortgageFields() }
     }
 
     private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Appearance")
-                .font(.headline)
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
                 .foregroundStyle(Theme.ink)
 
             Picker("Appearance", selection: Binding(
@@ -67,7 +67,7 @@ struct SettingsView: View {
             .frame(maxWidth: 300)
 
             Text("There's also a quick-switch button in the main window's toolbar.")
-                .font(.caption)
+                .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                 .foregroundStyle(Theme.inkSecondary)
         }
     }
@@ -75,11 +75,11 @@ struct SettingsView: View {
     private var dataSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Backup & Transfer")
-                .font(.headline)
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
                 .foregroundStyle(Theme.ink)
 
             Text("Export saves everything (items, home value, mortgage) to a single file you choose — for a backup, or to move your data to another Mac. Import loads a file like that back in, replacing what's currently here.")
-                .font(.callout)
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             HStack {
@@ -96,7 +96,7 @@ struct SettingsView: View {
             Divider()
 
             Text("CSV is for opening your items in Excel, Numbers, or Google Sheets. It only carries the item list — not home value or mortgage info.")
-                .font(.callout)
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             HStack {
@@ -151,13 +151,13 @@ struct SettingsView: View {
     private var storageSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Storage Location")
-                .font(.headline)
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
 
             Text("Your data file is currently stored here:")
                 .foregroundStyle(.secondary)
 
             Text(store.storageFolderURL.path)
-                .font(.system(.body, design: .monospaced))
+                .font(Theme.scaledFont(Theme.FontSize.body, design: .monospaced, scale: store.textScale))
                 .textSelection(.enabled)
                 .padding(8)
                 .background(Theme.ledgerPaper)
@@ -165,7 +165,7 @@ struct SettingsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 
             Text("By default this is a private, local-only folder on this Mac — nothing leaves your computer. You can point it anywhere you like instead, including a folder in iCloud Drive, if you want it backed up and synced automatically.")
-                .font(.callout)
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             HStack {
@@ -182,16 +182,16 @@ struct SettingsView: View {
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Categories")
-                .font(.headline)
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
                 .foregroundStyle(Theme.ink)
 
             Text("Rename fixes a typo or merges two categories together. Delete moves a category's items somewhere else, then removes it.")
-                .font(.callout)
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             if store.categoriesWithCounts.isEmpty {
                 Text("No categories yet — add an item to create one.")
-                    .font(.callout)
+                    .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                     .foregroundStyle(.secondary)
             } else {
                 VStack(spacing: 0) {
@@ -200,7 +200,7 @@ struct SettingsView: View {
                             Text(entry.category)
                                 .foregroundStyle(Theme.ink)
                             Text("\(entry.count) item\(entry.count == 1 ? "" : "s")")
-                                .font(.caption)
+                                .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                                 .foregroundStyle(Theme.inkSecondary)
                             Spacer()
                             Button("Rename…") {
@@ -278,10 +278,10 @@ struct SettingsView: View {
     private var mortgageSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Mortgage")
-                .font(.headline)
+                .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
 
             Text("The current balance is what drives your Equity figure on the main screen. Update it whenever you check a new statement. The other fields are just for your own reference.")
-                .font(.callout)
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             labeledField("Current Balance Owed") {
@@ -326,7 +326,7 @@ struct SettingsView: View {
                 if monthlyPaymentText.trimmingCharacters(in: .whitespaces).isEmpty,
                    let calculated = store.monthlyPayment {
                     Text("Estimated: \(currencyString(calculated))/mo, based on amount, rate, and term")
-                        .font(.caption)
+                        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                         .foregroundStyle(Theme.inkSecondary)
                 }
             }
@@ -338,7 +338,7 @@ struct SettingsView: View {
 
                 if showMortgageSavedConfirmation {
                     Label("Saved", systemImage: "checkmark.circle.fill")
-                        .font(.callout)
+                        .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                         .foregroundStyle(Theme.ledgerGreen)
                         .transition(.opacity)
                 }
@@ -350,7 +350,7 @@ struct SettingsView: View {
     private func labeledField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(Theme.ledgerLabel)
+                .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
             content()

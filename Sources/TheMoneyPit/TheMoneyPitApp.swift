@@ -8,10 +8,10 @@ struct TheMoneyPitApp: App {
         WindowGroup("Sunk Cost") {
             ContentView()
                 .environment(store)
-                .environment(\.dynamicTypeSize, store.dynamicTypeSize)
+                .environment(\.appTextScale, store.textScale)
                 .preferredColorScheme(store.appearanceMode.colorScheme)
         }
-        .defaultSize(width: 720, height: 640)
+        .defaultSize(width: 720, height: 780)
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(after: .toolbar) {
@@ -27,7 +27,7 @@ struct TheMoneyPitApp: App {
         Settings {
             SettingsView()
                 .environment(store)
-                .environment(\.dynamicTypeSize, store.dynamicTypeSize)
+                .environment(\.appTextScale, store.textScale)
                 .preferredColorScheme(store.appearanceMode.colorScheme)
         }
     }

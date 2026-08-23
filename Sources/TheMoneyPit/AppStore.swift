@@ -23,7 +23,7 @@ final class AppStore {
     var textSizeIndex: Int {
         didSet { UserDefaults.standard.set(textSizeIndex, forKey: TextSizeControl.userDefaultsKey) }
     }
-    var dynamicTypeSize: DynamicTypeSize { TextSizeControl.steps[textSizeIndex] }
+    var textScale: CGFloat { TextSizeControl.scales[textSizeIndex] }
 
     var appearanceMode: AppearanceMode {
         didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: AppearanceMode.userDefaultsKey) }
@@ -78,7 +78,7 @@ final class AppStore {
     }
 
     func increaseTextSize() {
-        textSizeIndex = min(textSizeIndex + 1, TextSizeControl.steps.count - 1)
+        textSizeIndex = min(textSizeIndex + 1, TextSizeControl.scales.count - 1)
     }
 
     func decreaseTextSize() {

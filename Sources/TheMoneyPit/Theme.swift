@@ -49,8 +49,40 @@ enum Theme {
         dark: NSColor(calibratedRed: 0.878, green: 0.478, blue: 0.431, alpha: 1.0)
     )
 
-    static let totalNumeral = Font.system(.largeTitle, design: .serif).weight(.bold)
-    static let ledgerLabel = Font.caption.weight(.semibold)
+    /// Base point sizes this app's text roles use at 1.0 scale -- chosen to
+    /// approximate macOS's real system text-style sizes closely enough that
+    /// the default (unscaled) look is unchanged from before.
+    enum FontSize {
+        static let totalNumeral: CGFloat = 24
+        static let title2: CGFloat = 17
+        static let title3: CGFloat = 15
+        static let headline: CGFloat = 13
+        static let body: CGFloat = 13
+        static let callout: CGFloat = 12
+        static let subheadline: CGFloat = 11
+        static let caption: CGFloat = 10
+        static let caption2: CGFloat = 10
+    }
+
+    /// Every font in the app should be built through this so Increase/
+    /// Decrease Font Size actually changes what's on screen -- explicit
+    /// point-size math, not platform Dynamic Type behavior.
+    static func scaledFont(
+        _ baseSize: CGFloat,
+        weight: Font.Weight = .regular,
+        design: Font.Design = .default,
+        scale: CGFloat
+    ) -> Font {
+        .system(size: baseSize * scale, weight: weight, design: design)
+    }
+
+    static func totalNumeral(scale: CGFloat) -> Font {
+        scaledFont(FontSize.totalNumeral, weight: .bold, design: .serif, scale: scale)
+    }
+
+    static func ledgerLabel(scale: CGFloat) -> Font {
+        scaledFont(FontSize.caption, weight: .semibold, scale: scale)
+    }
 
     /// Replaces digits with bullets for privacy mode, keeping the currency
     /// symbol/punctuation so the figure still reads as "a dollar amount" in

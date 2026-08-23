@@ -38,10 +38,10 @@ struct ItemRowView: View {
             Button(action: onTapName) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
-                        .font(.body.weight(.medium))
+                        .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
                         .foregroundStyle(Theme.ink)
                     Text("\(item.category.uppercased()) · \(dateText)")
-                        .font(.caption2.weight(.medium))
+                        .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .medium, scale: store.textScale))
                         .tracking(0.5)
                         .foregroundStyle(Theme.inkSecondary)
                 }
@@ -52,12 +52,13 @@ struct ItemRowView: View {
             Spacer()
 
             Text(costText)
-                .font(.body.monospacedDigit())
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                .monospacedDigit()
                 .foregroundStyle(Theme.inkSecondary)
 
             Button(action: onTapStatus) {
                 Text(statusLabel)
-                    .font(.caption.weight(.semibold))
+                    .font(Theme.scaledFont(Theme.FontSize.caption, weight: .semibold, scale: store.textScale))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(statusColor.opacity(isStatusFilterActive ? 0.35 : 0.18))

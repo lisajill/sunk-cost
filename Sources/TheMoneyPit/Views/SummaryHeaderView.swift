@@ -21,15 +21,15 @@ struct SummaryHeaderView: View {
     }
 
     var body: some View {
-        VStack(spacing: 14) {
-            VStack(spacing: 6) {
+        VStack(spacing: 10) {
+            VStack(spacing: 3) {
                 Text("TOTAL SPENT TO DATE")
-                    .font(Theme.ledgerLabel)
+                    .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(1.4)
                     .foregroundStyle(Theme.inkSecondary)
 
                 Text(formatted(store.totals.totalSpent))
-                    .font(Theme.totalNumeral)
+                    .font(Theme.totalNumeral(scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(Theme.ink)
 
@@ -38,7 +38,7 @@ struct SummaryHeaderView: View {
                     Rectangle().fill(Theme.ledgerBorder).frame(width: 180, height: 1.25)
                     Rectangle().fill(Theme.ledgerBorder).frame(width: 180, height: 1.25)
                 }
-                .padding(.top, 2)
+                .padding(.top, 1)
             }
 
             if !isCollapsed {
@@ -55,7 +55,7 @@ struct SummaryHeaderView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(20)
+        .padding(14)
         .frame(maxWidth: 720)
         .background(Theme.ledgerPaper)
         .overlay(alignment: .topTrailing) {
@@ -65,7 +65,7 @@ struct SummaryHeaderView: View {
                 }
             } label: {
                 Image(systemName: isCollapsed ? "chevron.down" : "chevron.up")
-                    .font(.caption.weight(.bold))
+                    .font(Theme.scaledFont(Theme.FontSize.caption, weight: .bold, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
                     .padding(8)
             }
@@ -78,7 +78,7 @@ struct SummaryHeaderView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .frame(maxWidth: .infinity)
-        .padding([.horizontal, .top], 14)
+        .padding([.horizontal, .top], 8)
         .onAppear { syncHomeValueText() }
         .onChange(of: store.homeValue) { _, _ in
             if !isHomeValueFocused { syncHomeValueText() }
@@ -95,13 +95,13 @@ struct SummaryHeaderView: View {
     private func statTile(title: String, value: Decimal, color: Color) -> some View {
         VStack(spacing: 3) {
             Text(title.uppercased())
-                .font(Theme.ledgerLabel)
+                .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             Text(formatted(value))
-                .font(.title3.weight(.semibold))
+                .font(Theme.scaledFont(Theme.FontSize.title3, weight: .semibold, scale: store.textScale))
                 .monospacedDigit()
                 .foregroundStyle(color)
         }
@@ -112,14 +112,17 @@ struct SummaryHeaderView: View {
         HStack(spacing: 16) {
             HStack(spacing: 6) {
                 Text("Home Value")
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
                 if store.isPrivacyModeEnabled {
                     Text(homeValueText.isEmpty ? "—" : Theme.mask(homeValueText))
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .frame(minWidth: 100, idealWidth: 140, maxWidth: 220, alignment: .trailing)
                         .foregroundStyle(Theme.ink)
                         .help("Turn off privacy mode to edit")
                 } else {
                     TextField("Enter estimate", text: $homeValueText)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
                         .frame(minWidth: 100, idealWidth: 140, maxWidth: 220)
                         .multilineTextAlignment(.trailing)
@@ -135,19 +138,19 @@ struct SummaryHeaderView: View {
                 let difference = homeValue - store.totals.totalSpent
                 let sign = difference >= 0 ? "+" : ""
                 Text("\(sign)\(formatted(difference)) vs. spent")
-                    .font(.subheadline.weight(.medium))
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(difference >= 0 ? Theme.ledgerGreen : Theme.ledgerRed)
             }
 
             if let equity = store.equity {
                 Text("Equity: \(formatted(equity))")
-                    .font(.subheadline.weight(.medium))
+                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(equity >= 0 ? Theme.ledgerGreen : Theme.ledgerRed)
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
-                    .font(.caption)
+                    .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
             }
         }

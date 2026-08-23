@@ -18,23 +18,26 @@ struct ItemFormView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(isEditing ? "Edit Item" : "Add Item")
-                .font(.title2.weight(.semibold))
+                .font(Theme.scaledFont(Theme.FontSize.title2, weight: .semibold, scale: store.textScale))
                 .foregroundStyle(Theme.ink)
 
             VStack(alignment: .leading, spacing: 14) {
                 labeledField("Name") {
                     TextField("", text: $name)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
                 }
 
                 labeledField("Category") {
                     TextField("", text: $category)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
                 }
 
                 labeledField("Cost") {
                     TextField("Leave blank if not spent yet", text: $costText)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
                 }
 
@@ -87,7 +90,7 @@ struct ItemFormView: View {
             }
         }
         .padding(24)
-        .frame(width: 440)
+        .frame(minWidth: 440, idealWidth: 440)
         .tint(Theme.ledgerGreen)
         .onAppear { populateFieldsIfEditing() }
     }
@@ -96,7 +99,7 @@ struct ItemFormView: View {
     private func labeledField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(Theme.ledgerLabel)
+                .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(0.6)
                 .foregroundStyle(Theme.inkSecondary)
             content()
