@@ -172,6 +172,7 @@ struct LongTermComparisonView: View {
                     Text("Buy needs a new home price below.")
                 }
                 Text("Buy's Maintenance/Rent reuses today's Maintenance total as a stand-in for the new home's upkeep.")
+                Text("Buy's Ending Net Worth also invests any of today's sale proceeds not put toward the down payment, same as Rent does with its own proceeds.")
             }
             .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
             .foregroundStyle(Theme.inkSecondary)

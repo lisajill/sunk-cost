@@ -170,9 +170,11 @@ final class AppStore {
     /// current mortgage's rate, a 30-year term).
     var buyingElsewhereNetWorthProjection: Decimal? {
         guard let newHomePrice else { return nil }
+        let netProceeds = sellScenario?.netProceeds ?? 0
         return projectBuyingElsewhereNetWorth(
             newHomePrice: newHomePrice,
-            downPayment: newHomeDownPayment ?? sellScenario?.netProceeds ?? 0,
+            downPayment: newHomeDownPayment ?? netProceeds,
+            netProceedsAvailable: netProceeds,
             appreciationPercent: homeAppreciationPercent ?? 3,
             newMortgageAnnualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
             newMortgageTermYears: newMortgageTermYears ?? 30,
