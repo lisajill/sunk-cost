@@ -135,7 +135,7 @@ struct ContentView: View {
                 set: { store.filter.searchText = $0.isEmpty ? nil : $0 }
             ),
             placement: .toolbar,
-            prompt: "Search name, category, or notes"
+            prompt: selectedTab == .items ? "Search name, category, or notes" : "Search categories or notes"
         )
     }
 }

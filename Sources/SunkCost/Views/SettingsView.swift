@@ -137,6 +137,17 @@ struct SettingsView: View {
                 }
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+
+            Divider()
+
+            Text("The app also keeps its own automatic daily backups (the last 14 days) without you doing anything — a recovery path if something gets accidentally deleted or edited wrong.")
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
+                .foregroundStyle(.secondary)
+
+            Button("Show Backups Folder…") {
+                store.revealBackupsFolder()
+            }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
         }
         .alert(
             "Replace Current Data?",

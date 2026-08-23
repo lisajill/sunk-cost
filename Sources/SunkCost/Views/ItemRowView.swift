@@ -100,10 +100,22 @@ struct ItemRowView: View {
                     )
             }
             .buttonStyle(.plain)
-            .help("Filter the list to \(statusLabel) items")
+            .help(statusTooltip)
             .frame(width: ItemListColumn.status * store.textScale, alignment: .trailing)
         }
         .padding(.vertical, 4)
+    }
+
+    private var statusTooltip: String {
+        guard item.status == .gone, let disposition = item.disposition else {
+            return "Filter the list to \(statusLabel) items"
+        }
+        var text = disposition.label
+        if disposition == .sold, let amountRecovered = item.amountRecovered {
+            let formatted = Self.currencyFormatter.string(from: amountRecovered as NSDecimalNumber) ?? "$0"
+            text += " for \(formatted)"
+        }
+        return "\(text) — click to filter the list to Gone items"
     }
 
     private var statusLabel: String {

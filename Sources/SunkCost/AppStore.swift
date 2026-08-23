@@ -150,10 +150,20 @@ final class AppStore {
     private func save() {
         do {
             try ItemStore.save(currentAppData(), to: fileURL)
+            BackupManager.snapshot(dataFileURL: fileURL, storageFolder: storageFolderURL)
             loadError = nil
         } catch {
             loadError = "Couldn't save your changes: \(error.localizedDescription)"
         }
+    }
+
+    /// Opens Finder to the folder of silent daily backups (Settings ->
+    /// "Show Backups Folder…") -- the recovery path for an accidental
+    /// delete or a bad edit.
+    func revealBackupsFolder() {
+        let folder = BackupManager.backupsFolder(in: storageFolderURL)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        NSWorkspace.shared.activateFileViewerSelecting([folder])
     }
 
     func addItem(_ item: Item) {

@@ -28,6 +28,24 @@ public enum ItemType: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// What happened to a Gone item -- most of the time it's given away or
+/// trashed, not sold, so this isn't just a "sale price" field.
+public enum Disposition: String, Codable, CaseIterable, Sendable {
+    case sold
+    case givenAway
+    case trashed
+    case other
+
+    public var label: String {
+        switch self {
+        case .sold: return "Sold"
+        case .givenAway: return "Given Away"
+        case .trashed: return "Trashed"
+        case .other: return "Other"
+        }
+    }
+}
+
 public struct Item: Identifiable, Codable, Sendable {
     public var id: UUID
     public var name: String
@@ -45,6 +63,11 @@ public struct Item: Identifiable, Codable, Sendable {
     /// leaves with the owner. Drives what counts toward the "vs. Home
     /// Value" comparison.
     public var type: ItemType
+    /// What happened to it, if Gone -- meaningless for any other status.
+    public var disposition: Disposition?
+    /// What you got for it, if sold. Only meaningful alongside
+    /// `disposition == .sold`; given-away or trashed items don't have one.
+    public var amountRecovered: Decimal?
 
     public init(
         id: UUID = UUID(),
@@ -54,7 +77,9 @@ public struct Item: Identifiable, Codable, Sendable {
         status: Status,
         dateAdded: Date? = Date(),
         notes: String? = nil,
-        type: ItemType = .moveable
+        type: ItemType = .moveable,
+        disposition: Disposition? = nil,
+        amountRecovered: Decimal? = nil
     ) {
         self.id = id
         self.name = name
@@ -64,10 +89,12 @@ public struct Item: Identifiable, Codable, Sendable {
         self.dateAdded = dateAdded
         self.notes = notes
         self.type = type
+        self.disposition = disposition
+        self.amountRecovered = amountRecovered
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, category, cost, status, dateAdded, notes, type
+        case id, name, category, cost, status, dateAdded, notes, type, disposition, amountRecovered
     }
 
     // Manual decode so JSON/CSV predating the `type` field (every item
@@ -85,6 +112,8 @@ public struct Item: Identifiable, Codable, Sendable {
         dateAdded = try container.decodeIfPresent(Date.self, forKey: .dateAdded)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         type = try container.decodeIfPresent(ItemType.self, forKey: .type) ?? .moveable
+        disposition = try container.decodeIfPresent(Disposition.self, forKey: .disposition)
+        amountRecovered = try container.decodeIfPresent(Decimal.self, forKey: .amountRecovered)
     }
 }
 
@@ -100,7 +129,9 @@ extension Item: Equatable {
             lhs.cost == rhs.cost,
             lhs.status == rhs.status,
             lhs.notes == rhs.notes,
-            lhs.type == rhs.type
+            lhs.type == rhs.type,
+            lhs.disposition == rhs.disposition,
+            lhs.amountRecovered == rhs.amountRecovered
         else {
             return false
         }

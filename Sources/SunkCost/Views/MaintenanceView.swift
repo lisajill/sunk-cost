@@ -12,7 +12,13 @@ struct MaintenanceView: View {
     @State private var showRequiredOnly = false
 
     private var visibleCategories: [MaintenanceCategory] {
-        showRequiredOnly ? store.maintenanceCategories.filter(\.isRequired) : store.maintenanceCategories
+        let filteredByRequired = showRequiredOnly ? store.maintenanceCategories.filter(\.isRequired) : store.maintenanceCategories
+        let trimmedSearch = store.filter.searchText?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard let search = trimmedSearch, !search.isEmpty else { return filteredByRequired }
+        return filteredByRequired.filter { category in
+            category.name.lowercased().contains(search)
+                || (category.notes?.lowercased().contains(search) ?? false)
+        }
     }
 
     private static let currencyFormatter: NumberFormatter = {
@@ -33,13 +39,20 @@ struct MaintenanceView: View {
             if store.maintenanceCategories.isEmpty {
                 emptyState
             } else {
-                List {
-                    ForEach(visibleCategories) { category in
-                        categoryRow(for: category)
+                if visibleCategories.isEmpty {
+                    Text("No categories match your search or filter.")
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(visibleCategories) { category in
+                            categoryRow(for: category)
+                        }
                     }
+                    .listStyle(.inset)
+                    .id(store.appearanceMode)
                 }
-                .listStyle(.inset)
-                .id(store.appearanceMode)
 
                 totalsFooter
             }
@@ -177,6 +190,7 @@ private struct MaintenanceCategoryFormView: View {
     @State private var monthlyAmountText: String = ""
     @State private var notes: String = ""
     @State private var isRequired: Bool = true
+    @State private var isShowingDeleteConfirmation = false
 
     private var isEditing: Bool { category != nil }
 
@@ -254,10 +268,7 @@ private struct MaintenanceCategoryFormView: View {
             HStack {
                 if isEditing {
                     Button("Delete", role: .destructive) {
-                        if let category {
-                            store.deleteMaintenanceCategory(category)
-                        }
-                        dismiss()
+                        isShowingDeleteConfirmation = true
                     }
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 }
@@ -288,6 +299,20 @@ private struct MaintenanceCategoryFormView: View {
         // a TextField in this sheet has focus -- onSubmit is what actually
         // wires the Return key to the save action.
         .onSubmit { save() }
+        .confirmationDialog(
+            "Delete \"\(name)\"?",
+            isPresented: $isShowingDeleteConfirmation
+        ) {
+            Button("Delete", role: .destructive) {
+                if let category {
+                    store.deleteMaintenanceCategory(category)
+                }
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This can't be undone.")
+        }
     }
 
     @ViewBuilder

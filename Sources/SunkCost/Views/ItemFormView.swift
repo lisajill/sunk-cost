@@ -15,6 +15,9 @@ struct ItemFormView: View {
     @State private var date: Date = Date()
     @State private var hasDate = true
     @State private var notes: String = ""
+    @State private var disposition: Disposition = .givenAway
+    @State private var amountRecoveredText: String = ""
+    @State private var isShowingDeleteConfirmation = false
 
     private var isEditing: Bool { item != nil }
 
@@ -53,6 +56,26 @@ struct ItemFormView: View {
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .labelsHidden()
                     .pickerStyle(.segmented)
+                }
+
+                if status == .gone {
+                    labeledField("What Happened to It") {
+                        Picker("", selection: $disposition) {
+                            ForEach(Disposition.allCases, id: \.self) { disposition in
+                                Text(disposition.label).tag(disposition)
+                            }
+                        }
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+
+                        if disposition == .sold {
+                            TextField("Amount recovered", text: $amountRecoveredText)
+                                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                                .textFieldStyle(.roundedBorder)
+                                .padding(.top, 4)
+                        }
+                    }
                 }
 
                 labeledField("Type") {
@@ -126,10 +149,7 @@ struct ItemFormView: View {
             HStack {
                 if isEditing {
                     Button("Delete", role: .destructive) {
-                        if let item {
-                            store.deleteItem(item)
-                        }
-                        dismiss()
+                        isShowingDeleteConfirmation = true
                     }
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 }
@@ -158,6 +178,20 @@ struct ItemFormView: View {
         // wires the Return key to the save action. TextEditor (Notes) isn't
         // affected -- Return there just inserts a newline, as it should.
         .onSubmit { save() }
+        .confirmationDialog(
+            "Delete \"\(name)\"?",
+            isPresented: $isShowingDeleteConfirmation
+        ) {
+            Button("Delete", role: .destructive) {
+                if let item {
+                    store.deleteItem(item)
+                }
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This can't be undone.")
+        }
     }
 
     @ViewBuilder
@@ -187,6 +221,10 @@ struct ItemFormView: View {
             costText = NSDecimalNumber(decimal: cost).stringValue
         }
         notes = item.notes ?? ""
+        disposition = item.disposition ?? .givenAway
+        if let amountRecovered = item.amountRecovered {
+            amountRecoveredText = NSDecimalNumber(decimal: amountRecovered).stringValue
+        }
     }
 
     private func save() {
@@ -200,6 +238,14 @@ struct ItemFormView: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalNotes = trimmedNotes.isEmpty ? nil : trimmedNotes
 
+        // Disposition/amount recovered only mean anything for Gone items --
+        // clear them if the status isn't (or no longer is) Gone.
+        let finalDisposition: Disposition? = status == .gone ? disposition : nil
+        let amountRecoveredDigitsAndDot = amountRecoveredText.filter { $0.isNumber || $0 == "." }
+        let finalAmountRecovered: Decimal? = (status == .gone && disposition == .sold && !amountRecoveredDigitsAndDot.isEmpty)
+            ? Decimal(string: amountRecoveredDigitsAndDot)
+            : nil
+
         if var existing = item {
             existing.name = trimmedName
             existing.category = trimmedCategory
@@ -208,6 +254,8 @@ struct ItemFormView: View {
             existing.dateAdded = dateAdded
             existing.notes = finalNotes
             existing.type = type
+            existing.disposition = finalDisposition
+            existing.amountRecovered = finalAmountRecovered
             store.updateItem(existing)
         } else {
             let newItem = Item(
@@ -217,7 +265,9 @@ struct ItemFormView: View {
                 status: status,
                 dateAdded: dateAdded,
                 notes: finalNotes,
-                type: type
+                type: type,
+                disposition: finalDisposition,
+                amountRecovered: finalAmountRecovered
             )
             store.addItem(newItem)
         }
