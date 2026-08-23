@@ -45,6 +45,26 @@ struct LongTermComparisonView: View {
         return store.isPrivacyModeEnabled ? Theme.mask(text) : text
     }
 
+    /// New Home Price minus the down payment actually applied to it -- the
+    /// size of the new mortgage itself, so the P&I figure above can
+    /// actually be sanity-checked instead of requiring mental subtraction.
+    private var newLoanAmount: Decimal? {
+        guard let newHomePrice = store.newHomePrice else { return nil }
+        let downPayment = store.newHomeDownPayment ?? store.sellScenario?.netProceeds ?? 0
+        return max(newHomePrice - min(downPayment, newHomePrice), 0)
+    }
+
+    private var principalAndInterestTooltip: String? {
+        var parts: [String] = []
+        if let mortgageOriginalAmount = store.mortgageOriginalAmount {
+            parts.append("Keep is on your \(formatted(mortgageOriginalAmount)) original loan.")
+        }
+        if let newLoanAmount {
+            parts.append("Buy is on a \(formatted(newLoanAmount)) new loan (New Home Price minus Down Payment).")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Divider().padding(.vertical, 4)
@@ -94,6 +114,11 @@ struct LongTermComparisonView: View {
                 assumptionGroup("Buying Elsewhere") {
                     dollarField("New Home Price", text: $newHomePriceText, placeholder: "required", field: .newHomePrice)
                     dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds", field: .newHomeDownPayment)
+                    if let newLoanAmount {
+                        Text("→ Loan Amount: \(formatted(newLoanAmount))")
+                            .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                            .foregroundStyle(Theme.inkSecondary)
+                    }
                     percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
                     percentField("Property Tax (per year)", text: $newPropertyTaxText, field: .newPropertyTax)
                     dollarField("Insurance (per year)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
@@ -141,7 +166,13 @@ struct LongTermComparisonView: View {
 
                 Divider().gridCellColumns(4)
 
-                tableRow("Principal & Interest", keep?.principalAndInterest, rent?.principalAndInterest, buy?.principalAndInterest)
+                tableRow(
+                    "Principal & Interest",
+                    keep?.principalAndInterest,
+                    rent?.principalAndInterest,
+                    buy?.principalAndInterest,
+                    tooltip: principalAndInterestTooltip
+                )
                 tableRow("Property Tax", keep?.propertyTax, rent?.propertyTax, buy?.propertyTax)
                 tableRow("Insurance", keep?.insurance, rent?.insurance, buy?.insurance)
                 tableRow("Maintenance / Rent", keep?.maintenanceOrRent, rent?.maintenanceOrRent, buy?.maintenanceOrRent)
@@ -186,7 +217,7 @@ struct LongTermComparisonView: View {
             .foregroundStyle(Theme.inkSecondary)
     }
 
-    private func tableRow(_ label: String, _ keep: Decimal?, _ rent: Decimal?, _ buy: Decimal?, bold: Bool = false) -> some View {
+    private func tableRow(_ label: String, _ keep: Decimal?, _ rent: Decimal?, _ buy: Decimal?, bold: Bool = false, tooltip: String? = nil) -> some View {
         GridRow {
             Text(label)
                 .font(Theme.scaledFont(Theme.FontSize.callout, weight: bold ? .semibold : .regular, scale: store.textScale))
@@ -196,6 +227,7 @@ struct LongTermComparisonView: View {
             tableCell(rent, bold: bold)
             tableCell(buy, bold: bold)
         }
+        .modifier(OptionalHelp(tooltip))
     }
 
     private func tableCell(_ value: Decimal?, bold: Bool) -> some View {
@@ -296,5 +328,17 @@ struct LongTermComparisonView: View {
             newHomeownersInsuranceAnnual: decimal(newInsuranceText)
         )
         syncFields()
+    }
+}
+
+private struct OptionalHelp: ViewModifier {
+    let text: String?
+    init(_ text: String?) { self.text = text }
+    func body(content: Content) -> some View {
+        if let text {
+            content.help(text)
+        } else {
+            content
+        }
     }
 }
