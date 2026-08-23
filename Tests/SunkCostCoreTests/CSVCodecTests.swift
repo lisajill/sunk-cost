@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import TheMoneyPitCore
+@testable import SunkCostCore
 
 @Suite("CSV import/export")
 struct CSVCodecTests {

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import TheMoneyPitCore
+@testable import SunkCostCore
 
 @Suite("Totals calculation")
 struct TotalsTests {

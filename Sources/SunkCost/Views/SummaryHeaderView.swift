@@ -1,5 +1,5 @@
 import SwiftUI
-import TheMoneyPitCore
+import SunkCostCore
 
 struct SummaryHeaderView: View {
     @Environment(AppStore.self) private var store

@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "TheMoneyPit",
+    name: "SunkCost",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "TheMoneyPit", targets: ["TheMoneyPit"])
+        .executable(name: "SunkCost", targets: ["SunkCost"])
     ],
     targets: [
-        .target(name: "TheMoneyPitCore"),
+        .target(name: "SunkCostCore"),
         .executableTarget(
-            name: "TheMoneyPit",
-            dependencies: ["TheMoneyPitCore"]
+            name: "SunkCost",
+            dependencies: ["SunkCostCore"]
         ),
         .testTarget(
-            name: "TheMoneyPitCoreTests",
-            dependencies: ["TheMoneyPitCore"]
+            name: "SunkCostCoreTests",
+            dependencies: ["SunkCostCore"]
         )
     ]
 )

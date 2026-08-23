@@ -1,5 +1,5 @@
 import Testing
-@testable import TheMoneyPitCore
+@testable import SunkCostCore
 
 @Suite("Equity calculation")
 struct EquityTests {

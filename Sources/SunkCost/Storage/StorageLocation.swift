@@ -13,7 +13,7 @@ import AppKit
 /// for "the user granted access to this folder, remember that") and re-open
 /// access to it on every launch.
 enum StorageLocation {
-    static let bookmarkKey = "TheMoneyPit.StorageFolderBookmark"
+    static let bookmarkKey = "SunkCost.StorageFolderBookmark"
     static let fileName = "items.json"
 
     static func defaultFolderURL() -> URL {

@@ -1,5 +1,5 @@
 import SwiftUI
-import TheMoneyPitCore
+import SunkCostCore
 
 struct FilterBarView: View {
     @Environment(AppStore.self) private var store

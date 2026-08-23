@@ -1,5 +1,5 @@
 import SwiftUI
-import TheMoneyPitCore
+import SunkCostCore
 
 struct ItemRowView: View {
     @Environment(AppStore.self) private var store

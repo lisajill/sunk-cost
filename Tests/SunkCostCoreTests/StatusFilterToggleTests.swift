@@ -1,5 +1,5 @@
 import Testing
-@testable import TheMoneyPitCore
+@testable import SunkCostCore
 
 @Suite("Status filter toggle")
 struct StatusFilterToggleTests {

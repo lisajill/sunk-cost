@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import TheMoneyPitCore
+import SunkCostCore
 
 struct SettingsView: View {
     @Environment(AppStore.self) private var store

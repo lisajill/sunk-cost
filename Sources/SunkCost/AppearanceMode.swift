@@ -5,7 +5,7 @@ enum AppearanceMode: String, CaseIterable {
     case light
     case dark
 
-    static let userDefaultsKey = "TheMoneyPit.AppearanceMode"
+    static let userDefaultsKey = "SunkCost.AppearanceMode"
 
     var colorScheme: ColorScheme? {
         switch self {

@@ -13,20 +13,20 @@ echo "Building release binary..."
 cd "$PROJECT_DIR"
 swift build -c release
 
-BIN_PATH="$PROJECT_DIR/.build/release/TheMoneyPit"
+BIN_PATH="$PROJECT_DIR/.build/release/SunkCost"
 
 echo "Assembling app bundle at $APP_BUNDLE ..."
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
-cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/TheMoneyPit"
+cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/SunkCost"
 cp "$SCRIPT_DIR/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 cp "$SCRIPT_DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
 echo "Code-signing with App Sandbox entitlements..."
 codesign --force --deep --options runtime \
-    --entitlements "$SCRIPT_DIR/TheMoneyPit.entitlements" \
+    --entitlements "$SCRIPT_DIR/SunkCost.entitlements" \
     --sign - \
     "$APP_BUNDLE"
 

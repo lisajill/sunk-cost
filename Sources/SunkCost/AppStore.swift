@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
-import TheMoneyPitCore
+import SunkCostCore
 
 @Observable
 @MainActor

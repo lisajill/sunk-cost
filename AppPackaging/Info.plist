@@ -15,7 +15,7 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>TheMoneyPit</string>
+    <string>SunkCost</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleSignature</key>

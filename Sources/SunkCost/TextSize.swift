@@ -11,7 +11,7 @@ import SwiftUI
 enum TextSizeControl {
     static let scales: [CGFloat] = [0.85, 1.0, 1.15, 1.35, 1.6, 1.9]
     static let defaultIndex = scales.firstIndex(of: 1.0) ?? 1
-    static let userDefaultsKey = "TheMoneyPit.TextSizeIndex"
+    static let userDefaultsKey = "SunkCost.TextSizeIndex"
 }
 
 private struct AppTextScaleKey: EnvironmentKey {

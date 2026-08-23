@@ -22,23 +22,19 @@ Developer account, macOS Gatekeeper will likely flag it as being from an
 Requires Xcode (for the Swift toolchain and code signing tools).
 
 ```
-git clone <this repo>
-cd HomeRenoApp
+git clone https://github.com/lisajill/sunk-cost.git
+cd sunk-cost
 swift test              # run the test suite
 ./AppPackaging/build_app.sh   # builds and packages build/"Sunk Cost.app"
 ```
 
-The internal Swift module names (`TheMoneyPit`, `TheMoneyPitCore`) predate
-the app's final name and are cosmetic-only — they don't affect anything
-user-facing.
-
 ## Project layout
 
-- `Sources/TheMoneyPitCore/` — data model and business logic (items, totals,
+- `Sources/SunkCostCore/` — data model and business logic (items, totals,
   equity, mortgage math, CSV import/export), fully unit tested with no
   UI dependencies.
-- `Sources/TheMoneyPit/` — the SwiftUI app itself.
-- `Tests/TheMoneyPitCoreTests/` — the test suite for `TheMoneyPitCore`.
+- `Sources/SunkCost/` — the SwiftUI app itself.
+- `Tests/SunkCostCoreTests/` — the test suite for `SunkCostCore`.
 - `AppPackaging/` — Info.plist, entitlements, app icon, and the build script
   that assembles a real `.app` bundle from the Swift Package build output.
 - `SampleData/sample-data.json` — fake placeholder data you can load via

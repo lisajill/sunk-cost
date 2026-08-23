@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct TheMoneyPitApp: App {
+struct SunkCostApp: App {
     @State private var store = AppStore()
 
     var body: some Scene {
