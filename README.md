@@ -33,7 +33,7 @@ swift test              # run the test suite
 ## Project layout
 
 - `Sources/SunkCostCore/` — data model and business logic (items, totals,
-  equity, mortgage math, Maintenance categories/payments, CSV import/export),
+  equity, mortgage math, Maintenance categories, CSV import/export),
   fully unit tested with no UI dependencies.
 - `Sources/SunkCost/` — the SwiftUI app itself.
 - `Tests/SunkCostCoreTests/` — the test suite for `SunkCostCore`.
@@ -47,9 +47,10 @@ swift test              # run the test suite
 ## Future plans
 
 The app tracks money already put into the house (one-time items, split into
-Value and Moveable) and what it costs to keep it running (Maintenance
-categories and payments, under the Maintenance tab). One more layer is
-planned:
+Value and Moveable) and what it costs to keep it running (a recurring
+monthly amount per Maintenance category, under the Maintenance tab — set
+once and updated only when the rate changes, not a payment log). One more
+layer is planned:
 
 - **Cost to leave** — a sell-scenario calculator: given a purchase price,
   mortgage payoff balance, and assumed selling costs (realtor commission,

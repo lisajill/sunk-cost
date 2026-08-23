@@ -52,6 +52,9 @@ struct ContentView: View {
                     .padding(.horizontal)
                     .padding(.top, 8)
 
+                ItemListHeaderView()
+                    .id(store.appearanceMode)
+
                 List {
                     ForEach(store.filteredItems) { item in
                         ItemRowView(

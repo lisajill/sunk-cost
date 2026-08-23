@@ -46,18 +46,6 @@ struct FilterBarView: View {
                 .frame(maxWidth: 180)
                 .help("Show only Value or only Moveable items")
 
-                Picker("Sort", selection: Binding(
-                    get: { store.sortOption },
-                    set: { store.sortOption = $0 }
-                )) {
-                    ForEach(SortOption.allCases, id: \.self) { option in
-                        Text(option.label).tag(option)
-                    }
-                }
-                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                .frame(maxWidth: 220)
-                .help("Change how the list below is ordered")
-
                 Spacer()
             }
             // NSPopUpButton-backed Pickers can be slow to pick up the new

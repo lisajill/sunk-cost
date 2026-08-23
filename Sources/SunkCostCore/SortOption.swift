@@ -20,6 +20,27 @@ public enum SortOption: String, CaseIterable, Sendable {
     }
 }
 
+/// A clickable column header in the item list.
+public enum SortColumn: Sendable {
+    case date
+    case item
+    case amount
+}
+
+/// What the sort option should become after clicking a column header:
+/// clicking the column already driving the sort flips its direction;
+/// clicking a different column switches to that column's default direction.
+public func toggledSortOption(current: SortOption, tapped column: SortColumn) -> SortOption {
+    switch column {
+    case .date:
+        return current == .dateNewest ? .dateOldest : .dateNewest
+    case .item:
+        return current == .nameAZ ? .nameZA : .nameAZ
+    case .amount:
+        return current == .costHighLow ? .costLowHigh : .costHighLow
+    }
+}
+
 public extension Array where Element == Item {
     /// Named `sorted(using:)` rather than `sorted(by:)` to avoid colliding
     /// with the standard library's closure-based overload.

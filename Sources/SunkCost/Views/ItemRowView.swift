@@ -1,6 +1,13 @@
 import SwiftUI
 import SunkCostCore
 
+/// Shared column widths so `ItemListHeaderView`'s clickable column labels
+/// line up with the values each row actually shows.
+enum ItemListColumn {
+    static let date: CGFloat = 92
+    static let amount: CGFloat = 90
+}
+
 struct ItemRowView: View {
     @Environment(AppStore.self) private var store
 
@@ -52,7 +59,7 @@ struct ItemRowView: View {
                                 .help(notes)
                         }
                     }
-                    Text(dateText.map { "\(item.category.uppercased()) · \($0)" } ?? item.category.uppercased())
+                    Text(item.category.uppercased())
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .medium, scale: store.textScale))
                         .tracking(0.5)
                         .foregroundStyle(Theme.inkSecondary)
@@ -61,12 +68,18 @@ struct ItemRowView: View {
             }
             .buttonStyle(.plain)
 
-            Spacer()
+            Spacer(minLength: 8)
+
+            Text(dateText ?? "—")
+                .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
+                .foregroundStyle(Theme.inkSecondary)
+                .frame(width: ItemListColumn.date * store.textScale, alignment: .trailing)
 
             Text(costText)
                 .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 .monospacedDigit()
                 .foregroundStyle(Theme.inkSecondary)
+                .frame(width: ItemListColumn.amount * store.textScale, alignment: .trailing)
 
             Button(action: onTapStatus) {
                 Text(statusLabel)
