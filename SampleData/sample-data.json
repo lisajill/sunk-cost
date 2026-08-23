@@ -1,0 +1,73 @@
+{
+  "homeValue": 425000,
+  "items": [
+    {
+      "category": "Furniture",
+      "cost": 1200.0,
+      "dateAdded": "2025-04-21T00:00:00.000Z",
+      "id": "3d6bc780-4c90-44c2-87da-0d2fcf59d3f2",
+      "name": "Living Room Sofa",
+      "status": "owned"
+    },
+    {
+      "category": "Furniture",
+      "cost": 650.0,
+      "dateAdded": "2025-04-06T00:00:00.000Z",
+      "id": "86aa733d-1363-47e2-ae38-50472f2479df",
+      "name": "Dining Table",
+      "status": "owned"
+    },
+    {
+      "category": "Furniture",
+      "cost": 300.0,
+      "dateAdded": "2025-04-26T00:00:00.000Z",
+      "id": "e3515752-008f-494a-9a12-b430aef175e9",
+      "name": "Old Recliner",
+      "status": "gone"
+    },
+    {
+      "category": "Furniture",
+      "cost": null,
+      "dateAdded": "2025-03-22T00:00:00.000Z",
+      "id": "7b373da4-8d70-4fd6-ad7a-97368cdbb28f",
+      "name": "Bookshelf",
+      "status": "planned"
+    },
+    {
+      "category": "Property Upgrades",
+      "cost": 4200.0,
+      "dateAdded": "2025-03-02T00:00:00.000Z",
+      "id": "d4c7e13f-aa63-4f88-8e10-31d28195e146",
+      "name": "Roof Repair",
+      "status": "owned"
+    },
+    {
+      "category": "Property Upgrades",
+      "cost": 2800.0,
+      "dateAdded": "2025-01-31T00:00:00.000Z",
+      "id": "79a52b15-f00d-482a-955f-1dff9e1411f5",
+      "name": "Backyard Fence",
+      "status": "owned"
+    },
+    {
+      "category": "Property Upgrades",
+      "cost": null,
+      "dateAdded": "2025-01-21T00:00:00.000Z",
+      "id": "67c7269d-ef96-4274-aec8-dbb3fbf535c8",
+      "name": "New Water Heater",
+      "status": "planned"
+    },
+    {
+      "category": "Property Upgrades",
+      "cost": 150.0,
+      "dateAdded": "2025-04-16T00:00:00.000Z",
+      "id": "00621d53-ef98-441d-a0f5-a493d2ec3444",
+      "name": "Old Shed",
+      "status": "gone"
+    }
+  ],
+  "mortgageBalance": 290000,
+  "mortgageInterestRatePercent": 4.25,
+  "mortgageOriginalAmount": 320000,
+  "mortgageStartDate": "2021-06-01T00:00:00.000Z"
+}

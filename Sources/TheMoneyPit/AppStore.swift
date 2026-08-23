@@ -1,0 +1,296 @@
+import Foundation
+import Observation
+import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
+import TheMoneyPitCore
+
+@Observable
+@MainActor
+final class AppStore {
+    var items: [Item] = []
+    var homeValue: Decimal?
+    var mortgageOriginalAmount: Decimal?
+    var mortgageInterestRatePercent: Decimal?
+    var mortgageStartDate: Date?
+    var mortgageBalance: Decimal?
+    var mortgageTermYears: Int?
+    var monthlyPaymentOverride: Decimal?
+    var filter = ItemFilter()
+    private(set) var storageFolderURL: URL
+    var loadError: String?
+
+    var textSizeIndex: Int {
+        didSet { UserDefaults.standard.set(textSizeIndex, forKey: TextSizeControl.userDefaultsKey) }
+    }
+    var dynamicTypeSize: DynamicTypeSize { TextSizeControl.steps[textSizeIndex] }
+
+    var appearanceMode: AppearanceMode {
+        didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: AppearanceMode.userDefaultsKey) }
+    }
+
+    /// Masks dollar figures for sharing a screenshot. Deliberately not
+    /// persisted -- always starts back off on launch, so it can't leave
+    /// values hidden and forgotten.
+    var isPrivacyModeEnabled = false
+    func togglePrivacyMode() { isPrivacyModeEnabled.toggle() }
+
+    private var stopAccessingCurrentFolder: (() -> Void)?
+
+    var totals: Totals { Totals(items: items) }
+    var filteredItems: [Item] { items.filtered(by: filter).sortedNewestFirst() }
+    var availableCategories: [String] { items.distinctCategories }
+    var categoriesWithCounts: [(category: String, count: Int)] {
+        availableCategories.map { category in
+            (category, items.filter { $0.category == category }.count)
+        }
+    }
+    var equity: Decimal? { computeEquity(homeValue: homeValue, mortgageBalance: mortgageBalance) }
+
+    /// The manually-entered payment if there is one; otherwise a calculated
+    /// estimate from amount/rate/term, if all three are present.
+    var monthlyPayment: Decimal? {
+        if let monthlyPaymentOverride { return monthlyPaymentOverride }
+        guard let mortgageOriginalAmount, let mortgageInterestRatePercent, let mortgageTermYears else {
+            return nil
+        }
+        return MortgageMath.monthlyPayment(
+            principal: mortgageOriginalAmount,
+            annualRatePercent: mortgageInterestRatePercent,
+            termYears: mortgageTermYears
+        )
+    }
+    var isMonthlyPaymentCalculated: Bool { monthlyPaymentOverride == nil && monthlyPayment != nil }
+
+    init() {
+        let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
+        self.storageFolderURL = folder
+        self.stopAccessingCurrentFolder = stopAccessing
+        self.textSizeIndex = UserDefaults.standard.object(forKey: TextSizeControl.userDefaultsKey) as? Int
+            ?? TextSizeControl.defaultIndex
+        self.appearanceMode = UserDefaults.standard.string(forKey: AppearanceMode.userDefaultsKey)
+            .flatMap(AppearanceMode.init(rawValue:)) ?? .system
+        load()
+    }
+
+    func cycleAppearanceMode() {
+        appearanceMode = appearanceMode.next()
+    }
+
+    func increaseTextSize() {
+        textSizeIndex = min(textSizeIndex + 1, TextSizeControl.steps.count - 1)
+    }
+
+    func decreaseTextSize() {
+        textSizeIndex = max(textSizeIndex - 1, 0)
+    }
+
+    func resetTextSize() {
+        textSizeIndex = TextSizeControl.defaultIndex
+    }
+
+    private var fileURL: URL {
+        StorageLocation.itemsFileURL(in: storageFolderURL)
+    }
+
+    func load() {
+        do {
+            let data = try ItemStore.load(from: fileURL)
+            items = data.items
+            homeValue = data.homeValue
+            mortgageOriginalAmount = data.mortgageOriginalAmount
+            mortgageInterestRatePercent = data.mortgageInterestRatePercent
+            mortgageStartDate = data.mortgageStartDate
+            mortgageBalance = data.mortgageBalance
+            mortgageTermYears = data.mortgageTermYears
+            monthlyPaymentOverride = data.monthlyPaymentOverride
+            loadError = nil
+        } catch {
+            loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
+            items = []
+            homeValue = nil
+        }
+    }
+
+    private func save() {
+        do {
+            try ItemStore.save(currentAppData(), to: fileURL)
+            loadError = nil
+        } catch {
+            loadError = "Couldn't save your changes: \(error.localizedDescription)"
+        }
+    }
+
+    func addItem(_ item: Item) {
+        items.append(item)
+        save()
+    }
+
+    func updateItem(_ item: Item) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index] = item
+        save()
+    }
+
+    func deleteItem(_ item: Item) {
+        items.removeAll { $0.id == item.id }
+        save()
+    }
+
+    func cycleStatus(for item: Item) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].status = items[index].status.next()
+        save()
+    }
+
+    func toggleStatusFilter(_ status: Status) {
+        filter.status = toggledStatusFilter(current: filter.status, tapped: status)
+    }
+
+    /// Renames a category across every item that uses it. Renaming into an
+    /// already-existing category merges the two -- this is also how you
+    /// "remove" a category: rename it into one you want to keep.
+    func renameCategory(from oldName: String, to newName: String) {
+        let trimmedNewName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedNewName.isEmpty, trimmedNewName != oldName else { return }
+        items = items.renamingCategory(from: oldName, to: trimmedNewName)
+        if filter.category == oldName {
+            filter.category = trimmedNewName
+        }
+        save()
+    }
+
+    func setHomeValue(_ value: Decimal?) {
+        homeValue = value
+        save()
+    }
+
+    func setMortgage(
+        originalAmount: Decimal?,
+        interestRatePercent: Decimal?,
+        startDate: Date?,
+        balance: Decimal?,
+        termYears: Int?,
+        monthlyPaymentOverride: Decimal?
+    ) {
+        mortgageOriginalAmount = originalAmount
+        mortgageInterestRatePercent = interestRatePercent
+        mortgageStartDate = startDate
+        mortgageBalance = balance
+        mortgageTermYears = termYears
+        self.monthlyPaymentOverride = monthlyPaymentOverride
+        save()
+    }
+
+    func chooseNewStorageFolder() {
+        guard StorageLocation.chooseNewFolder() != nil else { return }
+        stopAccessingCurrentFolder?()
+        let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
+        storageFolderURL = folder
+        stopAccessingCurrentFolder = stopAccessing
+        save()
+    }
+
+    func resetToDefaultStorageFolder() {
+        stopAccessingCurrentFolder?()
+        StorageLocation.resetToDefault()
+        let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
+        storageFolderURL = folder
+        stopAccessingCurrentFolder = stopAccessing
+        save()
+    }
+
+    /// Saves a standalone copy of the current data to a file the user picks
+    /// -- for backups, or to hand data to another Mac.
+    func exportData() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "The Money Pit Export.json"
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try ItemStore.save(currentAppData(), to: url)
+        } catch {
+            loadError = "Couldn't export: \(error.localizedDescription)"
+        }
+    }
+
+    /// Opens a file picker and reads the chosen file without applying it yet
+    /// -- the caller should confirm with the user (importing replaces
+    /// everything currently loaded) before calling `applyImportedData`.
+    func pickFileToImport() -> (url: URL, data: AppData)? {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        do {
+            return (url, try ItemStore.load(from: url))
+        } catch {
+            loadError = "Couldn't read that file: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    func applyImportedData(_ data: AppData) {
+        items = data.items
+        homeValue = data.homeValue
+        mortgageOriginalAmount = data.mortgageOriginalAmount
+        mortgageInterestRatePercent = data.mortgageInterestRatePercent
+        mortgageStartDate = data.mortgageStartDate
+        mortgageBalance = data.mortgageBalance
+        mortgageTermYears = data.mortgageTermYears
+        monthlyPaymentOverride = data.monthlyPaymentOverride
+        save()
+    }
+
+    private func currentAppData() -> AppData {
+        AppData(
+            items: items,
+            homeValue: homeValue,
+            mortgageOriginalAmount: mortgageOriginalAmount,
+            mortgageInterestRatePercent: mortgageInterestRatePercent,
+            mortgageStartDate: mortgageStartDate,
+            mortgageBalance: mortgageBalance,
+            mortgageTermYears: mortgageTermYears,
+            monthlyPaymentOverride: monthlyPaymentOverride
+        )
+    }
+
+    /// Saves items as CSV -- the practical way to interoperate with Excel,
+    /// Numbers, and Google Sheets, all of which open/save CSV natively.
+    func exportCSV() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "The Money Pit Export.csv"
+        panel.allowedContentTypes = [.commaSeparatedText]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try CSVCodec.encode(items).write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            loadError = "Couldn't export CSV: \(error.localizedDescription)"
+        }
+    }
+
+    /// Opens a file picker and parses the chosen CSV without applying it yet
+    /// -- the caller should confirm with the user (importing replaces every
+    /// item currently loaded; home value/mortgage info are untouched, since
+    /// CSV only carries items) before calling `applyImportedCSVItems`.
+    func pickCSVFileToImport() -> (url: URL, items: [Item])? {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.commaSeparatedText]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        do {
+            let csvText = try String(contentsOf: url, encoding: .utf8)
+            return (url, try CSVCodec.decode(csvText))
+        } catch {
+            loadError = "Couldn't read that CSV: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    func applyImportedCSVItems(_ importedItems: [Item]) {
+        items = importedItems
+        save()
+    }
+}

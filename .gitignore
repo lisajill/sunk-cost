@@ -1,0 +1,15 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Built app bundle (rebuild with AppPackaging/build_app.sh)
+build/
+
+# Intermediate icon PNGs (AppIcon.icns is what actually ships, and is tracked)
+AppPackaging/AppIcon.iconset/
+
+# macOS
+.DS_Store
+
+# Claude Code session state -- not part of the project
+.claude/
