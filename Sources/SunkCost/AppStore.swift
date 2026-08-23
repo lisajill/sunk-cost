@@ -323,6 +323,86 @@ final class AppStore {
         NSWorkspace.shared.activateFileViewerSelecting([folder])
     }
 
+    /// Plain-text dump of the Sell Scenario and Compare numbers -- inputs
+    /// and results both -- meant for pasting into a chat (with Claude or
+    /// anyone else) to play with the numbers outside the app, without
+    /// wiring any actual network access into the app itself.
+    func compareSummaryText() -> String {
+        let currencyFormatter = NumberFormatter()
+        currencyFormatter.numberStyle = .currency
+        currencyFormatter.currencyCode = "USD"
+        currencyFormatter.maximumFractionDigits = 0
+
+        func fmt(_ value: Decimal?) -> String {
+            guard let value else { return "—" }
+            return currencyFormatter.string(from: value as NSDecimalNumber) ?? "$0"
+        }
+        func pct(_ value: Decimal?) -> String {
+            guard let value else { return "—" }
+            return "\(NSDecimalNumber(decimal: value).stringValue)%"
+        }
+
+        var lines: [String] = ["Sunk Cost — Cost to Leave Summary", ""]
+
+        if let scenario = sellScenario {
+            lines += [
+                "SELL SCENARIO (today)",
+                "Home Value: \(fmt(homeValue))",
+                "Mortgage Payoff: \(fmt(mortgageBalance))",
+                "Selling Costs: \(fmt(scenario.sellingCosts)) (\(pct(realtorCommissionPercent ?? 6)) commission + \(pct(closingCostsPercent ?? 2)) closing)",
+                "Net Proceeds if Sold Today: \(fmt(scenario.netProceeds))",
+            ]
+            if let totalInvested {
+                lines.append("Total Invested (Purchase Price + Value spending): \(fmt(totalInvested))")
+            }
+            if let netProfitOrLoss = scenario.netProfitOrLoss {
+                lines.append("Profit/Loss vs. Total Invested: \(fmt(netProfitOrLoss))")
+            }
+            lines.append("")
+        }
+
+        lines += ["COMPARE: STAY VS. RENT VS. BUY ELSEWHERE (\(projectionYears) years)", ""]
+
+        lines.append("STAYING")
+        lines.append("Home Appreciation: \(pct(homeAppreciationPercent ?? 3))/yr")
+        lines.append("Property Tax: \(pct(propertyTaxPercent ?? 1.2))/yr, Insurance: \(fmt(homeownersInsuranceAnnual ?? 1500))/yr")
+        if let breakdown = stayingMonthlyBreakdown {
+            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
+        }
+        lines.append("Ending Net Worth: \(stayingNetWorthProjection.map(fmt) ?? "needs full mortgage details (original amount, rate, term, start date) in Settings")")
+        lines.append("")
+
+        lines.append("RENTING")
+        lines.append("Investment Return: \(pct(investmentReturnPercent ?? 6))/yr")
+        lines.append("Monthly Rent: \(fmt(monthlyRent)), Rent Increase: \(pct(rentAnnualIncreasePercent ?? 3))/yr")
+        if let breakdown = rentingMonthlyBreakdown {
+            lines.append("Monthly Total: \(fmt(breakdown.total))/mo")
+        }
+        lines.append("Ending Net Worth: \(rentingNetWorthProjection.map(fmt) ?? "needs a monthly rent figure")")
+        lines.append("")
+
+        lines.append("BUYING ELSEWHERE")
+        lines.append("New Home Price: \(fmt(newHomePrice)), Down Payment: \(fmt(newHomeDownPayment ?? sellScenario?.netProceeds))")
+        if let newHomePrice {
+            let downPayment = newHomeDownPayment ?? sellScenario?.netProceeds ?? 0
+            lines.append("Loan Amount: \(fmt(max(newHomePrice - min(downPayment, newHomePrice), 0)))")
+        }
+        lines.append("Mortgage Rate: \(pct(newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6)), Term: \(newMortgageTermYears ?? 30) years")
+        lines.append("Property Tax: \(pct(newPropertyTaxPercent ?? 1.2))/yr, Insurance: \(fmt(newHomeownersInsuranceAnnual ?? 1500))/yr")
+        if let breakdown = buyingElsewhereMonthlyBreakdown {
+            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
+        }
+        lines.append("Ending Net Worth: \(buyingElsewhereNetWorthProjection.map(fmt) ?? "needs a new home price")")
+
+        return lines.joined(separator: "\n")
+    }
+
+    func copyCompareSummaryToClipboard() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(compareSummaryText(), forType: .string)
+    }
+
     func addItem(_ item: Item) {
         items.append(item)
         save()

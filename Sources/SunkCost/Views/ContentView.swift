@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var isShowingAddForm = false
     @State private var editingItem: Item?
     @State private var selectedTab: MainTab = .items
+    @State private var didCopySummary = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -122,6 +123,22 @@ struct ContentView: View {
                     } label: {
                         Label("Add Item", systemImage: "plus")
                     }
+                }
+            }
+
+            if selectedTab == .sellScenario {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        store.copyCompareSummaryToClipboard()
+                        withAnimation { didCopySummary = true }
+                        Task {
+                            try? await Task.sleep(for: .seconds(2))
+                            withAnimation { didCopySummary = false }
+                        }
+                    } label: {
+                        Label(didCopySummary ? "Copied!" : "Copy Summary", systemImage: didCopySummary ? "checkmark" : "doc.on.doc")
+                    }
+                    .help("Copy all the Sell Scenario and Compare numbers as plain text — for pasting into a chat with Claude, a spreadsheet, or anywhere else.")
                 }
             }
         }
