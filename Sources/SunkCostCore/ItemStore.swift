@@ -12,6 +12,13 @@ public enum ItemStore {
             return AppData()
         }
         let data = try Data(contentsOf: url)
+        return try decode(data)
+    }
+
+    /// Decodes `AppData` straight from bytes, no file involved -- used for
+    /// loading the app's embedded sample data during onboarding, in
+    /// addition to `load(from:)`'s on-disk path.
+    public static func decode(_ data: Data) throws -> AppData {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()

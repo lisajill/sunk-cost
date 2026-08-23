@@ -164,6 +164,14 @@ struct ContentView: View {
                 }
             }
         }
+        .sheet(isPresented: Binding(
+            get: { !store.hasCompletedOnboarding },
+            set: { isPresented in
+                if !isPresented { store.hasCompletedOnboarding = true }
+            }
+        )) {
+            WelcomeView()
+        }
         .sheet(isPresented: $isShowingAddForm) {
             ItemFormView(item: nil)
         }

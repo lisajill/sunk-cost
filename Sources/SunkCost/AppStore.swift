@@ -51,6 +51,14 @@ final class AppStore {
         didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: AppearanceMode.userDefaultsKey) }
     }
 
+    /// Whether the first-launch Welcome sheet has already been shown.
+    /// Independent of the data file (like other view preferences here) so
+    /// switching storage folders doesn't bring it back.
+    var hasCompletedOnboarding: Bool {
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: AppStore.onboardingKey) }
+    }
+    private static let onboardingKey = "SunkCost.HasCompletedOnboarding"
+
     /// Masks dollar figures for sharing a screenshot. Deliberately not
     /// persisted -- always starts back off on launch, so it can't leave
     /// values hidden and forgotten.
@@ -123,9 +131,17 @@ final class AppStore {
             ?? TextSizeControl.defaultIndex
         self.appearanceMode = UserDefaults.standard.string(forKey: AppearanceMode.userDefaultsKey)
             .flatMap(AppearanceMode.init(rawValue:)) ?? .system
+        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: AppStore.onboardingKey)
         self.sortOption = UserDefaults.standard.string(forKey: AppStore.sortOptionKey)
             .flatMap(SortOption.init(rawValue:)) ?? .dateNewest
         load()
+        // A pre-existing install (real items or a home value already on
+        // disk) never saw an onboarding flag get set -- treat that as
+        // already onboarded rather than surprising a returning user with
+        // the Welcome sheet on their next launch.
+        if !hasCompletedOnboarding, !items.isEmpty || homeValue != nil {
+            hasCompletedOnboarding = true
+        }
     }
 
     func cycleAppearanceMode() {
@@ -340,6 +356,16 @@ final class AppStore {
             loadError = "Couldn't read that file: \(error.localizedDescription)"
             return nil
         }
+    }
+
+    /// Populates the app with fake placeholder data (a house, some items, a
+    /// mortgage) so a first-time user from the Welcome screen can see
+    /// what everything looks like filled in, before typing in real
+    /// numbers. Safe to call any time -- replaces whatever's currently
+    /// loaded, same as any other import.
+    func loadSampleData() {
+        guard let data = try? ItemStore.decode(Data(SampleData.json.utf8)) else { return }
+        applyImportedData(data)
     }
 
     func applyImportedData(_ data: AppData) {

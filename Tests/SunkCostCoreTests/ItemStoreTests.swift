@@ -148,6 +148,21 @@ struct ItemStoreTests {
         #expect(loaded.homeValue == 450_000)
     }
 
+    @Test("decode(_:) parses JSON data directly, without a file on disk")
+    func decodeParsesDataDirectly() throws {
+        let json = """
+        {
+            "items": [],
+            "homeValue": 425000
+        }
+        """
+
+        let decoded = try ItemStore.decode(Data(json.utf8))
+
+        #expect(decoded.homeValue == 425_000)
+        #expect(decoded.items.isEmpty)
+    }
+
     @Test("loading corrupt JSON throws instead of silently losing data")
     func loadingCorruptJSONThrows() throws {
         let url = makeTempFileURL()
