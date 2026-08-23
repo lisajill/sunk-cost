@@ -21,6 +21,12 @@ struct LongTermComparisonView: View {
     @State private var newMortgageRateText = ""
     @State private var newMortgageTermText = ""
 
+    private enum Field: Hashable {
+        case years, appreciation, investmentReturn, rent, rentIncrease
+        case newHomePrice, newHomeDownPayment, newMortgageRate, newMortgageTerm
+    }
+    @FocusState private var focusedField: Field?
+
     private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -67,6 +73,7 @@ struct LongTermComparisonView: View {
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 50)
+                        .focused($focusedField, equals: .years)
                         .onSubmit { commit() }
                     Text("years from now")
                         .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
@@ -97,17 +104,17 @@ struct LongTermComparisonView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 assumptionGroup("Staying") {
-                    percentField("Home Appreciation", text: $appreciationText)
+                    percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
                 }
                 assumptionGroup("Renting") {
-                    percentField("Investment Return", text: $investmentReturnText)
-                    dollarField("Monthly Rent", text: $rentText, placeholder: "required")
-                    percentField("Rent Increase (per year)", text: $rentIncreaseText)
+                    percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
+                    dollarField("Monthly Rent", text: $rentText, placeholder: "required", field: .rent)
+                    percentField("Rent Increase (per year)", text: $rentIncreaseText, field: .rentIncrease)
                 }
                 assumptionGroup("Buying Elsewhere") {
-                    dollarField("New Home Price", text: $newHomePriceText, placeholder: "required")
-                    dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds")
-                    percentField("Mortgage Rate", text: $newMortgageRateText)
+                    dollarField("New Home Price", text: $newHomePriceText, placeholder: "required", field: .newHomePrice)
+                    dollarField("Down Payment", text: $newHomeDownPaymentText, placeholder: "defaults to today's sale proceeds", field: .newHomeDownPayment)
+                    percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
                     HStack(spacing: 4) {
                         Text("MORTGAGE TERM".uppercased())
                             .font(Theme.ledgerLabel(scale: store.textScale))
@@ -117,6 +124,7 @@ struct LongTermComparisonView: View {
                             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 50)
+                            .focused($focusedField, equals: .newMortgageTerm)
                             .onSubmit { commit() }
                         Text("years")
                             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
@@ -126,6 +134,13 @@ struct LongTermComparisonView: View {
             }
         }
         .onAppear { syncFields() }
+        // Button(.defaultAction)/.onSubmit alone only fires on Return --
+        // committing when focus leaves any field (tabbing/clicking to the
+        // next one, not just pressing Return) is what actually saves what
+        // was typed. See CLAUDE.md's Return-key/onSubmit note.
+        .onChange(of: focusedField) { oldValue, _ in
+            if oldValue != nil { commit() }
+        }
     }
 
     private func resultCard(title: String, value: Decimal?, monthlyCost: Decimal?, missingHint: String) -> some View {
@@ -168,13 +183,14 @@ struct LongTermComparisonView: View {
         }
     }
 
-    private func percentField(_ title: String, text: Binding<String>) -> some View {
+    private func percentField(_ title: String, text: Binding<String>, field: Field) -> some View {
         labeledField(title) {
             HStack(spacing: 4) {
                 TextField("", text: text)
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 60)
+                    .focused($focusedField, equals: field)
                     .onSubmit { commit() }
                 Text("%")
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
@@ -183,12 +199,13 @@ struct LongTermComparisonView: View {
         }
     }
 
-    private func dollarField(_ title: String, text: Binding<String>, placeholder: String) -> some View {
+    private func dollarField(_ title: String, text: Binding<String>, placeholder: String, field: Field) -> some View {
         labeledField(title) {
             TextField(placeholder, text: text)
                 .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 160)
+                .focused($focusedField, equals: field)
                 .onSubmit { commit() }
         }
     }
