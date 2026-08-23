@@ -16,6 +16,9 @@ public struct AppData: Codable, Equatable, Sendable {
     /// real statement figure instead of the calculated estimate.
     public var monthlyPaymentOverride: Decimal?
 
+    public var maintenanceCategories: [MaintenanceCategory]
+    public var maintenancePayments: [MaintenancePayment]
+
     public init(
         items: [Item] = [],
         homeValue: Decimal? = nil,
@@ -24,7 +27,9 @@ public struct AppData: Codable, Equatable, Sendable {
         mortgageStartDate: Date? = nil,
         mortgageBalance: Decimal? = nil,
         mortgageTermYears: Int? = nil,
-        monthlyPaymentOverride: Decimal? = nil
+        monthlyPaymentOverride: Decimal? = nil,
+        maintenanceCategories: [MaintenanceCategory] = [],
+        maintenancePayments: [MaintenancePayment] = []
     ) {
         self.items = items
         self.homeValue = homeValue
@@ -34,5 +39,30 @@ public struct AppData: Codable, Equatable, Sendable {
         self.mortgageBalance = mortgageBalance
         self.mortgageTermYears = mortgageTermYears
         self.monthlyPaymentOverride = monthlyPaymentOverride
+        self.maintenanceCategories = maintenanceCategories
+        self.maintenancePayments = maintenancePayments
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case items, homeValue, mortgageOriginalAmount, mortgageInterestRatePercent,
+             mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
+             maintenanceCategories, maintenancePayments
+    }
+
+    // Manual decode so JSON saved before Maintenance existed (every data
+    // file up to this point) still loads -- `items` etc. default via
+    // decodeIfPresent, same pattern as Item's manual decode for `type`.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        items = try container.decodeIfPresent([Item].self, forKey: .items) ?? []
+        homeValue = try container.decodeIfPresent(Decimal.self, forKey: .homeValue)
+        mortgageOriginalAmount = try container.decodeIfPresent(Decimal.self, forKey: .mortgageOriginalAmount)
+        mortgageInterestRatePercent = try container.decodeIfPresent(Decimal.self, forKey: .mortgageInterestRatePercent)
+        mortgageStartDate = try container.decodeIfPresent(Date.self, forKey: .mortgageStartDate)
+        mortgageBalance = try container.decodeIfPresent(Decimal.self, forKey: .mortgageBalance)
+        mortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .mortgageTermYears)
+        monthlyPaymentOverride = try container.decodeIfPresent(Decimal.self, forKey: .monthlyPaymentOverride)
+        maintenanceCategories = try container.decodeIfPresent([MaintenanceCategory].self, forKey: .maintenanceCategories) ?? []
+        maintenancePayments = try container.decodeIfPresent([MaintenancePayment].self, forKey: .maintenancePayments) ?? []
     }
 }

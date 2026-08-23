@@ -1,8 +1,10 @@
 # Sunk Cost
 
 A native macOS app for tracking what a house actually costs: money put into
-furniture and upgrades, what the house is worth, and the equity that leaves
-behind once the mortgage is accounted for.
+furniture and upgrades (split into Value, which stays with the house if
+sold, and Moveable, which goes with you), what it costs to keep the house
+running month to month, what the house is worth, and the equity that's left
+once the mortgage is accounted for.
 
 Local-first and private by design: your data lives in a plain JSON file on
 your own Mac by default (nothing is ever sent anywhere), and you can point
@@ -31,8 +33,8 @@ swift test              # run the test suite
 ## Project layout
 
 - `Sources/SunkCostCore/` — data model and business logic (items, totals,
-  equity, mortgage math, CSV import/export), fully unit tested with no
-  UI dependencies.
+  equity, mortgage math, Maintenance categories/payments, CSV import/export),
+  fully unit tested with no UI dependencies.
 - `Sources/SunkCost/` — the SwiftUI app itself.
 - `Tests/SunkCostCoreTests/` — the test suite for `SunkCostCore`.
 - `AppPackaging/` — Info.plist, entitlements, app icon, and the build script
@@ -44,21 +46,19 @@ swift test              # run the test suite
 
 ## Future plans
 
-The app tracks money already put into the house (one-time items:
-furniture, upgrades). Two more layers are planned, each building on the
-last:
+The app tracks money already put into the house (one-time items, split into
+Value and Moveable) and what it costs to keep it running (Maintenance
+categories and payments, under the Maintenance tab). One more layer is
+planned:
 
-- **Cost to keep** — recurring upkeep (oil, electricity, landscaping,
-  repairs), tracked separately from one-time items, with an optional
-  expected-monthly-amount per category so you can see actual vs. budgeted.
 - **Cost to leave** — a sell-scenario calculator: given a purchase price,
   mortgage payoff balance, and assumed selling costs (realtor commission,
   closing costs), show whether selling today would be a loss, break-even,
   or profit — so staying can be weighed against selling-and-renting or
   selling-and-buying-elsewhere.
 
-Both are intentionally sequenced after the core tracker (this repo) rather
-than built all at once, so each layer gets designed against real usage
+It's intentionally sequenced after the rest of the tracker (this repo)
+rather than built all at once, so it gets designed against real usage
 instead of a guess.
 
 ## License

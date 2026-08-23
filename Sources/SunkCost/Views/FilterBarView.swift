@@ -33,6 +33,19 @@ struct FilterBarView: View {
                 .frame(maxWidth: 200)
                 .help("Show only items with one status — tapping a status pill on a row does this too")
 
+                Picker("Type", selection: Binding(
+                    get: { store.filter.type },
+                    set: { store.filter.type = $0 }
+                )) {
+                    Text("All Types").tag(ItemType?.none)
+                    ForEach(ItemType.allCases, id: \.self) { type in
+                        Text(type.label).tag(ItemType?.some(type))
+                    }
+                }
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                .frame(maxWidth: 180)
+                .help("Show only Value or only Moveable items")
+
                 Picker("Sort", selection: Binding(
                     get: { store.sortOption },
                     set: { store.sortOption = $0 }

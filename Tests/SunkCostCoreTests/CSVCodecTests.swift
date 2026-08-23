@@ -12,8 +12,8 @@ struct CSVCodecTests {
         let csv = CSVCodec.encode([item])
 
         let lines = csv.components(separatedBy: "\r\n")
-        #expect(lines[0] == "Name,Category,Cost,Status,Date,Notes")
-        #expect(lines[1] == "Couch,Furniture,1200.5,Owned,2025-01-01,")
+        #expect(lines[0] == "Name,Category,Cost,Status,Date,Notes,Type")
+        #expect(lines[1] == "Couch,Furniture,1200.5,Owned,2025-01-01,,Moveable")
     }
 
     @Test("blank cost encodes as an empty field")
@@ -32,7 +32,7 @@ struct CSVCodecTests {
 
         let csv = CSVCodec.encode([item])
         let lines = csv.components(separatedBy: "\r\n")
-        #expect(lines[1] == "TV,Furniture,999,Owned,,")
+        #expect(lines[1] == "TV,Furniture,999,Owned,,,Moveable")
 
         let decoded = try CSVCodec.decode(csv)
         #expect(decoded[0].dateAdded == nil)
@@ -123,5 +123,26 @@ struct CSVCodecTests {
         let decoded = try CSVCodec.decode(csv)
 
         #expect(decoded[0].notes == nil)
+    }
+
+    @Test("type round-trips through encode then decode")
+    func typeRoundTrips() throws {
+        let item = Item(name: "Fence", category: "Property Upgrades", cost: 3000, status: .owned, type: .value)
+
+        let csv = CSVCodec.encode([item])
+        let lines = csv.components(separatedBy: "\r\n")
+        #expect(lines[1].contains(",Value"))
+
+        let decoded = try CSVCodec.decode(csv)
+        #expect(decoded[0].type == .value)
+    }
+
+    @Test("decoding a CSV without a Type column (older export) falls back to moveable")
+    func decodeWithoutTypeColumnFallsBackToMoveable() throws {
+        let csv = "Name,Category,Cost,Status,Date\r\nDesk,Furniture,100,owned,2025-01-01"
+
+        let decoded = try CSVCodec.decode(csv)
+
+        #expect(decoded[0].type == .moveable)
     }
 }

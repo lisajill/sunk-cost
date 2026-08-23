@@ -11,6 +11,7 @@ struct ItemFormView: View {
     @State private var category: String = ""
     @State private var costText: String = ""
     @State private var status: Status = .owned
+    @State private var type: ItemType = .moveable
     @State private var date: Date = Date()
     @State private var hasDate = true
     @State private var notes: String = ""
@@ -52,6 +53,23 @@ struct ItemFormView: View {
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .labelsHidden()
                     .pickerStyle(.segmented)
+                }
+
+                labeledField("Type") {
+                    Picker("", selection: $type) {
+                        ForEach(ItemType.allCases, id: \.self) { type in
+                            Text(type.label).tag(type)
+                        }
+                    }
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+
+                    Text(type == .value
+                        ? "Stays with the house if sold -- counts toward Home Value comparison"
+                        : "Goes with you if you move -- doesn't count toward Home Value comparison")
+                        .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
                 }
 
                 labeledField("Date") {
@@ -153,6 +171,7 @@ struct ItemFormView: View {
         name = item.name
         category = item.category
         status = item.status
+        type = item.type
         if let itemDate = item.dateAdded {
             date = itemDate
             hasDate = true
@@ -182,6 +201,7 @@ struct ItemFormView: View {
             existing.status = status
             existing.dateAdded = dateAdded
             existing.notes = finalNotes
+            existing.type = type
             store.updateItem(existing)
         } else {
             let newItem = Item(
@@ -190,7 +210,8 @@ struct ItemFormView: View {
                 cost: cost,
                 status: status,
                 dateAdded: dateAdded,
-                notes: finalNotes
+                notes: finalNotes,
+                type: type
             )
             store.addItem(newItem)
         }

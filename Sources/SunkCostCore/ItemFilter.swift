@@ -3,11 +3,13 @@ import Foundation
 public struct ItemFilter: Equatable, Sendable {
     public var category: String?
     public var status: Status?
+    public var type: ItemType?
     public var searchText: String?
 
-    public init(category: String? = nil, status: Status? = nil, searchText: String? = nil) {
+    public init(category: String? = nil, status: Status? = nil, type: ItemType? = nil, searchText: String? = nil) {
         self.category = category
         self.status = status
+        self.type = type
         self.searchText = searchText
     }
 }
@@ -27,6 +29,7 @@ public extension Array where Element == Item {
         return self.filter { item in
             (filter.category == nil || item.category == filter.category)
                 && (filter.status == nil || item.status == filter.status)
+                && (filter.type == nil || item.type == filter.type)
                 && (search == nil || matches(item, search: search!))
         }
     }

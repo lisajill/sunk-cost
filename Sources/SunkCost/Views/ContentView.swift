@@ -1,10 +1,16 @@
 import SwiftUI
 import SunkCostCore
 
+private enum MainTab: String, CaseIterable {
+    case items = "Items"
+    case maintenance = "Maintenance"
+}
+
 struct ContentView: View {
     @Environment(AppStore.self) private var store
     @State private var isShowingAddForm = false
     @State private var editingItem: Item?
+    @State private var selectedTab: MainTab = .items
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,22 +35,39 @@ struct ContentView: View {
             SummaryHeaderView()
                 .id(store.appearanceMode)
 
-            FilterBarView()
-                .padding(.horizontal)
-                .padding(.top, 8)
-
-            List {
-                ForEach(store.filteredItems) { item in
-                    ItemRowView(
-                        item: item,
-                        isStatusFilterActive: store.filter.status == item.status,
-                        onTapName: { editingItem = item },
-                        onTapStatus: { store.toggleStatusFilter(item.status) }
-                    )
+            Picker("", selection: $selectedTab) {
+                ForEach(MainTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue).tag(tab)
                 }
             }
-            .listStyle(.inset)
-            .id(store.appearanceMode)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 240)
+            .padding(.horizontal)
+            .padding(.top, 8)
+
+            switch selectedTab {
+            case .items:
+                FilterBarView()
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
+                List {
+                    ForEach(store.filteredItems) { item in
+                        ItemRowView(
+                            item: item,
+                            isStatusFilterActive: store.filter.status == item.status,
+                            onTapName: { editingItem = item },
+                            onTapStatus: { store.toggleStatusFilter(item.status) }
+                        )
+                    }
+                }
+                .listStyle(.inset)
+                .id(store.appearanceMode)
+            case .maintenance:
+                MaintenanceView()
+                    .id(store.appearanceMode)
+            }
         }
         .frame(minWidth: 560, minHeight: 480)
         .toolbar {
@@ -82,11 +105,13 @@ struct ContentView: View {
                 )
             }
 
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    isShowingAddForm = true
-                } label: {
-                    Label("Add Item", systemImage: "plus")
+            if selectedTab == .items {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        isShowingAddForm = true
+                    } label: {
+                        Label("Add Item", systemImage: "plus")
+                    }
                 }
             }
         }

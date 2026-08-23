@@ -41,6 +41,10 @@ struct ItemRowView: View {
                         Text(item.name)
                             .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
                             .foregroundStyle(Theme.ink)
+                        Image(systemName: item.type == .value ? "house.fill" : "shippingbox.fill")
+                            .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                            .foregroundStyle(Theme.inkSecondary)
+                            .help(item.type == .value ? "Value -- stays with the house" : "Moveable -- goes with you")
                         if let notes = item.notes, !notes.isEmpty {
                             Image(systemName: "note.text")
                                 .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))

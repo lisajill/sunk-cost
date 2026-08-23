@@ -14,6 +14,20 @@ public enum Status: String, Codable, CaseIterable, Sendable {
     }
 }
 
+public enum ItemType: String, Codable, CaseIterable, Sendable {
+    /// Stays with the house if sold -- a fence, a deck, a mini-split.
+    case value
+    /// She'd take it with her if she moved -- furniture, electronics.
+    case moveable
+
+    public var label: String {
+        switch self {
+        case .value: return "Value"
+        case .moveable: return "Moveable"
+        }
+    }
+}
+
 public struct Item: Identifiable, Codable, Sendable {
     public var id: UUID
     public var name: String
@@ -27,6 +41,10 @@ public struct Item: Identifiable, Codable, Sendable {
     /// Free-text notes. Stored as plain text (portable for JSON/CSV);
     /// markdown and #hashtag styling are applied only when displaying it.
     public var notes: String?
+    /// Whether this item's cost stays with the house (raises its value) or
+    /// leaves with the owner. Drives what counts toward the "vs. Home
+    /// Value" comparison.
+    public var type: ItemType
 
     public init(
         id: UUID = UUID(),
@@ -35,7 +53,8 @@ public struct Item: Identifiable, Codable, Sendable {
         cost: Decimal?,
         status: Status,
         dateAdded: Date? = Date(),
-        notes: String? = nil
+        notes: String? = nil,
+        type: ItemType = .moveable
     ) {
         self.id = id
         self.name = name
@@ -44,6 +63,28 @@ public struct Item: Identifiable, Codable, Sendable {
         self.status = status
         self.dateAdded = dateAdded
         self.notes = notes
+        self.type = type
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, category, cost, status, dateAdded, notes, type
+    }
+
+    // Manual decode so JSON/CSV predating the `type` field (every item
+    // saved before this feature existed) still loads instead of failing --
+    // falls back to .moveable, the same default new items get. Real
+    // pre-existing data gets an explicit, correct value from a one-time
+    // migration rather than relying on this fallback in practice.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        category = try container.decode(String.self, forKey: .category)
+        cost = try container.decodeIfPresent(Decimal.self, forKey: .cost)
+        status = try container.decode(Status.self, forKey: .status)
+        dateAdded = try container.decodeIfPresent(Date.self, forKey: .dateAdded)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        type = try container.decodeIfPresent(ItemType.self, forKey: .type) ?? .moveable
     }
 }
 
@@ -58,7 +99,8 @@ extension Item: Equatable {
             lhs.category == rhs.category,
             lhs.cost == rhs.cost,
             lhs.status == rhs.status,
-            lhs.notes == rhs.notes
+            lhs.notes == rhs.notes,
+            lhs.type == rhs.type
         else {
             return false
         }

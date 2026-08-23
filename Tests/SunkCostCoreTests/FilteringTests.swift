@@ -5,10 +5,10 @@ import Foundation
 @Suite("Filtering and categories")
 struct FilteringTests {
     let items = [
-        Item(name: "Couch", category: "Furniture", cost: 1000, status: .owned, notes: "From the #livingroom set"),
-        Item(name: "Old TV", category: "Furniture", cost: 200, status: .gone),
-        Item(name: "Deck", category: "Property Upgrades", cost: 5000, status: .planned),
-        Item(name: "Fence", category: "Property Upgrades", cost: 3000, status: .owned)
+        Item(name: "Couch", category: "Furniture", cost: 1000, status: .owned, notes: "From the #livingroom set", type: .moveable),
+        Item(name: "Old TV", category: "Furniture", cost: 200, status: .gone, type: .moveable),
+        Item(name: "Deck", category: "Property Upgrades", cost: 5000, status: .planned, type: .value),
+        Item(name: "Fence", category: "Property Upgrades", cost: 3000, status: .owned, type: .value)
     ]
 
     @Test("no filter returns all items")
@@ -67,6 +67,18 @@ struct FilteringTests {
     @Test("search combines with category and status filters")
     func searchCombinesWithOtherFilters() {
         let result = items.filtered(by: ItemFilter(category: "Property Upgrades", status: .owned, searchText: "fence"))
+        #expect(result.map(\.name) == ["Fence"])
+    }
+
+    @Test("type filter narrows to matching type")
+    func typeFilterNarrowsResults() {
+        let result = items.filtered(by: ItemFilter(type: .value))
+        #expect(result.map(\.name).sorted() == ["Deck", "Fence"])
+    }
+
+    @Test("type filter combines with category and status filters")
+    func typeFilterCombinesWithOtherFilters() {
+        let result = items.filtered(by: ItemFilter(category: "Property Upgrades", status: .owned, type: .value))
         #expect(result.map(\.name) == ["Fence"])
     }
 }

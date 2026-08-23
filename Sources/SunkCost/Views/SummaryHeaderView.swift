@@ -40,6 +40,9 @@ struct SummaryHeaderView: View {
                     Rectangle().fill(Theme.ledgerBorder).frame(width: 180, height: 1.25)
                 }
                 .padding(.top, 1)
+
+                costToKeepRow
+                    .padding(.top, 2)
             }
 
             if !isCollapsed {
@@ -86,7 +89,7 @@ struct SummaryHeaderView: View {
                     .padding(8)
             }
             .buttonStyle(.plain)
-            .help(isCollapsed ? "Show spending details" : "Collapse to just the total")
+            .help(isCollapsed ? "Show spending details" : "Collapse to just the totals")
         }
         .overlay(
             RoundedRectangle(cornerRadius: 10)
@@ -99,6 +102,20 @@ struct SummaryHeaderView: View {
         .onChange(of: store.homeValue) { _, _ in
             if !isHomeValueFocused { syncHomeValueText() }
         }
+    }
+
+    private var costToKeepRow: some View {
+        HStack(spacing: 6) {
+            Text("COST TO KEEP")
+                .font(Theme.ledgerLabel(scale: store.textScale))
+                .tracking(0.6)
+                .foregroundStyle(Theme.inkSecondary)
+            Text(formatted(store.costToKeep))
+                .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .semibold, scale: store.textScale))
+                .monospacedDigit()
+                .foregroundStyle(Theme.ink)
+        }
+        .help("All-time Maintenance payments — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.")
     }
 
     private var ledgerDivider: some View {
@@ -156,13 +173,13 @@ struct SummaryHeaderView: View {
             }
 
             if let homeValue = store.homeValue {
-                let difference = homeValue - store.totals.totalSpent
+                let difference = homeValue - store.valueSpent.totalSpent
                 let sign = difference >= 0 ? "+" : ""
-                Text("\(sign)\(formatted(difference)) vs. spent")
+                Text("\(sign)\(formatted(difference)) vs. Value Improvements")
                     .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .medium, scale: store.textScale))
                     .monospacedDigit()
                     .foregroundStyle(difference >= 0 ? Theme.positive : Theme.ledgerRed)
-                    .help("Home Value minus Total Spent to Date. Positive means the house is worth more than you've put into it.")
+                    .help("Home Value minus spending on Value-type items only (things that stay with the house, like a fence or a deck) — Moveable items like furniture aren't counted here since they don't raise the home's value.")
             }
 
             if let equity = store.equity {

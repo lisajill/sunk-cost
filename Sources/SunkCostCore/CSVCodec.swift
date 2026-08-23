@@ -15,7 +15,7 @@ public enum CSVCodecError: Error, LocalizedError {
 /// Excel, Numbers, and Google Sheets, all of which open and save CSV
 /// natively without needing a real binary .xlsx reader/writer.
 public enum CSVCodec {
-    public static let header = ["Name", "Category", "Cost", "Status", "Date", "Notes"]
+    public static let header = ["Name", "Category", "Cost", "Status", "Date", "Notes", "Type"]
 
     private static func makeDateFormatter() -> DateFormatter {
         let formatter = DateFormatter()
@@ -38,6 +38,7 @@ public enum CSVCodec {
                 item.status.rawValue.capitalized,
                 dateField,
                 item.notes ?? "",
+                item.type.label,
             ]
             lines.append(fields.map(escapeField).joined(separator: ","))
         }
@@ -73,11 +74,14 @@ public enum CSVCodec {
             let status = Status(rawValue: statusText) ?? .owned
             let date = dateText.isEmpty ? nil : dateFormatter.date(from: dateText)
 
-            // Notes is optional -- older exported CSVs won't have this column.
+            // Notes and Type are optional -- older exported CSVs won't have these columns.
             let notesText = indices["notes"].flatMap { index in row.indices.contains(index) ? row[index] : nil }
             let notes = (notesText?.isEmpty ?? true) ? nil : notesText
 
-            return Item(name: name, category: category, cost: cost, status: status, dateAdded: date, notes: notes)
+            let typeText = indices["type"].flatMap { index in row.indices.contains(index) ? row[index] : nil }
+            let type = typeText.flatMap { ItemType(rawValue: $0.lowercased()) } ?? .moveable
+
+            return Item(name: name, category: category, cost: cost, status: status, dateAdded: date, notes: notes, type: type)
         }
     }
 

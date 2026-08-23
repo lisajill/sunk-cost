@@ -90,6 +90,38 @@ struct ItemStoreTests {
         #expect(loaded.items.first?.dateAdded == nil)
     }
 
+    @Test("maintenance categories and payments round-trip")
+    func maintenanceRoundTrips() throws {
+        let url = makeTempFileURL()
+        let category = MaintenanceCategory(name: "Oil", expectedMonthlyAmount: 200)
+        let payment = MaintenancePayment(categoryID: category.id, amount: 185.50, notes: "November delivery")
+        let original = AppData(maintenanceCategories: [category], maintenancePayments: [payment])
+
+        try ItemStore.save(original, to: url)
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded == original)
+    }
+
+    @Test("loading JSON saved before Maintenance existed gives empty maintenance arrays")
+    func loadingPreMaintenanceJSONGivesEmptyArrays() throws {
+        let url = makeTempFileURL()
+        let json = """
+        {
+            "items": [],
+            "homeValue": 450000
+        }
+        """
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.maintenanceCategories.isEmpty)
+        #expect(loaded.maintenancePayments.isEmpty)
+        #expect(loaded.homeValue == 450_000)
+    }
+
     @Test("loading corrupt JSON throws instead of silently losing data")
     func loadingCorruptJSONThrows() throws {
         let url = makeTempFileURL()
