@@ -8,7 +8,7 @@ struct CategoryDonutChart: View {
     @Environment(AppStore.self) private var store
     let entries: [(category: String, total: Decimal)]
 
-    private static let palette: [Color] = [Theme.positive, Theme.gold, Theme.taupe, Theme.ledgerRed]
+    private static let palette: [Color] = [Theme.chartPositive, Theme.chartGold, Theme.chartTaupe, Theme.chartRed]
 
     private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()

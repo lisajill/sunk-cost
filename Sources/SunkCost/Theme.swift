@@ -94,6 +94,31 @@ enum Theme {
     static let taupeFill = Color(red: 0.350, green: 0.320, blue: 0.340)
     static let ledgerRedFill = Color(red: 0.700, green: 0.080, blue: 0.120)
 
+    /// A third set, for a colored graphic *element* on top of the page
+    /// background itself (a chart ring, a legend icon) -- as opposed to
+    /// `positive`/etc. (text on the page background) or `*Fill` (a solid
+    /// badge with *white* text on top of it). Those two don't work here:
+    /// the plain adaptive colors get brightened way up in dark mode for
+    /// text-on-black contrast, which reads as pastel/washed-out sitting
+    /// right next to the deep `*Fill` badges -- but `*Fill` itself is too
+    /// dark to be visible against the app's own near-black dark
+    /// background. These are tuned against WCAG's graphical-object 3:1
+    /// minimum specifically (looser than text's 4.5:1, appropriate for a
+    /// chart segment, not a sentence) -- checked by hand, not eyeballed.
+    static let chartPositive = adaptive(
+        light: NSColor(calibratedRed: 0.212, green: 0.035, blue: 0.498, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.580, green: 0.240, blue: 0.960, alpha: 1.0)
+    )
+    static let chartGold = goldFill
+    static let chartTaupe = adaptive(
+        light: NSColor(calibratedRed: 0.350, green: 0.320, blue: 0.340, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.450, green: 0.450, blue: 0.450, alpha: 1.0)
+    )
+    static let chartRed = adaptive(
+        light: NSColor(calibratedRed: 0.700, green: 0.080, blue: 0.120, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.850, green: 0.150, blue: 0.200, alpha: 1.0)
+    )
+
     /// Base point sizes this app's text roles use at 1.0 scale -- bumped up
     /// noticeably from v1 as part of the "vibrant, easy, accessible"
     /// redesign: bigger text reads as friendlier *and* is more legible,

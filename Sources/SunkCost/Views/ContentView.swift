@@ -59,7 +59,13 @@ struct ContentView: View {
             }
             .frame(minWidth: 480, minHeight: 480)
             .toolbar {
-                ToolbarItemGroup(placement: .automatic) {
+                // .primaryAction, not .automatic -- NavigationSplitView adds
+                // its own sidebar-toggle button to the toolbar, and with a
+                // sidebar present .automatic-grouped items are more likely
+                // to get swept into the overflow "..." menu when the window
+                // narrows. .primaryAction keeps these pinned as visible
+                // trailing buttons instead.
+                ToolbarItemGroup(placement: .primaryAction) {
                     Button {
                         store.decreaseTextSize()
                     } label: {
