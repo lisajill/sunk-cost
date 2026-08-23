@@ -67,8 +67,8 @@ enum Theme {
     /// the type-level doc comment for why this is a blue-leaning violet
     /// rather than plain blue or green.
     static let positive = adaptive(
-        light: NSColor(calibratedRed: 0.424, green: 0.310, blue: 0.820, alpha: 1.0),
-        dark: NSColor(calibratedRed: 0.667, green: 0.557, blue: 0.980, alpha: 1.0)
+        light: NSColor(calibratedRed: 0.212, green: 0.035, blue: 0.498, alpha: 1.0),
+        dark: NSColor(calibratedRed: 0.620, green: 0.480, blue: 0.920, alpha: 1.0)
     )
     /// "In the red" -- classic bookkeeping color for a deficit. Blue-vs-red
     /// stays distinguishable even for red-green colorblind users, since it's
@@ -77,6 +77,22 @@ enum Theme {
         light: NSColor(calibratedRed: 0.925, green: 0.204, blue: 0.302, alpha: 1.0),
         dark: NSColor(calibratedRed: 1.000, green: 0.416, blue: 0.478, alpha: 1.0)
     )
+
+    /// Deep, solid variants of the four accent colors above, for a bold
+    /// filled badge/card with *white* text on top -- "primary colors, not
+    /// pastel" turned out to mean the translucent tinted backgrounds
+    /// (a color diluted with the page behind it) rather than the accent
+    /// colors themselves. These aren't adaptive per light/dark mode like
+    /// the rest of the palette -- they're small, self-contained badges
+    /// (not page backgrounds or running text), so a consistent color
+    /// regardless of appearance mode is both simpler and reads more like
+    /// a deliberate colored sticker. Each is dark enough that white text
+    /// on top clears WCAG AA's 4.5:1 contrast minimum -- verified by hand
+    /// against these exact values, not just eyeballed.
+    static let positiveFill = Color(red: 0.212, green: 0.035, blue: 0.498)
+    static let terracottaFill = Color(red: 0.720, green: 0.280, blue: 0.060)
+    static let taupeFill = Color(red: 0.350, green: 0.320, blue: 0.340)
+    static let ledgerRedFill = Color(red: 0.700, green: 0.080, blue: 0.120)
 
     /// Base point sizes this app's text roles use at 1.0 scale -- bumped up
     /// noticeably from v1 as part of the "vibrant, easy, accessible"

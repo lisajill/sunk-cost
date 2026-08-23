@@ -53,19 +53,19 @@ struct SummaryHeaderView: View {
                     statTile(
                         title: "In the House",
                         value: store.totals.inTheHouse,
-                        color: Theme.positive,
+                        color: Theme.positiveFill,
                         tooltip: "Items marked Owned — still in the house and paid for."
                     )
                     statTile(
                         title: "Gone, Paid For",
                         value: store.totals.goneButPaidFor,
-                        color: Theme.taupe,
+                        color: Theme.taupeFill,
                         tooltip: "Items marked Gone — paid for, but no longer in the house (sold, replaced, disposed of)."
                     )
                     statTile(
                         title: "Planned Ahead",
                         value: store.totals.plannedNotSpent,
-                        color: Theme.terracotta,
+                        color: Theme.terracottaFill,
                         tooltip: "Items marked Planned — not spent yet, so not counted in Total Spent to Date."
                     )
                 }
@@ -119,27 +119,49 @@ struct SummaryHeaderView: View {
         .infoTooltip("Total recurring monthly (and projected yearly) cost across every Maintenance category — utilities, oil, landscaping, and the like. Kept separate from Total Spent to Date: running the house and improving it are different questions.", scale: store.textScale)
     }
 
+    /// A solid-fill pill with white text -- like `.infoTooltip`, but that
+    /// helper's info icon is a fixed gray meant for plain backgrounds, and
+    /// reads poorly against these deep colored fills, so this builds the
+    /// same "text + info icon, one .help()" shape with a white-tinted icon
+    /// instead.
+    private func pillFigure(_ text: String, fill: Color, tooltip: String) -> some View {
+        HStack(spacing: 3) {
+            Text(text)
+                .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .bold, scale: store.textScale))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+            Image(systemName: "info.circle")
+                .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                .foregroundStyle(.white.opacity(0.85))
+        }
+        .help(tooltip)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(fill)
+        .clipShape(Capsule())
+    }
+
     private func statTile(title: String, value: Decimal, color: Color, tooltip: String) -> some View {
         VStack(spacing: 5) {
             HStack(spacing: 3) {
                 Text(title.uppercased())
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(0.6)
-                    .foregroundStyle(color)
+                    .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Image(systemName: "info.circle")
                     .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                    .foregroundStyle(color.opacity(0.75))
+                    .foregroundStyle(.white.opacity(0.85))
             }
             Text(formatted(value))
                 .font(Theme.scaledFont(Theme.FontSize.title2, weight: .bold, scale: store.textScale))
                 .monospacedDigit()
-                .foregroundStyle(color)
+                .foregroundStyle(.white)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(color.opacity(0.14))
+        .background(color)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .help(tooltip)
     }
@@ -173,16 +195,12 @@ struct SummaryHeaderView: View {
 
             if let netHouseGain = store.netHouseGain {
                 let sign = netHouseGain >= 0 ? "+" : ""
-                let color = netHouseGain >= 0 ? Theme.positive : Theme.ledgerRed
-                Text("Net Gain: \(sign)\(formatted(netHouseGain))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .bold, scale: store.textScale))
-                    .monospacedDigit()
-                    .foregroundStyle(color)
-                    .infoTooltip("Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value.", scale: store.textScale)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(color.opacity(0.14))
-                    .clipShape(Capsule())
+                let fill = netHouseGain >= 0 ? Theme.positiveFill : Theme.ledgerRedFill
+                pillFigure(
+                    "Net Gain: \(sign)\(formatted(netHouseGain))",
+                    fill: fill,
+                    tooltip: "Home Value minus everything actually invested in the house as an asset — Purchase Price plus Value-type item spending (things that stay with the house, like a fence or a deck). Moveable items like furniture aren't counted since they don't raise the home's value."
+                )
             } else if store.homeValue != nil {
                 Text("Add your Purchase Price in Settings to see Net Gain")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
@@ -190,16 +208,12 @@ struct SummaryHeaderView: View {
             }
 
             if let equity = store.equity {
-                let color = equity >= 0 ? Theme.positive : Theme.ledgerRed
-                Text("Equity: \(formatted(equity))")
-                    .font(Theme.scaledFont(Theme.FontSize.subheadline, weight: .bold, scale: store.textScale))
-                    .monospacedDigit()
-                    .foregroundStyle(color)
-                    .infoTooltip("Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs.", scale: store.textScale)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(color.opacity(0.14))
-                    .clipShape(Capsule())
+                let fill = equity >= 0 ? Theme.positiveFill : Theme.ledgerRedFill
+                pillFigure(
+                    "Equity: \(formatted(equity))",
+                    fill: fill,
+                    tooltip: "Home Value minus your mortgage balance — the actual stake you'd have if you sold today, before selling costs."
+                )
             } else if store.homeValue != nil {
                 Text("Add your mortgage balance in Settings to see Equity")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
