@@ -133,11 +133,13 @@ struct LongTermComparisonView: View {
                 }
             }
 
+            comparisonTable
+                .padding(20)
+                .background(Theme.ledgerPaper)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.ledgerBorder, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
             VStack(alignment: .leading, spacing: 16) {
-                comparisonTable
-
-                Divider()
-
                 Text("ASSUMPTIONS")
                     .font(Theme.ledgerLabel(scale: store.textScale))
                     .tracking(0.6)
@@ -146,7 +148,7 @@ struct LongTermComparisonView: View {
                 assumptionColumns
             }
             .padding(20)
-            .background(Theme.ledgerPaper)
+            .background(Theme.ledgerPaper.opacity(0.5))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.ledgerBorder, lineWidth: 1))
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
