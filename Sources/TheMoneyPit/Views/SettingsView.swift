@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import TheMoneyPitCore
 
 struct SettingsView: View {
@@ -46,6 +47,7 @@ struct SettingsView: View {
         .tint(Theme.ledgerGreen)
         .environment(\.appTextScale, store.textScale)
         .onAppear { populateMortgageFields() }
+        .onExitCommand { NSApp.keyWindow?.close() }
     }
 
     private var appearanceSection: some View {
@@ -62,6 +64,7 @@ struct SettingsView: View {
                     Text(mode.label).tag(mode)
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             .labelsHidden()
             .pickerStyle(.segmented)
             .frame(maxWidth: 300)
@@ -92,6 +95,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
 
             Divider()
 
@@ -109,6 +113,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
         }
         .alert(
             "Replace Current Data?",
@@ -154,6 +159,7 @@ struct SettingsView: View {
                 .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
 
             Text("Your data file is currently stored here:")
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 .foregroundStyle(.secondary)
 
             Text(store.storageFolderURL.path)
@@ -176,6 +182,7 @@ struct SettingsView: View {
                     store.resetToDefaultStorageFolder()
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
         }
     }
 
@@ -198,6 +205,7 @@ struct SettingsView: View {
                     ForEach(store.categoriesWithCounts, id: \.category) { entry in
                         HStack {
                             Text(entry.category)
+                                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                                 .foregroundStyle(Theme.ink)
                             Text("\(entry.count) item\(entry.count == 1 ? "" : "s")")
                                 .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
@@ -207,11 +215,13 @@ struct SettingsView: View {
                                 categoryBeingRenamed = entry.category
                                 newCategoryName = entry.category
                             }
+                            .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                             .controlSize(.small)
 
                             Button("Delete…") {
                                 categoryBeingDeleted = entry.category
                             }
+                            .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                             .controlSize(.small)
                             .disabled(otherCategories(than: entry.category).isEmpty)
                             .help(
@@ -286,18 +296,21 @@ struct SettingsView: View {
 
             labeledField("Current Balance Owed") {
                 TextField("e.g. 75000", text: $mortgageBalanceText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
             }
 
             labeledField("Original Loan Amount") {
                 TextField("e.g. 100000", text: $mortgageOriginalAmountText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
             }
 
             labeledField("Interest Rate (%)") {
                 TextField("e.g. 3.75", text: $mortgageInterestRateText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
             }
@@ -307,6 +320,7 @@ struct SettingsView: View {
                     Toggle("", isOn: $hasStartDate)
                         .labelsHidden()
                     DatePicker("", selection: $mortgageStartDate, displayedComponents: .date)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .labelsHidden()
                         .disabled(!hasStartDate)
                 }
@@ -314,12 +328,14 @@ struct SettingsView: View {
 
             labeledField("Loan Term (years)") {
                 TextField("e.g. 30", text: $mortgageTermYearsText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(minWidth: 100, idealWidth: 140, maxWidth: 200)
             }
 
             labeledField("Monthly Payment") {
                 TextField("Leave blank to auto-calculate", text: $monthlyPaymentText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .textFieldStyle(.roundedBorder)
                     .frame(minWidth: 180, idealWidth: 240, maxWidth: 300)
 
@@ -335,6 +351,7 @@ struct SettingsView: View {
                 Button("Save Mortgage Info") {
                     saveMortgage()
                 }
+                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
 
                 if showMortgageSavedConfirmation {
                     Label("Saved", systemImage: "checkmark.circle.fill")

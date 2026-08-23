@@ -47,19 +47,24 @@ struct ItemFormView: View {
                             Text(status.rawValue.capitalized).tag(status)
                         }
                     }
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                     .labelsHidden()
                     .pickerStyle(.segmented)
                 }
 
                 labeledField("Date") {
                     DatePicker("", selection: $date, displayedComponents: .date)
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                         .labelsHidden()
                         .datePickerStyle(.field)
                 }
 
                 if !store.availableCategories.isEmpty {
                     labeledField("Existing categories") {
-                        FlowingCategoryButtons(categories: store.availableCategories) { existing in
+                        FlowingCategoryButtons(
+                            categories: store.availableCategories,
+                            textScale: store.textScale
+                        ) { existing in
                             category = existing
                         }
                     }
@@ -74,14 +79,17 @@ struct ItemFormView: View {
                         }
                         dismiss()
                     }
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 }
 
                 Spacer()
 
                 Button("Cancel") { dismiss() }
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
                 Button(isEditing ? "Save" : "Add") {
                     save()
                 }
+                .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
                 .keyboardShortcut(.defaultAction)
                 .disabled(
                     name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -144,12 +152,14 @@ struct ItemFormView: View {
 /// of bug as the old Form layout.
 private struct FlowingCategoryButtons: View {
     let categories: [String]
+    let textScale: CGFloat
     let onTap: (String) -> Void
 
     var body: some View {
         FlowLayout(spacing: 6) {
             ForEach(categories, id: \.self) { category in
                 Button(category) { onTap(category) }
+                    .font(Theme.scaledFont(Theme.FontSize.caption, scale: textScale))
                     .buttonStyle(.bordered)
                     .controlSize(.small)
             }

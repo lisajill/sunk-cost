@@ -15,6 +15,7 @@ struct FilterBarView: View {
                     Text(category).tag(category)
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             .frame(maxWidth: 220)
 
             Picker("Status", selection: Binding(
@@ -26,6 +27,7 @@ struct FilterBarView: View {
                     Text(status.rawValue.capitalized).tag(Status?.some(status))
                 }
             }
+            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             .frame(maxWidth: 200)
 
             Spacer()
