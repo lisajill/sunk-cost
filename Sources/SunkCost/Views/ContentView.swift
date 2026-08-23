@@ -87,5 +87,13 @@ struct ContentView: View {
         }
         .tint(Theme.positive)
         .environment(\.appTextScale, store.textScale)
+        .searchable(
+            text: Binding(
+                get: { store.filter.searchText ?? "" },
+                set: { store.filter.searchText = $0.isEmpty ? nil : $0 }
+            ),
+            placement: .toolbar,
+            prompt: "Search name, category, or notes"
+        )
     }
 }

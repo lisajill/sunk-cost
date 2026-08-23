@@ -12,8 +12,8 @@ struct CSVCodecTests {
         let csv = CSVCodec.encode([item])
 
         let lines = csv.components(separatedBy: "\r\n")
-        #expect(lines[0] == "Name,Category,Cost,Status,Date")
-        #expect(lines[1] == "Couch,Furniture,1200.5,Owned,2025-01-01")
+        #expect(lines[0] == "Name,Category,Cost,Status,Date,Notes")
+        #expect(lines[1] == "Couch,Furniture,1200.5,Owned,2025-01-01,")
     }
 
     @Test("blank cost encodes as an empty field")
@@ -32,7 +32,7 @@ struct CSVCodecTests {
 
         let csv = CSVCodec.encode([item])
         let lines = csv.components(separatedBy: "\r\n")
-        #expect(lines[1] == "TV,Furniture,999,Owned,")
+        #expect(lines[1] == "TV,Furniture,999,Owned,,")
 
         let decoded = try CSVCodec.decode(csv)
         #expect(decoded[0].dateAdded == nil)
@@ -94,5 +94,34 @@ struct CSVCodecTests {
         let decoded = try CSVCodec.decode(csv)
 
         #expect(decoded.count == 1)
+    }
+
+    @Test("notes round-trip through encode then decode")
+    func notesRoundTrip() throws {
+        let item = Item(name: "Couch", category: "Furniture", cost: 1000, status: .owned, notes: "From the #livingroom set")
+
+        let csv = CSVCodec.encode([item])
+        let decoded = try CSVCodec.decode(csv)
+
+        #expect(decoded[0].notes == "From the #livingroom set")
+    }
+
+    @Test("decoding a CSV without a Notes column (older export) still works, with nil notes")
+    func decodeWithoutNotesColumnStillWorks() throws {
+        let csv = "Name,Category,Cost,Status,Date\r\nDesk,Furniture,100,owned,2025-01-01"
+
+        let decoded = try CSVCodec.decode(csv)
+
+        #expect(decoded.count == 1)
+        #expect(decoded[0].notes == nil)
+    }
+
+    @Test("blank notes decode as nil")
+    func blankNotesDecodeAsNil() throws {
+        let csv = "Name,Category,Cost,Status,Date,Notes\r\nDesk,Furniture,100,owned,2025-01-01,"
+
+        let decoded = try CSVCodec.decode(csv)
+
+        #expect(decoded[0].notes == nil)
     }
 }

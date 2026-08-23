@@ -24,6 +24,9 @@ public struct Item: Identifiable, Codable, Sendable {
     /// without a real date on record (e.g. from a spreadsheet that didn't
     /// track purchase dates) rather than defaulting to a fabricated one.
     public var dateAdded: Date?
+    /// Free-text notes. Stored as plain text (portable for JSON/CSV);
+    /// markdown and #hashtag styling are applied only when displaying it.
+    public var notes: String?
 
     public init(
         id: UUID = UUID(),
@@ -31,7 +34,8 @@ public struct Item: Identifiable, Codable, Sendable {
         category: String,
         cost: Decimal?,
         status: Status,
-        dateAdded: Date? = Date()
+        dateAdded: Date? = Date(),
+        notes: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -39,6 +43,7 @@ public struct Item: Identifiable, Codable, Sendable {
         self.cost = cost
         self.status = status
         self.dateAdded = dateAdded
+        self.notes = notes
     }
 }
 
@@ -52,7 +57,8 @@ extension Item: Equatable {
             lhs.name == rhs.name,
             lhs.category == rhs.category,
             lhs.cost == rhs.cost,
-            lhs.status == rhs.status
+            lhs.status == rhs.status,
+            lhs.notes == rhs.notes
         else {
             return false
         }

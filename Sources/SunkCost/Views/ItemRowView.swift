@@ -37,9 +37,17 @@ struct ItemRowView: View {
         HStack {
             Button(action: onTapName) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
-                        .foregroundStyle(Theme.ink)
+                    HStack(spacing: 5) {
+                        Text(item.name)
+                            .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
+                            .foregroundStyle(Theme.ink)
+                        if let notes = item.notes, !notes.isEmpty {
+                            Image(systemName: "note.text")
+                                .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                                .foregroundStyle(Theme.inkSecondary)
+                                .help(notes)
+                        }
+                    }
                     Text(dateText.map { "\(item.category.uppercased()) · \($0)" } ?? item.category.uppercased())
                         .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .medium, scale: store.textScale))
                         .tracking(0.5)

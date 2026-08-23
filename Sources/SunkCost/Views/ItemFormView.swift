@@ -13,6 +13,7 @@ struct ItemFormView: View {
     @State private var status: Status = .owned
     @State private var date: Date = Date()
     @State private var hasDate = true
+    @State private var notes: String = ""
 
     private var isEditing: Bool { item != nil }
 
@@ -63,6 +64,32 @@ struct ItemFormView: View {
                             .labelsHidden()
                             .datePickerStyle(.field)
                             .disabled(!hasDate)
+                    }
+                }
+
+                labeledField("Notes") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        TextEditor(text: $notes)
+                            .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                            .frame(height: 60)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(Theme.ledgerBorder, lineWidth: 1)
+                            )
+
+                        Text("Supports **bold**, *italic*, and #hashtags")
+                            .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+                            .foregroundStyle(Theme.inkSecondary)
+
+                        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Text(NotesFormatting.attributedString(from: notes, hashtagColor: Theme.terracotta))
+                                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                                .foregroundStyle(Theme.ink)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(8)
+                                .background(Theme.ledgerPaper)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
                     }
                 }
 
@@ -135,6 +162,7 @@ struct ItemFormView: View {
         if let cost = item.cost {
             costText = NSDecimalNumber(decimal: cost).stringValue
         }
+        notes = item.notes ?? ""
     }
 
     private func save() {
@@ -144,6 +172,8 @@ struct ItemFormView: View {
         let cost = digitsAndDot.isEmpty ? nil : Decimal(string: digitsAndDot)
 
         let dateAdded = hasDate ? date : nil
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalNotes = trimmedNotes.isEmpty ? nil : trimmedNotes
 
         if var existing = item {
             existing.name = trimmedName
@@ -151,9 +181,17 @@ struct ItemFormView: View {
             existing.cost = cost
             existing.status = status
             existing.dateAdded = dateAdded
+            existing.notes = finalNotes
             store.updateItem(existing)
         } else {
-            let newItem = Item(name: trimmedName, category: trimmedCategory, cost: cost, status: status, dateAdded: dateAdded)
+            let newItem = Item(
+                name: trimmedName,
+                category: trimmedCategory,
+                cost: cost,
+                status: status,
+                dateAdded: dateAdded,
+                notes: finalNotes
+            )
             store.addItem(newItem)
         }
         dismiss()

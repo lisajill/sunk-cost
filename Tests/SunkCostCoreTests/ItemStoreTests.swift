@@ -23,7 +23,13 @@ struct ItemStoreTests {
     @Test("saving then loading round-trips items and home value")
     func saveThenLoadRoundTrips() throws {
         let url = makeTempFileURL()
-        let item = Item(name: "Couch", category: "Furniture", cost: 1200.50, status: .owned)
+        let item = Item(
+            name: "Couch",
+            category: "Furniture",
+            cost: 1200.50,
+            status: .owned,
+            notes: "Bought on sale, #livingroom, **great** find"
+        )
         let original = AppData(items: [item], homeValue: 450_000)
 
         try ItemStore.save(original, to: url)
