@@ -1,4 +1,4 @@
-# The Money Pit
+# Sunk Cost
 
 A native macOS app for tracking what a house actually costs: money put into
 furniture and upgrades, what the house is worth, and the equity that leaves
@@ -11,10 +11,10 @@ iCloud Drive, Dropbox, etc. — if you want that.
 
 ## Running it
 
-Grab (or build, see below) `The Money Pit.app` and double-click it — no
-Xcode required to run a built app. Since it's not notarized with a paid
-Apple Developer account, macOS Gatekeeper will likely flag it as being from
-an "unidentified developer" the first time; right-click the app and choose
+Grab (or build, see below) `Sunk Cost.app` and double-click it — no Xcode
+required to run a built app. Since it's not notarized with a paid Apple
+Developer account, macOS Gatekeeper will likely flag it as being from an
+"unidentified developer" the first time; right-click the app and choose
 **Open** once to get past that.
 
 ## Building from source
@@ -25,8 +25,12 @@ Requires Xcode (for the Swift toolchain and code signing tools).
 git clone <this repo>
 cd HomeRenoApp
 swift test              # run the test suite
-./AppPackaging/build_app.sh   # builds and packages build/"The Money Pit.app"
+./AppPackaging/build_app.sh   # builds and packages build/"Sunk Cost.app"
 ```
+
+The internal Swift module names (`TheMoneyPit`, `TheMoneyPitCore`) predate
+the app's final name and are cosmetic-only — they don't affect anything
+user-facing.
 
 ## Project layout
 

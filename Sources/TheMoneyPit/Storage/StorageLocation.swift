@@ -18,7 +18,7 @@ enum StorageLocation {
 
     static func defaultFolderURL() -> URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return base.appendingPathComponent("TheMoneyPit", isDirectory: true)
+        return base.appendingPathComponent("SunkCost", isDirectory: true)
     }
 
     /// Resolves whichever folder is currently configured (custom, if the user

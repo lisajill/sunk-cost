@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>The Money Pit</string>
+    <string>Sunk Cost</string>
     <key>CFBundleDisplayName</key>
-    <string>The Money Pit</string>
+    <string>Sunk Cost</string>
     <key>CFBundleIdentifier</key>
-    <string>com.lisajill.themoneypit</string>
+    <string>com.lisajill.sunkcost</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>

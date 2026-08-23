@@ -5,7 +5,7 @@ struct TheMoneyPitApp: App {
     @State private var store = AppStore()
 
     var body: some Scene {
-        WindowGroup("The Money Pit") {
+        WindowGroup("Sunk Cost") {
             ContentView()
                 .environment(store)
                 .environment(\.dynamicTypeSize, store.dynamicTypeSize)

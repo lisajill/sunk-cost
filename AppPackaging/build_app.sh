@@ -1,11 +1,11 @@
 #!/bin/bash
-# Builds The Money Pit and packages it as a real, double-clickable macOS .app.
+# Builds Sunk Cost and packages it as a real, double-clickable macOS .app.
 # Run from anywhere; paths are resolved relative to this script.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-APP_NAME="The Money Pit"
+APP_NAME="Sunk Cost"
 BUILD_DIR="$PROJECT_DIR/build"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
