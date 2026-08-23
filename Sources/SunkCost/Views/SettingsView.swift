@@ -339,6 +339,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .onSubmit { savePurchasePrice() }
     }
 
     private var mortgageSection: some View {
@@ -417,6 +418,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .onSubmit { saveMortgage() }
     }
 
     @ViewBuilder

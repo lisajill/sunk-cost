@@ -303,6 +303,10 @@ private struct MaintenanceCategoryFormView: View {
                 expectedAmountText = NSDecimalNumber(decimal: expected).stringValue
             }
         }
+        // Button(.defaultAction) alone doesn't reliably fire on Return while
+        // a TextField in this sheet has focus -- onSubmit is what actually
+        // wires the Return key to the save action.
+        .onSubmit { save() }
     }
 
     @ViewBuilder
@@ -318,6 +322,7 @@ private struct MaintenanceCategoryFormView: View {
 
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
         let digitsAndDot = expectedAmountText.filter { $0.isNumber || $0 == "." }
         let expected = digitsAndDot.isEmpty ? nil : Decimal(string: digitsAndDot)
 
@@ -405,6 +410,7 @@ private struct MaintenancePaymentFormView: View {
             date = payment.date
             notes = payment.notes ?? ""
         }
+        .onSubmit { save() }
     }
 
     @ViewBuilder

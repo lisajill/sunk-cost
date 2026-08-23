@@ -153,6 +153,11 @@ struct ItemFormView: View {
         .frame(minWidth: 440, idealWidth: 440)
         .tint(Theme.positive)
         .onAppear { populateFieldsIfEditing() }
+        // Button(.defaultAction) alone doesn't reliably fire on Return while
+        // a TextField in this sheet has focus -- onSubmit is what actually
+        // wires the Return key to the save action. TextEditor (Notes) isn't
+        // affected -- Return there just inserts a newline, as it should.
+        .onSubmit { save() }
     }
 
     @ViewBuilder
@@ -187,6 +192,7 @@ struct ItemFormView: View {
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty, !trimmedCategory.isEmpty else { return }
         let digitsAndDot = costText.filter { $0.isNumber || $0 == "." }
         let cost = digitsAndDot.isEmpty ? nil : Decimal(string: digitsAndDot)
 
