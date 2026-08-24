@@ -60,7 +60,24 @@ struct ContentView: View {
 
                 switch selectedSection {
                 case .overview:
-                    OverviewView()
+                    // Overview has nothing of its own to search -- while
+                    // there's active search text, show matches from Items
+                    // and Maintenance instead of the dashboard, since the
+                    // search field is visible (and typing into it felt
+                    // "dead") no matter which section you're on.
+                    if let searchText = store.filter.searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        SearchResultsView(
+                            onSelectItem: { item in
+                                selectedSection = .items
+                                editingItem = item
+                            },
+                            onSelectMaintenanceCategory: { _ in
+                                selectedSection = .maintenance
+                            }
+                        )
+                    } else {
+                        OverviewView()
+                    }
                 case .items:
                     itemsSection
                 case .maintenance:
@@ -241,7 +258,7 @@ struct ContentView: View {
 
     private var searchPrompt: String {
         switch selectedSection {
-        case .overview: return "Search"
+        case .overview: return "Search items and maintenance"
         case .items: return "Search name, category, or notes"
         case .maintenance: return "Search categories or notes"
         case .sellScenario: return "Search"

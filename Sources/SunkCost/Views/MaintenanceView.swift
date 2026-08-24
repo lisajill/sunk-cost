@@ -12,13 +12,9 @@ struct MaintenanceView: View {
     @State private var showRequiredOnly = false
 
     private var visibleCategories: [MaintenanceCategory] {
-        let filteredByRequired = showRequiredOnly ? store.maintenanceCategories.filter(\.isRequired) : store.maintenanceCategories
-        let trimmedSearch = store.filter.searchText?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard let search = trimmedSearch, !search.isEmpty else { return filteredByRequired }
-        return filteredByRequired.filter { category in
-            category.name.lowercased().contains(search)
-                || (category.notes?.lowercased().contains(search) ?? false)
-        }
+        let trimmedSearch = store.filter.searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let bySearch = (trimmedSearch?.isEmpty == false) ? store.searchMatchedMaintenanceCategories : store.maintenanceCategories
+        return showRequiredOnly ? bySearch.filter(\.isRequired) : bySearch
     }
 
     private static let currencyFormatter: NumberFormatter = {

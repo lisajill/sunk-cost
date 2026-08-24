@@ -85,6 +85,20 @@ final class AppStore {
     /// would save per month.
     var optionalMonthlyCost: Decimal { costToKeep - requiredMonthlyCost }
     var filteredItems: [Item] { items.filtered(by: filter).sorted(using: sortOption) }
+    /// Maintenance categories matching the shared search text -- same
+    /// name/notes matching MaintenanceView does locally, factored out here
+    /// so Overview's cross-tab search results can reuse it without
+    /// duplicating the logic. Empty (not "everything") when there's no
+    /// search text, since -- unlike `filteredItems` -- this isn't meant to
+    /// be a general-purpose "current Maintenance list."
+    var searchMatchedMaintenanceCategories: [MaintenanceCategory] {
+        let trimmedSearch = filter.searchText?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard let search = trimmedSearch, !search.isEmpty else { return [] }
+        return maintenanceCategories.filter { category in
+            category.name.lowercased().contains(search)
+                || (category.notes?.lowercased().contains(search) ?? false)
+        }
+    }
     var availableCategories: [String] { items.distinctCategories }
     var availableHashtags: [String] { items.distinctHashtags }
     var categoriesWithCounts: [(category: String, count: Int)] {
