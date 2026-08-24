@@ -39,7 +39,7 @@ struct OverviewView: View {
     }
 
     private var categoryChartCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 24) {
             Text("SPEND BY CATEGORY")
                 .font(Theme.ledgerLabel(scale: store.textScale))
                 .tracking(1.2)

@@ -155,10 +155,6 @@ final class AppStore {
         }
     }
 
-    func cycleAppearanceMode() {
-        appearanceMode = appearanceMode.next()
-    }
-
     func increaseTextSize() {
         textSizeIndex = min(textSizeIndex + 1, TextSizeControl.scales.count - 1)
     }

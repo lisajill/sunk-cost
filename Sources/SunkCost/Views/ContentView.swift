@@ -21,6 +21,11 @@ private enum MainSection: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @Environment(AppStore.self) private var store
+    // The actual, currently-rendered appearance -- reflects System mode's
+    // resolved light/dark, not just store.appearanceMode's raw setting.
+    // The toolbar toggle needs this to know what "the opposite" even means
+    // when the mode is System rather than an explicit Light/Dark.
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isShowingAddForm = false
     @State private var editingItem: Item?
     @State private var selectedSection: MainSection = .overview
@@ -91,13 +96,20 @@ struct ContentView: View {
                     .help("Increase Font Size (⌘+)")
                     .accessibilityLabel("Increase Font Size")
 
+                    // Binary toggle, not a 3-way cycle through System too --
+                    // System is a different kind of choice ("follow the
+                    // Mac" vs. an explicit pick), so it lives in Settings
+                    // instead. Clicking here always sets an explicit
+                    // opposite of whatever's currently showing -- including
+                    // escaping System mode with an explicit choice, if
+                    // that's what's active.
                     Button {
-                        store.cycleAppearanceMode()
+                        store.appearanceMode = colorScheme == .dark ? .light : .dark
                     } label: {
-                        Image(systemName: store.appearanceMode.symbolName)
+                        Image(systemName: colorScheme == .dark ? "moon.fill" : "sun.max.fill")
                     }
-                    .help("Appearance: \(store.appearanceMode.label) (click to change)")
-                    .accessibilityLabel("Appearance: \(store.appearanceMode.label). Click to change.")
+                    .help("Switch to \(colorScheme == .dark ? "Light" : "Dark") Mode (choose System in Settings to follow your Mac instead)")
+                    .accessibilityLabel("Switch to \(colorScheme == .dark ? "Light" : "Dark") Mode")
 
                     Button {
                         store.togglePrivacyMode()

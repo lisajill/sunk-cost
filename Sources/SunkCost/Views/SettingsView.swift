@@ -99,7 +99,7 @@ struct SettingsView: View {
             .pickerStyle(.segmented)
             .frame(maxWidth: 300)
 
-            Text("There's also a quick-switch button in the main window's toolbar.")
+            Text("The toolbar's sun/moon button is a quick Light/Dark toggle -- choose System here if you'd rather it just follow your Mac's own setting.")
                 .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                 .foregroundStyle(Theme.inkSecondary)
         }

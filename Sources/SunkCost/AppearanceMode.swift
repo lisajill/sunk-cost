@@ -22,20 +22,4 @@ enum AppearanceMode: String, CaseIterable {
         case .dark: return "Dark"
         }
     }
-
-    var symbolName: String {
-        switch self {
-        case .system: return "circle.righthalf.filled"
-        case .light: return "sun.max.fill"
-        case .dark: return "moon.fill"
-        }
-    }
-
-    func next() -> AppearanceMode {
-        switch self {
-        case .system: return .light
-        case .light: return .dark
-        case .dark: return .system
-        }
-    }
 }
