@@ -23,17 +23,25 @@ struct ContentView: View {
     @Environment(AppStore.self) private var store
     @State private var isShowingAddForm = false
     @State private var editingItem: Item?
-    @State private var selectedSection: MainSection? = .overview
+    @State private var selectedSection: MainSection = .overview
     @State private var didCopySummary = false
 
     var body: some View {
         NavigationSplitView {
-            List(MainSection.allCases, selection: $selectedSection) { section in
-                Label(section.rawValue, systemImage: section.icon)
-                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+            // A plain VStack of buttons that directly set `selectedSection`,
+            // not List(selection:) -- that relies on List's native
+            // selection-binding machinery, which silently failed to
+            // register clicks here (every section stayed on Overview no
+            // matter what was clicked). A Button's action closure setting
+            // @State directly has no equivalent failure mode.
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(MainSection.allCases) { section in
+                    sidebarRow(section)
+                }
+                Spacer()
             }
-            .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 240)
+            .padding(8)
+            .frame(minWidth: 170, idealWidth: 190, maxWidth: 240, maxHeight: .infinity, alignment: .top)
         } detail: {
             VStack(spacing: 0) {
                 if let error = store.loadError {
@@ -45,7 +53,7 @@ struct ContentView: View {
                         .background(.red.opacity(0.1))
                 }
 
-                switch selectedSection ?? .overview {
+                switch selectedSection {
                 case .overview:
                     OverviewView()
                 case .items:
@@ -202,8 +210,25 @@ struct ContentView: View {
         }
     }
 
+    private func sidebarRow(_ section: MainSection) -> some View {
+        let isSelected = selectedSection == section
+        return Button {
+            selectedSection = section
+        } label: {
+            Label(section.rawValue, systemImage: section.icon)
+                .font(Theme.scaledFont(Theme.FontSize.body, weight: isSelected ? .semibold : .regular, scale: store.textScale))
+                .foregroundStyle(isSelected ? Theme.positive : Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(isSelected ? Theme.positive.opacity(0.14) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var searchPrompt: String {
-        switch selectedSection ?? .overview {
+        switch selectedSection {
         case .overview: return "Search"
         case .items: return "Search name, category, or notes"
         case .maintenance: return "Search categories or notes"
