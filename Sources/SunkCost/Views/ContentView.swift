@@ -32,6 +32,7 @@ struct ContentView: View {
                 Label(section.rawValue, systemImage: section.icon)
                     .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
             }
+            .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 240)
         } detail: {
             VStack(spacing: 0) {
