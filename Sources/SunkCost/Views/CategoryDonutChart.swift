@@ -54,6 +54,8 @@ struct CategoryDonutChart: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 24) {
+            Spacer().frame(width: 8)
+
             ZStack {
                 ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
                     Circle()
