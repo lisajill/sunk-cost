@@ -83,10 +83,28 @@ user-chosen folder is ordinary and portable.
 hold one), so colors are built by hand via
 `NSColor(name: nil) { appearance in ... }` dynamic providers wrapped in
 SwiftUI `Color`. The palette is deliberately colorblind-safe: `positive`
-(blue, not green) vs `terracotta` (orange) vs `taupe` (gray) for
-Owned/Planned/Gone, since green-vs-orange is a real confusion risk for
-red-green color blindness — status is also never conveyed by color alone,
-every status has a text label too.
+(a blue-*leaning* violet — not blue itself since the 2026-08-24 redesign,
+but still not red-leaning, which is what would actually be risky) vs
+`gold` (a deep amber, not orange — renamed from `terracotta` in the same
+redesign) vs `taupe` (gray) for Owned/Planned/Gone, since a same-warmth
+orange-vs-red pairing (or, worse, green-vs-red) is a real confusion risk
+for red-green color blindness — status is also never conveyed by color
+alone, every status has a text label too.
+
+Three layered variants of that same palette exist for three different
+jobs, and mixing them up is the mistake to avoid: `positive`/`gold`/
+`taupe`/`ledgerRed` are for plain text/icons on the page background
+(adaptive per light/dark mode); `*Fill` (`positiveFill` etc.) are deep,
+*non-adaptive* solid colors for a badge with white text on top of it
+(too dark to use as plain text against the dark-mode background — you'd
+get ~1:1 contrast); `chart*` (`chartPositive` etc.) are for a graphic
+*element* directly on the page background, like a chart ring or a
+legend icon — brighter than `*Fill` (checked against WCAG's 3:1
+graphical-object minimum, not text's 4.5:1) since neither of the other
+two sets is visible/appropriate there. All three were reasoned through
+by hand against actual relative-luminance math during the redesign, not
+eyeballed — if you add a fourth accent color, work out which bucket it
+belongs to rather than guessing.
 
 **Font scaling does NOT use SwiftUI's Dynamic Type.** An earlier attempt
 wired `\.dynamicTypeSize` through the view hierarchy; it did not visibly
@@ -135,6 +153,19 @@ Return works even when nothing has focus yet. Since `.onSubmit` bypasses
 whatever `.disabled(...)` condition guards the button, each `save()`
 re-checks that same condition (e.g. name/category non-empty) and returns
 early instead of saving invalid state.
+
+**Sidebar navigation (`ContentView.swift`)**: the main window uses
+`NavigationSplitView` with a hand-rolled sidebar — a plain `VStack` of
+`Button`s that set `@State private var selectedSection` directly in
+their action closure, deliberately *not* `List(MainSection.allCases,
+selection: $selectedSection)`. That was tried first and silently failed
+to register clicks: every sidebar click left the detail pane on
+Overview no matter what was selected, so three of the four sections
+were completely unreachable for several iterations before the cause was
+found. If you're tempted to use `List(selection:)` for a
+`NavigationSplitView` sidebar again, actually click through it after
+building — it compiles and looks correct with nothing indicating the
+selection binding isn't firing.
 
 **Packaging (`AppPackaging/`)**: `build_app.sh` does `swift build -c
 release`, copies the resulting binary + `Info.plist` + `AppIcon.icns` into
