@@ -115,11 +115,11 @@ struct ListingParserTests {
         #expect(result.mortgageTermYears == nil)
     }
 
-    // Verbatim paste from a real "RealCost"-style listing (a third site,
-    // different from Redfin/Zillow) -- "List price" not "Home price",
-    // down payment shows dollar-then-percent ("$49,800 (20%)", the
-    // reverse of Redfin's percent-then-dollar), and "30-year fixed at
-    // 6.717%" instead of "30-yr fixed, 6.75%".
+    // Verbatim paste from realtor.com's own "RealCost" payment calculator
+    // widget -- "List price" not "Home price", down payment shows
+    // dollar-then-percent ("$49,800 (20%)", the reverse of Redfin's
+    // percent-then-dollar), and "30-year fixed at 6.717%" instead of
+    // "30-yr fixed, 6.75%".
     private static let realCostText = """
     Monthly Payment
     RealCostTM for this home
@@ -150,7 +150,7 @@ struct ListingParserTests {
     $9,960 (4%)
     """
 
-    @Test("parses a RealCost-style listing with different wording and down-payment ordering")
+    @Test("parses a realtor.com RealCost listing with different wording and down-payment ordering")
     func parsesRealCostStyleListing() {
         let result = ListingParser.parse(Self.realCostText)
 
