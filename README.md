@@ -1,5 +1,7 @@
 # Sunk Cost
 
+*100% vibe-coded with AI.*
+
 A native macOS app for tracking what a house actually costs: money put into
 furniture and upgrades (split into Value, which stays with the house if
 sold, and Moveable, which goes with you), what it costs to keep the house
