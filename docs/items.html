@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Items — Sunk Cost</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="sidebar" aria-label="Documentation sections">
+  <div class="sidebar__brand">
+    <img src="assets/icon.png" width="26" height="26" alt="" style="border-radius:7px">
+    Sunk Cost
+  </div>
+  <div class="sidebar__group-label">Guide</div>
+  <a class="navlink" href="index.html">Home</a>
+  <a class="navlink" href="getting-started.html">Getting Started</a>
+  <div class="sidebar__group-label">The App</div>
+  <a class="navlink" href="overview.html">Overview</a>
+  <a class="navlink active" href="items.html" aria-current="page">Items</a>
+  <a class="navlink" href="maintenance.html">Maintenance</a>
+  <a class="navlink" href="sell-scenario.html">Sell Scenario &amp; Compare</a>
+  <a class="navlink" href="settings.html">Settings</a>
+  <div class="sidebar__group-label">More</div>
+  <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
+  <a class="navlink" href="support.html">Support &amp; Contributing</a>
+  <div class="sidebar__footer">
+    <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
+  </div>
+</nav>
+<main id="main-content" tabindex="-1">
+  <div class="eyebrow">The App</div>
+  <h1>📦 Items</h1>
+  <p class="lede">Every one-time thing you've bought (or plan to) for the house — furniture, appliances, a new deck, a fence. Not the recurring bills; that's <a href="maintenance.html">Maintenance</a>.</p>
+
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_items.png" alt="Items list in light mode">
+    <img class="shot" src="assets/images/dark_items.png" alt="Items list in dark mode">
+  </div>
+
+  <h2>Adding and editing an item</h2>
+  <p>Click the <strong>+</strong> button to add one, or click any item's name to edit it.</p>
+  <img class="shot" src="assets/images/light_item_edit.png" alt="The Edit Item form">
+  <ul>
+    <li><strong>Name</strong> — whatever you'd call it</li>
+    <li><strong>Category</strong> — free text. Type a new one or reuse an existing one; the app suggests categories you've used before as you type.</li>
+    <li><strong>Cost</strong> — optional. Leave it blank if you don't know yet (Planned items especially).</li>
+    <li><strong>Status</strong> — Owned, Planned, or Gone (see below)</li>
+    <li><strong>Type</strong> — Value or Moveable (see below)</li>
+    <li><strong>Date</strong> — optional, when you bought it</li>
+    <li><strong>Notes</strong> — free text. Supports <strong>bold</strong>, <em>italic</em>, links, and #hashtags — type a live preview shows up right under the box as you type.</li>
+  </ul>
+
+  <h3>Status: Owned, Planned, or Gone</h3>
+  <ul>
+    <li><strong>Owned</strong> — you have it, it's in the house right now</li>
+    <li><strong>Planned</strong> — you're thinking about it, haven't bought it yet. Doesn't count toward your spending total until you switch it to Owned.</li>
+    <li><strong>Gone</strong> — you no longer have it. Picking Gone asks <em>how</em>: Sold (with what you got for it, if anything), Given Away, Trashed, or Other. It still counts in your all-time spending total, since the money is genuinely gone either way.</li>
+  </ul>
+
+  <h3>Type: Value or Moveable</h3>
+  <p>This one matters for your <a href="sell-scenario.html">Sell Scenario</a> numbers:</p>
+  <ul>
+    <li><strong>Value</strong> — stays with the house if you sell it (a new roof, built-in cabinets, a fence). Counts toward the house's overall value comparison.</li>
+    <li><strong>Moveable</strong> — goes with you when you move (a couch, a TV). It cost you money, but it isn't part of what makes the house itself worth more.</li>
+  </ul>
+
+  <h2>Filtering, sorting, and hashtags</h2>
+  <p>
+    Above the list: dropdowns to filter by <strong>Category</strong>,
+    <strong>Status</strong>, and <strong>Type</strong>, plus clickable
+    hashtag chips pulled from whatever you've typed in Notes fields —
+    click one to instantly filter to just items tagged with it. Click any
+    column header (<strong>Item / Date / Amount</strong>) to sort by it;
+    click again to flip the direction.
+  </p>
+  <p>
+    Clicking directly on a Status badge in the list (Owned/Planned/Gone) is
+    a shortcut that filters the whole list to just that status — click it
+    again to clear the filter.
+  </p>
+
+  <div class="callout callout--tip">
+    <strong>Deleting a category?</strong> In Settings, deleting a category
+    doesn't delete the items in it — it asks where to move them first, so
+    nothing gets silently lost.
+  </div>
+
+  <div class="next-prev">
+    <a href="overview.html">← Overview</a>
+    <a href="maintenance.html">Maintenance →</a>
+  </div>
+</main>
+</body>
+</html>

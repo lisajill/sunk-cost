@@ -1,0 +1,312 @@
+/* Sunk Cost docs — reuses the app's own palette (Theme.swift) and its
+   ui-rounded font family, so the docs site reads as part of the app
+   rather than a generic doc-site template. Light/dark values match
+   Theme.swift's `adaptive(light:dark:)` pairs exactly. */
+
+:root {
+  --paper: #fbf6ef;
+  --paper-raised: #ffffff;
+  --border: #e9ddd8;
+  --ink: #1d1b21;
+  --ink-secondary: #6b6571;
+  --gold: #806b05;
+  --gold-fill: rgba(128, 107, 5, 0.12);
+  --taupe: #968b92;
+  --positive: #36097f;
+  --positive-fill: rgba(54, 9, 127, 0.1);
+  --red: #ec344d;
+  --shadow: 0 1px 3px rgba(29, 27, 33, 0.06), 0 8px 24px rgba(29, 27, 33, 0.04);
+  --radius: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #171319;
+    --paper-raised: #201c26;
+    --border: #453b47;
+    --ink: #f5f2ee;
+    --ink-secondary: #afa7b3;
+    --gold: #d9b840;
+    --gold-fill: rgba(217, 184, 64, 0.14);
+    --taupe: #b8afb5;
+    --positive: #9e7aeb;
+    --positive-fill: rgba(158, 122, 235, 0.14);
+    --red: #ff6a7a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.24);
+  }
+}
+
+* { box-sizing: border-box; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--positive);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0 0 8px 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--positive);
+  outline-offset: 2px;
+}
+
+main:focus-visible {
+  outline: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-rounded, -apple-system, "SF Pro Rounded", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+a { color: var(--positive); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Sidebar (deliberately echoes the app's own sidebar) ---- */
+
+.sidebar {
+  flex: 0 0 240px;
+  padding: 28px 18px;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 20px;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.sidebar__brand svg { flex: 0 0 auto; }
+
+.sidebar__group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  padding: 14px 10px 6px;
+}
+
+.sidebar a.navlink {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.sidebar a.navlink:hover { background: var(--border); text-decoration: none; }
+
+.sidebar a.navlink.active {
+  background: var(--positive-fill);
+  color: var(--positive);
+  font-weight: 700;
+}
+
+.sidebar__footer {
+  margin-top: 24px;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+/* ---- Main content ---- */
+
+main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 48px 56px 96px;
+  max-width: 880px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 44px 0 12px;
+  padding-top: 8px;
+}
+
+h2:first-of-type { margin-top: 28px; }
+
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 26px 0 8px;
+  color: var(--ink);
+}
+
+p, li { line-height: 1.6; font-size: 15.5px; color: var(--ink); }
+p { margin: 0 0 14px; }
+
+.lede {
+  font-size: 18px;
+  color: var(--ink-secondary);
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+ul, ol { padding-left: 22px; margin: 0 0 14px; }
+li { margin-bottom: 6px; }
+
+strong { font-weight: 700; }
+
+code, pre {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+code {
+  background: var(--border);
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+pre {
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code { background: none; padding: 0; }
+
+/* ---- Callouts (mirror the app's ledger-paper cards) ---- */
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 20px 0;
+  box-shadow: var(--shadow);
+}
+
+.callout {
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 14.5px;
+  border: 1px solid transparent;
+}
+
+.callout--tip {
+  background: var(--positive-fill);
+  border-color: color-mix(in srgb, var(--positive) 25%, transparent);
+}
+.callout--tip strong { color: var(--positive); }
+
+.callout--note {
+  background: var(--gold-fill);
+  border-color: color-mix(in srgb, var(--gold) 25%, transparent);
+}
+.callout--note strong { color: var(--gold); }
+
+/* ---- Screenshots ---- */
+
+.shot {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: block;
+  margin: 6px 0 4px;
+}
+
+.shot-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0 22px;
+}
+
+.shot-caption {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+@media (max-width: 760px) {
+  body { flex-direction: column; }
+  .sidebar { position: static; height: auto; flex-basis: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  main { padding: 32px 20px 64px; max-width: 100%; }
+  .shot-pair { grid-template-columns: 1fr; }
+}
+
+/* ---- Feature grid on the home page ---- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (max-width: 620px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.grid a.tile {
+  display: block;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.grid a.tile:hover { border-color: var(--positive); text-decoration: none; }
+.grid a.tile .tile-title { font-weight: 700; font-size: 15.5px; margin-bottom: 4px; }
+.grid a.tile .tile-desc { font-size: 13.5px; color: var(--ink-secondary); }
+
+.next-prev {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}

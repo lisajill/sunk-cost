@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Sunk Cost</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="sidebar" aria-label="Documentation sections">
+  <div class="sidebar__brand">
+    <img src="assets/icon.png" width="26" height="26" alt="" style="border-radius:7px">
+    Sunk Cost
+  </div>
+  <div class="sidebar__group-label">Guide</div>
+  <a class="navlink" href="index.html">Home</a>
+  <a class="navlink" href="getting-started.html">Getting Started</a>
+  <div class="sidebar__group-label">The App</div>
+  <a class="navlink" href="overview.html">Overview</a>
+  <a class="navlink" href="items.html">Items</a>
+  <a class="navlink" href="maintenance.html">Maintenance</a>
+  <a class="navlink" href="sell-scenario.html">Sell Scenario &amp; Compare</a>
+  <a class="navlink active" href="settings.html" aria-current="page">Settings</a>
+  <div class="sidebar__group-label">More</div>
+  <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
+  <a class="navlink" href="support.html">Support &amp; Contributing</a>
+  <div class="sidebar__footer">
+    <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
+  </div>
+</nav>
+<main id="main-content" tabindex="-1">
+  <div class="eyebrow">The App</div>
+  <h1>⚙️ Settings</h1>
+  <p class="lede">Everything about how and where your data lives, plus the house-level facts (purchase price, mortgage) that feed the rest of the app.</p>
+
+  <h2>Appearance</h2>
+  <p>Choose <strong>Light</strong>, <strong>Dark</strong>, or <strong>System</strong> (follows your Mac's own setting automatically). The toolbar's sun/moon button is a quick toggle between Light and Dark for whenever you want to override System for a moment.</p>
+
+  <h2>Storage Location</h2>
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_settings.png" alt="Storage location settings in light mode">
+    <img class="shot" src="assets/images/dark_settings.png" alt="Storage location settings in dark mode">
+  </div>
+  <p>
+    By default your data file lives in a private folder inside the app's
+    own sandbox — nothing you need to think about. Click
+    <strong>Choose a Different Folder…</strong> to point it anywhere you
+    like instead, including a folder inside iCloud Drive or Dropbox, which
+    gets your data backed up and synced across your other Macs
+    automatically, using tools you may already have — the app itself
+    doesn't do any syncing.
+  </p>
+
+  <h2>Backup &amp; Transfer</h2>
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_auto_backups.png" alt="Automatic backups settings in light mode">
+    <img class="shot" src="assets/images/dark_auto_backups.png" alt="Automatic backups settings in dark mode">
+  </div>
+  <ul>
+    <li><strong>Export Data (JSON)</strong> — saves everything (items, home value, mortgage, saved scenarios) to one file. Use this for a manual backup or to move your data to another Mac.</li>
+    <li><strong>Import Data (JSON)</strong> — loads a file like that back in, replacing what's currently in the app.</li>
+    <li><strong>Export/Import Data (CSV)</strong> — for opening your item list in Excel, Numbers, or Google Sheets. Only carries the items, not Home Value or mortgage info.</li>
+    <li><strong>Automatic backups</strong> — the app quietly saves a backup every day, keeping the last 14. Click <strong>Restore from Backup…</strong> to roll back to an earlier day if something gets accidentally deleted or edited wrong. No setup required — this just happens.</li>
+  </ul>
+
+  <h2>Categories</h2>
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_categories.png" alt="Category management in light mode">
+    <img class="shot" src="assets/images/dark_categories.png" alt="Category management in dark mode">
+  </div>
+  <p>
+    <strong>Rename</strong> fixes a typo, or merges two categories into one
+    (rename "Furnature" to "Furniture" and they combine). <strong>Delete</strong>
+    asks where to move that category's items first, so nothing gets lost —
+    it never silently deletes items along with the category.
+  </p>
+
+  <h2>Home Purchase &amp; Mortgage</h2>
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_settings_currenthome.png" alt="Purchase price and mortgage settings in light mode">
+    <img class="shot" src="assets/images/dark_settings_currenthome.png" alt="Purchase price and mortgage settings in dark mode">
+  </div>
+  <p>These two feed the numbers everywhere else in the app:</p>
+  <ul>
+    <li><strong>Purchase Price</strong> — what you actually paid for the house. Used to calculate Net Gain (Home Value minus Purchase Price) alongside Equity on the main screen.</li>
+    <li><strong>Current Balance Owed</strong> — the one field you'll actually update over time, whenever you check a new mortgage statement. This is what drives your Equity figure.</li>
+    <li>Original Loan Amount, Interest Rate, Loan Start Date, Loan Term, and Monthly Payment are all there just for your own reference — they don't feed into any calculation elsewhere.</li>
+  </ul>
+
+  <div class="next-prev">
+    <a href="sell-scenario.html">← Sell Scenario &amp; Compare</a>
+    <a href="privacy.html">Privacy &amp; Your Data →</a>
+  </div>
+</main>
+</body>
+</html>
