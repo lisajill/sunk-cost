@@ -60,31 +60,14 @@ struct ContentView: View {
 
                 switch selectedSection {
                 case .overview:
-                    // Overview has nothing of its own to search -- while
-                    // there's active search text, show matches from Items
-                    // and Maintenance instead of the dashboard, since the
-                    // search field is visible (and typing into it felt
-                    // "dead") no matter which section you're on.
-                    if let searchText = store.filter.searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        SearchResultsView(
-                            onSelectItem: { item in
-                                selectedSection = .items
-                                editingItem = item
-                            },
-                            onSelectMaintenanceCategory: { _ in
-                                selectedSection = .maintenance
-                            }
-                        )
-                    } else {
-                        OverviewView()
-                    }
+                    searchAwareContent { OverviewView() }
                 case .items:
                     itemsSection
                 case .maintenance:
                     MaintenanceView()
                         .id(store.appearanceMode)
                 case .sellScenario:
-                    SellScenarioView()
+                    searchAwareContent { SellScenarioView() }
                         .id(store.appearanceMode)
                 }
             }
@@ -261,7 +244,31 @@ struct ContentView: View {
         case .overview: return "Search items and maintenance"
         case .items: return "Search name, category, or notes"
         case .maintenance: return "Search categories or notes"
-        case .sellScenario: return "Search"
+        case .sellScenario: return "Search items and maintenance"
+        }
+    }
+
+    /// Overview and Sell Scenario have nothing of their own to search --
+    /// while there's active search text, show matches from Items and
+    /// Maintenance instead of the section's normal content, since the
+    /// search field is visible (and typing into it felt "dead") no matter
+    /// which section you're on. Originally only wired up for Overview;
+    /// Sell Scenario had the same dead-search-field problem until this was
+    /// extracted so both sections share it.
+    @ViewBuilder
+    private func searchAwareContent<Default: View>(@ViewBuilder default defaultView: () -> Default) -> some View {
+        if let searchText = store.filter.searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            SearchResultsView(
+                onSelectItem: { item in
+                    selectedSection = .items
+                    editingItem = item
+                },
+                onSelectMaintenanceCategory: { _ in
+                    selectedSection = .maintenance
+                }
+            )
+        } else {
+            defaultView()
         }
     }
 }
