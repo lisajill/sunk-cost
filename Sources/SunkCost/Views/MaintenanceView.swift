@@ -43,7 +43,9 @@ struct MaintenanceView: View {
                 } else {
                     List {
                         ForEach(visibleCategories) { category in
-                            categoryRow(for: category)
+                            MaintenanceCategoryRowView(category: category) {
+                                editingCategory = category
+                            }
                         }
                     }
                     .listStyle(.inset)
@@ -138,40 +140,6 @@ struct MaintenanceView: View {
         }
     }
 
-    private func categoryRow(for category: MaintenanceCategory) -> some View {
-        HStack {
-            HStack(spacing: 5) {
-                Text(category.name)
-                    .font(Theme.scaledFont(Theme.FontSize.body, weight: .medium, scale: store.textScale))
-                    .foregroundStyle(Theme.ink)
-                if let notes = category.notes, !notes.isEmpty {
-                    Image(systemName: "note.text")
-                        .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
-                        .foregroundStyle(Theme.inkSecondary)
-                        .help(notes)
-                }
-                if !category.isRequired {
-                    Text("OPTIONAL")
-                        .font(Theme.scaledFont(Theme.FontSize.caption2, weight: .semibold, scale: store.textScale))
-                        .tracking(0.5)
-                        .foregroundStyle(Theme.gold)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Theme.gold.opacity(0.15))
-                        .clipShape(Capsule())
-                        .help("Discretionary -- counted out when viewing Required Only")
-                }
-            }
-            Spacer()
-            Text("\(formatted(category.monthlyAmount))/mo")
-                .font(Theme.scaledFont(Theme.FontSize.body, weight: .semibold, scale: store.textScale))
-                .monospacedDigit()
-                .foregroundStyle(Theme.ink)
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-        .onTapGesture { editingCategory = category }
-    }
 }
 
 /// Add/edit a Maintenance category: just a name and its recurring monthly
