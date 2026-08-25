@@ -17,34 +17,97 @@ something gets edited or deleted by mistake.
 
 ## Screenshots
 
-Dollar figures blurred out below since these are pulled straight from a real
-data file — the layout and features are what matters here.
+Light and Dark mode side by side. Dollar figures are blacked out below since
+these are pulled straight from a real data file — the layout and features
+are what matters here. (The privacy eye-icon toggle only blanks item/total
+figures in the main views; it doesn't apply to Settings, which doesn't show
+any anyway.)
 
 **Overview** — the dashboard: total spent, the Owned/Planned/Gone split, and
 spend by category.
-![Overview dashboard](Images/Overview.png)
+<p>
+  <img src="Images/light_overview.png" width="420" alt="Overview dashboard, light mode">
+  <img src="Images/dark_overview.png" width="420" alt="Overview dashboard, dark mode">
+</p>
 
 **Items** — the full item list with category/status/type filters, hashtag
 chips, and sorting.
-![Item list](Images/Items.png)
+<p>
+  <img src="Images/light_items.png" width="420" alt="Item list, light mode">
+  <img src="Images/dark_items.png" width="420" alt="Item list, dark mode">
+</p>
 
 **Maintenance** — recurring monthly costs by category, Required vs. Optional.
-![Maintenance categories](Images/Maintenance.png)
+<p>
+  <img src="Images/light_maintenance.png" width="420" alt="Maintenance categories, light mode">
+  <img src="Images/dark_maintenance.png" width="420" alt="Maintenance categories, dark mode">
+</p>
 
 **Sell Scenario** — net proceeds if sold today, and profit against
 everything actually invested.
-![Selling proceeds](Images/Selling_proceeds.png)
+<p>
+  <img src="Images/light_proceeds.png" width="420" alt="Selling proceeds, light mode">
+  <img src="Images/dark_proceeds.png" width="420" alt="Selling proceeds, dark mode">
+</p>
 
 **Compare assumptions** — Stay vs. Rent vs. Buy Elsewhere inputs, with the
 Annual/Monthly toggle and Paste from Listing.
-![Compare assumptions](Images/Assumptions.png)
+<p>
+  <img src="Images/light_assumptions.png" width="420" alt="Compare assumptions, light mode">
+  <img src="Images/dark_assumptions.png" width="420" alt="Compare assumptions, dark mode">
+</p>
 
 **Compare table** — the resulting monthly cost breakdown and projected
 ending net worth for each scenario.
-![Comparison table](Images/Comparison_table.png)
+<p>
+  <img src="Images/light_compare.png" width="420" alt="Comparison table, light mode">
+  <img src="Images/dark_compare.png" width="420" alt="Comparison table, dark mode">
+</p>
 
 **In Plain English** — the numbers translated into a plain-language summary.
-![Plain English summary](Images/Plain_English.png)
+<p>
+  <img src="Images/light_plain_english.png" width="420" alt="Plain English summary, light mode">
+  <img src="Images/dark_plain_english.png" width="420" alt="Plain English summary, dark mode">
+</p>
+
+**Editing an item** — status, type, cost, date, and freeform notes with
+hashtag support.
+<p>
+  <img src="Images/light_item_edit.png" width="420" alt="Edit Item sheet, light mode">
+  <img src="Images/dark_item_edit.png" width="420" alt="Edit Item sheet, dark mode">
+</p>
+
+**Search** — jump straight to a matching item from anywhere in the app.
+<p>
+  <img src="Images/light_search.png" width="420" alt="Search results, light mode">
+  <img src="Images/dark_search.png" width="420" alt="Search results, dark mode">
+</p>
+
+**Managing categories** — rename or delete a category; deleting moves its
+items elsewhere first rather than losing them.
+<p>
+  <img src="Images/light_categories.png" width="420" alt="Category management, light mode">
+  <img src="Images/dark_categories.png" width="420" alt="Category management, dark mode">
+</p>
+
+**Storage & backups** — Settings' storage-location and automatic-backup
+controls. (The file path shown is blacked out here too, since it's a real
+path on a real Mac.)
+<p>
+  <img src="Images/light_settings.png" width="420" alt="Storage location settings, light mode">
+  <img src="Images/dark_settings.png" width="420" alt="Storage location settings, dark mode">
+</p>
+<p>
+  <img src="Images/light_auto_backups.png" width="420" alt="Automatic backups, light mode">
+  <img src="Images/dark_auto_backups.png" width="420" alt="Automatic backups, dark mode">
+</p>
+
+**Toolbar** — text size, Light/Dark toggle, the privacy eye-icon, and Copy
+Summary.
+<p>
+  <img src="Images/light_main_toggles.png" width="420" alt="Toolbar controls, light mode">
+  <img src="Images/dark_main_toggles.png" width="420" alt="Toolbar controls, dark mode">
+</p>
 
 ## Running it
 
