@@ -39,14 +39,40 @@ struct ListingImportSheet: View {
                 .font(Theme.scaledFont(Theme.FontSize.headline, weight: .semibold, scale: store.textScale))
                 .foregroundStyle(Theme.ink)
 
-            Text("Copy the payment calculator box from a Redfin or Zillow listing (or similar) and paste it below. Nothing is fetched or sent anywhere -- this only reads what you paste.")
+            Text("Copy the payment calculator box from a Redfin or Zillow listing (or similar), then click Paste below. Nothing is fetched or sent anywhere -- this only reads what you paste.")
                 .font(Theme.scaledFont(Theme.FontSize.callout, scale: store.textScale))
                 .foregroundStyle(Theme.inkSecondary)
 
-            TextEditor(text: $pastedText)
-                .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
-                .frame(height: 140)
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Theme.ledgerBorder, lineWidth: 1))
+            // A visible Paste button, not just relying on ⌘V in the text
+            // box below -- same lesson as the saved-scenario chips
+            // earlier: a keyboard-only or right-click-only way to do
+            // something isn't discoverable enough on its own.
+            Button {
+                if let clipboardText = NSPasteboard.general.string(forType: .string) {
+                    pastedText = clipboardText
+                }
+            } label: {
+                Label("Paste", systemImage: "doc.on.clipboard")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Paste from the clipboard -- copy the listing's payment calculator box first.")
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $pastedText)
+                    .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                    .frame(height: 140)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Theme.ledgerBorder, lineWidth: 1))
+
+                if pastedText.isEmpty {
+                    Text("Pasted text will appear here")
+                        .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+                        .foregroundStyle(Theme.inkSecondary)
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+            }
 
             if !pastedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 previewSection
