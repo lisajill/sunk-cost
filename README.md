@@ -15,6 +15,37 @@ iCloud Drive, Dropbox, etc. — if you want that. The app also keeps its own
 rolling 14-day local backup automatically, restorable from Settings if
 something gets edited or deleted by mistake.
 
+## Screenshots
+
+Dollar figures blurred out below since these are pulled straight from a real
+data file — the layout and features are what matters here.
+
+**Overview** — the dashboard: total spent, the Owned/Planned/Gone split, and
+spend by category.
+![Overview dashboard](Images/Overview.png)
+
+**Items** — the full item list with category/status/type filters, hashtag
+chips, and sorting.
+![Item list](Images/Items.png)
+
+**Maintenance** — recurring monthly costs by category, Required vs. Optional.
+![Maintenance categories](Images/Maintenance.png)
+
+**Sell Scenario** — net proceeds if sold today, and profit against
+everything actually invested.
+![Selling proceeds](Images/Selling_proceeds.png)
+
+**Compare assumptions** — Stay vs. Rent vs. Buy Elsewhere inputs, with the
+Annual/Monthly toggle and Paste from Listing.
+![Compare assumptions](Images/Assumptions.png)
+
+**Compare table** — the resulting monthly cost breakdown and projected
+ending net worth for each scenario.
+![Comparison table](Images/Comparison_table.png)
+
+**In Plain English** — the numbers translated into a plain-language summary.
+![Plain English summary](Images/Plain_English.png)
+
 ## Running it
 
 Grab (or build, see below) `Sunk Cost.app` and double-click it — no Xcode
