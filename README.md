@@ -61,7 +61,7 @@ all built at once:
    once and updated only when the rate changes, not a payment log.
 3. **Cost to leave** — under the Sell Scenario tab: given Home Value,
    mortgage payoff balance, and assumed selling costs (realtor commission
-   + closing costs, both editable percentages), shows Net Proceeds if
+   and closing costs, both editable percentages), shows Net Proceeds if
    sold today and the profit/loss against everything actually invested in
    the house. Below that, a multi-year **Compare: Stay vs. Rent vs. Buy
    Elsewhere** projection — a chosen time horizon, assumed home
