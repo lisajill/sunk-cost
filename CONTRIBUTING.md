@@ -1,7 +1,13 @@
 # Contributing to Sunk Cost
 
-Contributions are welcome. This is a plain Swift Package — no Xcode
-project to fight with, just the Swift toolchain that ships with Xcode.
+Contributions are welcome — bug fixes especially. This is a plain Swift
+Package — no Xcode project to fight with, just the Swift toolchain that
+ships with Xcode.
+
+**AI-assisted contributions are welcome too.** This whole app was built
+with AI to begin with, so a PR written with Claude, Copilot, or anything
+else isn't held to a different standard than one written by hand — it
+just needs to work, be tested, and be reviewable like any other change.
 
 ```
 git clone https://github.com/lisajill/sunk-cost.git
