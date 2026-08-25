@@ -19,8 +19,12 @@
   --radius: 16px;
 }
 
+/* Three states: follow the OS by default; an explicit choice (saved in
+   localStorage, applied via data-theme on <html>) always wins over it in
+   either direction -- same idea as the app's own Light/Dark toolbar
+   button always setting an explicit choice, even overriding System. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --paper: #171319;
     --paper-raised: #201c26;
     --border: #453b47;
@@ -34,6 +38,21 @@
     --red: #ff6a7a;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.24);
   }
+}
+
+:root[data-theme="dark"] {
+  --paper: #171319;
+  --paper-raised: #201c26;
+  --border: #453b47;
+  --ink: #f5f2ee;
+  --ink-secondary: #afa7b3;
+  --gold: #d9b840;
+  --gold-fill: rgba(217, 184, 64, 0.14);
+  --taupe: #b8afb5;
+  --positive: #9e7aeb;
+  --positive-fill: rgba(158, 122, 235, 0.14);
+  --red: #ff6a7a;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.24);
 }
 
 * { box-sizing: border-box; }
@@ -136,6 +155,25 @@ a:hover { text-decoration: underline; }
   font-size: 12px;
   color: var(--ink-secondary);
 }
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--positive); }
+.theme-toggle .icon { font-size: 15px; line-height: 1; }
 
 /* ---- Main content ---- */
 

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){try{var t=localStorage.getItem('sunk-cost-docs-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Settings — Sunk Cost</title>
 <link rel="icon" href="assets/favicon.png">
@@ -26,6 +27,10 @@
   <div class="sidebar__group-label">More</div>
   <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
   <a class="navlink" href="support.html">Support &amp; Contributing</a>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">
+    <span class="icon" aria-hidden="true">☀️</span>
+    <span class="label">Light</span>
+  </button>
   <div class="sidebar__footer">
     <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
   </div>
@@ -94,5 +99,6 @@
     <a href="privacy.html">Privacy &amp; Your Data →</a>
   </div>
 </main>
+<script src="assets/theme.js"></script>
 </body>
 </html>

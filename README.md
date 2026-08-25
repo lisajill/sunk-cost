@@ -215,6 +215,16 @@ Not committed, no timeline — just ideas worth remembering:
   else: comparing the current loan against a hypothetical refinance
   (new rate/term/closing costs) the way Compare already does for
   Stay/Rent/Buy Elsewhere.
+- **Renovation value-at-sale modeling** — what a given upgrade actually
+  adds to resale value, not just what it cost (the "$30k kitchen remodel
+  only recoups $18k" problem). Since the app can't fetch real Cost-vs-Value
+  survey data (no network access, by design), this would need to be a
+  manually-entered "estimated value added" per Value-type item rather than
+  an automatic lookup — still useful for personal what-if planning, just
+  not automatic.
+
+See [open feature requests and ideas](https://github.com/lisajill/sunk-cost/issues?q=is%3Aissue+is%3Aopen+label%3A%22Feature+Request%22%2C%22Idea%22)
+for these and other ideas, or to propose your own.
 
 ## Contributing
 

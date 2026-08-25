@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){try{var t=localStorage.getItem('sunk-cost-docs-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Support &amp; Contributing — Sunk Cost</title>
 <link rel="icon" href="assets/favicon.png">
@@ -26,6 +27,10 @@
   <div class="sidebar__group-label">More</div>
   <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
   <a class="navlink active" href="support.html" aria-current="page">Support &amp; Contributing</a>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">
+    <span class="icon" aria-hidden="true">☀️</span>
+    <span class="label">Light</span>
+  </button>
   <div class="sidebar__footer">
     <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
   </div>
@@ -70,6 +75,12 @@
     written by hand — it just needs to work, be tested, and be reviewable
     like any other change.
   </div>
+  <p>
+    Not sure what to work on? Browse
+    <a href="https://github.com/lisajill/sunk-cost/issues?q=is%3Aissue+is%3Aopen+label%3A%22Feature+Request%22%2C%22Idea%22">open feature requests and ideas</a>
+    — things that are wanted but not yet built, each with the design
+    tradeoffs already thought through.
+  </p>
   <pre><code>git clone https://github.com/lisajill/sunk-cost.git
 cd sunk-cost
 swift test                    # run the test suite
@@ -112,5 +123,6 @@ swift test                    # run the test suite
     <span></span>
   </div>
 </main>
+<script src="assets/theme.js"></script>
 </body>
 </html>
