@@ -102,6 +102,13 @@ path on a real Mac.)
   <img src="Images/dark_auto_backups.png" width="420" alt="Automatic backups, dark mode">
 </p>
 
+**Purchase price & mortgage** — Settings' Home Purchase and Mortgage
+sections, which drive the Equity/Appreciation figures on the main screen.
+<p>
+  <img src="Images/light_settings_currenthome.png" width="420" alt="Purchase price and mortgage settings, light mode">
+  <img src="Images/dark_settings_currenthome.png" width="420" alt="Purchase price and mortgage settings, dark mode">
+</p>
+
 **Toolbar** — text size, Light/Dark toggle, the privacy eye-icon, and Copy
 Summary.
 <p>
