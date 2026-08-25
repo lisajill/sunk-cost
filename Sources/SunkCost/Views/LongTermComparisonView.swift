@@ -29,11 +29,13 @@ struct LongTermComparisonView: View {
     @State private var newInsuranceText = ""
     @State private var hoaText = ""
     @State private var newHoaText = ""
-    /// Whether the 4 tax/insurance fields above are being typed as monthly
-    /// figures instead of annual -- every real-world source for these
-    /// (listings, loan estimates, tax bills) quotes them monthly, so typing
-    /// the annual total by hand meant doing that multiplication yourself
-    /// every time. The stored values are always annual regardless; this
+    /// Whether tax/insurance/HOA/rent/pet rent above are being typed as
+    /// monthly figures instead of annual -- every real-world source for
+    /// these (listings, loan estimates, tax bills) quotes them monthly, so
+    /// typing the annual total by hand meant doing that multiplication
+    /// yourself every time. Each field's *stored* value stays in whatever
+    /// unit is natural for it (tax/insurance annual, HOA/rent/pet rent
+    /// monthly, see `annualToDisplayText` vs. `monthlyToDisplayText`); this
     /// only changes what's displayed/typed.
     @State private var isEnteringMonthly = false
 
@@ -106,7 +108,7 @@ struct LongTermComparisonView: View {
     /// New Home Price minus the down payment actually applied to it -- the
     /// size of the new mortgage itself, so the P&I figure above can
     /// actually be sanity-checked instead of requiring mental subtraction.
-    private var taxInsuranceUnitLabel: String {
+    private var entryUnitLabel: String {
         isEnteringMonthly ? "(per month)" : "(per year)"
     }
 
@@ -217,9 +219,9 @@ struct LongTermComparisonView: View {
                     .labelsHidden()
                     .frame(width: 160)
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
-                    .help("Whether the Property Tax and Insurance fields below are typed as monthly or annual figures -- matches what a real estate listing or loan estimate shows.")
+                    .help("Whether Property Tax, Insurance, HOA Dues, and Rent below are typed as monthly or annual figures -- matches what a real estate listing or loan estimate shows.")
                     .onChange(of: isEnteringMonthly) { oldValue, _ in
-                        commit(interpretTaxInsuranceAsMonthly: oldValue)
+                        commit(interpretAsMonthly: oldValue)
                     }
                 }
 
@@ -259,21 +261,21 @@ struct LongTermComparisonView: View {
         HStack(alignment: .top, spacing: 24) {
             assumptionGroup("Staying") {
                 percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
-                dollarField("Property Tax \(taxInsuranceUnitLabel)", text: $propertyTaxText, placeholder: "e.g. 5000", field: .propertyTax)
-                dollarField("Insurance \(taxInsuranceUnitLabel)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
-                dollarField("HOA Dues (per month)", text: $hoaText, placeholder: "e.g. 0", field: .hoa)
+                dollarField("Property Tax \(entryUnitLabel)", text: $propertyTaxText, placeholder: "e.g. 5000", field: .propertyTax)
+                dollarField("Insurance \(entryUnitLabel)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
+                dollarField("HOA Dues \(entryUnitLabel)", text: $hoaText, placeholder: "e.g. 0", field: .hoa)
             }
             assumptionGroup("Renting") {
                 percentField("Investment Return", text: $investmentReturnText, field: .investmentReturn)
-                dollarField("Monthly Rent", text: $rentText, placeholder: "required", field: .rent)
+                dollarField("Rent \(entryUnitLabel)", text: $rentText, placeholder: "required", field: .rent)
                 Text("Affects the monthly total in the table above, not the Ending Net Worth figure — that only reflects investing today's sale proceeds and letting them grow, not what you spend on rent along the way.")
                     .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
                 percentField("Rent Increase (per year)", text: $rentIncreaseText, field: .rentIncrease)
                 dollarField("Security Deposit", text: $securityDepositText, placeholder: "e.g. 0", field: .securityDeposit)
                 dollarField("Pet Deposit(s)", text: $petDepositText, placeholder: "e.g. 0", field: .petDeposit)
-                dollarField("Pet Rent (per month)", text: $petRentText, placeholder: "e.g. 0", field: .petRent)
-                Text("Deposits come off your sale proceeds before the rest is invested, same as a down payment does for Buying Elsewhere. Pet rent just adds to the monthly total above, same as Monthly Rent.")
+                dollarField("Pet Rent \(entryUnitLabel)", text: $petRentText, placeholder: "e.g. 0", field: .petRent)
+                Text("Deposits come off your sale proceeds before the rest is invested, same as a down payment does for Buying Elsewhere. Pet rent just adds to the monthly total above, same as Rent.")
                     .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
                     .foregroundStyle(Theme.inkSecondary)
             }
@@ -294,9 +296,9 @@ struct LongTermComparisonView: View {
                         .foregroundStyle(Theme.inkSecondary)
                 }
                 percentField("Mortgage Rate", text: $newMortgageRateText, field: .newMortgageRate)
-                dollarField("Property Tax \(taxInsuranceUnitLabel)", text: $newPropertyTaxText, placeholder: "e.g. 5000", field: .newPropertyTax)
-                dollarField("Insurance \(taxInsuranceUnitLabel)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
-                dollarField("HOA Dues (per month)", text: $newHoaText, placeholder: "e.g. 0", field: .newHoa)
+                dollarField("Property Tax \(entryUnitLabel)", text: $newPropertyTaxText, placeholder: "e.g. 5000", field: .newPropertyTax)
+                dollarField("Insurance \(entryUnitLabel)", text: $newInsuranceText, placeholder: "e.g. 1500", field: .newInsurance)
+                dollarField("HOA Dues \(entryUnitLabel)", text: $newHoaText, placeholder: "e.g. 0", field: .newHoa)
                 HStack(spacing: 4) {
                     Text("MORTGAGE TERM".uppercased())
                         .font(Theme.ledgerLabel(scale: store.textScale))
@@ -536,6 +538,24 @@ struct LongTermComparisonView: View {
         return isMonthly ? value * 12 : value
     }
 
+    /// Same idea as `annualToDisplayText`/`displayTextToAnnual` above, but
+    /// for fields whose stored value is canonically *monthly* (HOA dues,
+    /// rent, pet rent -- all inherently monthly figures) rather than
+    /// annual, so the toggle multiplies by 12 for the annual display
+    /// instead of dividing by 12 for the monthly one.
+    private func monthlyToDisplayText(_ monthly: Decimal?) -> String {
+        guard let monthly else { return "" }
+        var displayed = isEnteringMonthly ? monthly : monthly * 12
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &displayed, 2, .plain)
+        return NSDecimalNumber(decimal: rounded).stringValue
+    }
+
+    private func displayTextToMonthly(_ text: String, isMonthly: Bool) -> Decimal? {
+        guard let value = decimal(text) else { return nil }
+        return isMonthly ? value : value / 12
+    }
+
     private func decimal(_ text: String) -> Decimal? {
         let digitsAndDot = text.filter { $0.isNumber || $0 == "." }
         return digitsAndDot.isEmpty ? nil : Decimal(string: digitsAndDot)
@@ -549,11 +569,11 @@ struct LongTermComparisonView: View {
         yearsText = String(store.projectionYears)
         appreciationText = NSDecimalNumber(decimal: store.homeAppreciationPercent ?? 3).stringValue
         investmentReturnText = NSDecimalNumber(decimal: store.investmentReturnPercent ?? 6).stringValue
-        rentText = store.monthlyRent.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
+        rentText = monthlyToDisplayText(store.monthlyRent)
         rentIncreaseText = NSDecimalNumber(decimal: store.rentAnnualIncreasePercent ?? 3).stringValue
         securityDepositText = store.securityDeposit.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
         petDepositText = store.petDeposit.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
-        petRentText = store.petRentMonthly.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
+        petRentText = monthlyToDisplayText(store.petRentMonthly)
         newHomePriceText = store.newHomePrice.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
         newHomeDownPaymentText = store.newHomeDownPayment.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
         newMortgageRateText = NSDecimalNumber(decimal: store.newMortgageRatePercent ?? store.mortgageInterestRatePercent ?? 6).stringValue
@@ -562,8 +582,8 @@ struct LongTermComparisonView: View {
         insuranceText = annualToDisplayText(store.homeownersInsuranceAnnual, defaultAnnual: 1500)
         newPropertyTaxText = annualToDisplayText(store.newPropertyTaxAnnual, defaultAnnual: (store.newHomePrice ?? 0) * 0.012)
         newInsuranceText = annualToDisplayText(store.newHomeownersInsuranceAnnual, defaultAnnual: 1500)
-        hoaText = store.hoaMonthly.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
-        newHoaText = store.newHoaMonthly.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
+        hoaText = monthlyToDisplayText(store.hoaMonthly)
+        newHoaText = monthlyToDisplayText(store.newHoaMonthly)
     }
 
     /// Fills whichever Buying Elsewhere fields the pasted listing text
@@ -590,28 +610,31 @@ struct LongTermComparisonView: View {
             newInsuranceText = NSDecimalNumber(decimal: isEnteringMonthly ? insurance : insurance * 12).stringValue
         }
         if let hoa = parsed.monthlyHOA {
-            newHoaText = NSDecimalNumber(decimal: hoa).stringValue
+            newHoaText = NSDecimalNumber(decimal: isEnteringMonthly ? hoa : hoa * 12).stringValue
         }
         commit()
     }
 
-    /// `interpretTaxInsuranceAsMonthly` defaults to the live toggle state
-    /// for every normal call site (typing in a field, tabbing away, a
-    /// paste-import). The one exception is the toggle's own onChange,
-    /// which passes the *old* mode explicitly -- see
-    /// `displayTextToAnnual`'s doc comment for why that distinction is
-    /// the whole fix for the toggle-corrupts-the-value bug.
-    private func commit(interpretTaxInsuranceAsMonthly: Bool? = nil) {
-        let isMonthly = interpretTaxInsuranceAsMonthly ?? isEnteringMonthly
+    /// `interpretAsMonthly` defaults to the live toggle state for every
+    /// normal call site (typing in a field, tabbing away, a paste-import).
+    /// The one exception is the toggle's own onChange, which passes the
+    /// *old* mode explicitly -- see `displayTextToAnnual`'s doc comment
+    /// for why that distinction is the whole fix for the
+    /// toggle-corrupts-the-value bug. Governs every field the Annual/
+    /// Monthly toggle affects, not just tax/insurance -- HOA, rent, and
+    /// pet rent are canonically monthly (see `displayTextToMonthly`) but
+    /// share the same toggle and the same old-value-on-flip requirement.
+    private func commit(interpretAsMonthly: Bool? = nil) {
+        let isMonthly = interpretAsMonthly ?? isEnteringMonthly
         store.setComparisonAssumptions(
             projectionYears: int(yearsText),
             homeAppreciationPercent: decimal(appreciationText),
             investmentReturnPercent: decimal(investmentReturnText),
-            monthlyRent: decimal(rentText),
+            monthlyRent: displayTextToMonthly(rentText, isMonthly: isMonthly),
             rentAnnualIncreasePercent: decimal(rentIncreaseText),
             securityDeposit: decimal(securityDepositText),
             petDeposit: decimal(petDepositText),
-            petRentMonthly: decimal(petRentText),
+            petRentMonthly: displayTextToMonthly(petRentText, isMonthly: isMonthly),
             newHomePrice: decimal(newHomePriceText),
             newHomeDownPayment: decimal(newHomeDownPaymentText),
             newMortgageRatePercent: decimal(newMortgageRateText),
@@ -620,8 +643,8 @@ struct LongTermComparisonView: View {
             homeownersInsuranceAnnual: displayTextToAnnual(insuranceText, isMonthly: isMonthly),
             newPropertyTaxAnnual: displayTextToAnnual(newPropertyTaxText, isMonthly: isMonthly),
             newHomeownersInsuranceAnnual: displayTextToAnnual(newInsuranceText, isMonthly: isMonthly),
-            hoaMonthly: decimal(hoaText),
-            newHoaMonthly: decimal(newHoaText)
+            hoaMonthly: displayTextToMonthly(hoaText, isMonthly: isMonthly),
+            newHoaMonthly: displayTextToMonthly(newHoaText, isMonthly: isMonthly)
         )
         syncFields()
     }
