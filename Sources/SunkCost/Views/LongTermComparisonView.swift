@@ -508,10 +508,16 @@ struct LongTermComparisonView: View {
     /// Formats an annual dollar amount (the store's canonical unit) for
     /// display, converting to monthly first if that's the active entry
     /// mode -- the stored value never changes, only what's shown/typed.
+    /// Rounded to the cent: dividing by 12 almost never lands on a clean
+    /// number (6500/12 is a repeating decimal), and displaying that
+    /// unrounded produced ugly noise like "6499.999999999999999" once it
+    /// had been divided and multiplied back through a toggle.
     private func annualToDisplayText(_ annual: Decimal?, defaultAnnual: Decimal) -> String {
         let base = annual ?? defaultAnnual
-        let displayed = isEnteringMonthly ? base / 12 : base
-        return NSDecimalNumber(decimal: displayed).stringValue
+        var displayed = isEnteringMonthly ? base / 12 : base
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &displayed, 2, .plain)
+        return NSDecimalNumber(decimal: rounded).stringValue
     }
 
     /// The inverse: whatever's typed, interpreted under `isMonthly`,

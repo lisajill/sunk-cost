@@ -45,13 +45,20 @@ public enum ListingParser {
     public static func parse(_ text: String) -> ParsedListing {
         var result = ParsedListing()
 
-        result.homePrice = firstDecimal(pattern: #"Home price\D{0,20}\$?([\d,]+)"#, in: text)
-        result.downPaymentAmount = firstDecimal(pattern: #"Down payment[\s\S]{0,30}?\(\$?([\d,]+)\)"#, in: text)
+        result.homePrice = firstDecimal(pattern: #"(?:Home|List) price\D{0,20}\$?([\d,]+)"#, in: text)
+        // A dollar figure can come before or after a "(NN%)" -- Redfin
+        // shows "57% ($279,243)", another site shows "$49,800 (20%)" --
+        // so this just looks for the first $-prefixed number after the
+        // label, not a specific ordering with the percent.
+        result.downPaymentAmount = firstDecimal(pattern: #"Down payment[\s\S]{0,30}?\$([\d,]+)"#, in: text)
         result.monthlyPropertyTax = firstDecimal(pattern: #"Property tax(?:es)?\D{0,20}\$?([\d,]+)"#, in: text)
         result.monthlyInsurance = firstDecimal(pattern: #"Home insurance\D{0,20}\$?([\d,]+)"#, in: text)
         result.monthlyHOA = firstDecimal(pattern: #"HOA\D{0,20}\$?([\d,]+)"#, in: text)
 
-        if let loanMatch = firstMatch(pattern: #"(\d+)-yr fixed,\s*([\d.]+)%"#, in: text) {
+        // "30-yr fixed, 6.75%" (Redfin) and "30-year fixed at 6.717%"
+        // (another site) both need to match -- "yr"/"year", an optional
+        // comma or "at" between the term and the rate.
+        if let loanMatch = firstMatch(pattern: #"(\d+)[- ]?(?:yr|year)s?\s+fixed[^\d%]{0,15}([\d.]+)\s*%"#, in: text) {
             result.mortgageTermYears = Int(loanMatch[1])
             result.mortgageRatePercent = Decimal(string: loanMatch[2])
         }
