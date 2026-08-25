@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy &amp; Your Data — Sunk Cost</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="sidebar" aria-label="Documentation sections">
+  <div class="sidebar__brand">
+    <img src="assets/icon.png" width="26" height="26" alt="" style="border-radius:7px">
+    Sunk Cost
+  </div>
+  <div class="sidebar__group-label">Guide</div>
+  <a class="navlink" href="index.html">Home</a>
+  <a class="navlink" href="getting-started.html">Getting Started</a>
+  <div class="sidebar__group-label">The App</div>
+  <a class="navlink" href="overview.html">Overview</a>
+  <a class="navlink" href="items.html">Items</a>
+  <a class="navlink" href="maintenance.html">Maintenance</a>
+  <a class="navlink" href="sell-scenario.html">Sell Scenario &amp; Compare</a>
+  <a class="navlink" href="settings.html">Settings</a>
+  <div class="sidebar__group-label">More</div>
+  <a class="navlink active" href="privacy.html" aria-current="page">Privacy &amp; Your Data</a>
+  <a class="navlink" href="support.html">Support &amp; Contributing</a>
+  <div class="sidebar__footer">
+    <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
+  </div>
+</nav>
+<main id="main-content" tabindex="-1">
+  <div class="eyebrow">More</div>
+  <h1>🔒 Privacy &amp; Your Data</h1>
+  <p class="lede">Your finances are one of the most personal things about you. Sunk Cost is built so there's genuinely nowhere for that information to leak to — not "we won't look," but "there's no wire for it to travel down."</p>
+
+  <h2>There is no server</h2>
+  <p>
+    Most apps like this ask you to make an account, then send your data to
+    a company's server so it can sync across your devices. Sunk Cost has no
+    account, no server, and no networking code anywhere in it — it is
+    <strong>not capable</strong> of sending your data anywhere, even if it
+    wanted to. That's a real, checkable fact about the code, not a policy
+    promise: the app doesn't include the code needed to make an internet
+    connection at all.
+  </p>
+
+  <h2>Where your data actually lives</h2>
+  <p>
+    Everything you enter is saved to one plain file on your own Mac, in a
+    private, sandboxed folder that only this app can touch, by default.
+    Want it backed up automatically, or shared across your own Macs? Point
+    the storage location (in <a href="settings.html">Settings</a>) at a
+    folder inside iCloud Drive or Dropbox — that's <em>your</em> existing
+    sync tool doing the work, the app just needs to be told where to save.
+  </p>
+
+  <h2>Privacy mode — hiding numbers for a screenshot</h2>
+  <p>
+    Click the 👁 eye icon in the toolbar and every dollar figure across
+    the app instantly turns into dots (<code>$•••,•••</code>) — useful for
+    screen-sharing, or sending a screenshot to someone without your actual
+    numbers in it. Click it again to bring them back. Every screenshot in
+    this documentation was taken with this on.
+  </p>
+
+  <h2>"Paste from Listing" — still no network access</h2>
+  <p>
+    The <a href="sell-scenario.html">Compare tool</a> can read a payment
+    calculator box you copy off a real estate listing and fill in the
+    numbers for you. It was tempting to instead let you just paste in a
+    link and have the app fetch the listing itself — but that would mean
+    writing actual network code into the app, which breaks the one clean,
+    always-true claim above ("this app cannot talk to the internet, full
+    stop") into "except for this one feature." So it stays paste-only: you
+    copy the text yourself from your own browser, and the app only ever
+    reads text you've explicitly handed it.
+  </p>
+
+  <h2>What actually gets sent anywhere, ever</h2>
+  <p>Nothing, automatically. The only ways your data leaves your Mac are things <em>you</em> deliberately choose to do:</p>
+  <ul>
+    <li>Exporting a backup file yourself (Settings → Export Data)</li>
+    <li>Pointing storage at a cloud-synced folder you already use (iCloud Drive, Dropbox)</li>
+    <li>Copying the Compare summary or a listing's text yourself, to paste somewhere else</li>
+  </ul>
+  <p>The app never does any of this on its own.</p>
+
+  <div class="next-prev">
+    <a href="settings.html">← Settings</a>
+    <a href="support.html">Support &amp; Contributing →</a>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support &amp; Contributing — Sunk Cost</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="sidebar" aria-label="Documentation sections">
+  <div class="sidebar__brand">
+    <img src="assets/icon.png" width="26" height="26" alt="" style="border-radius:7px">
+    Sunk Cost
+  </div>
+  <div class="sidebar__group-label">Guide</div>
+  <a class="navlink" href="index.html">Home</a>
+  <a class="navlink" href="getting-started.html">Getting Started</a>
+  <div class="sidebar__group-label">The App</div>
+  <a class="navlink" href="overview.html">Overview</a>
+  <a class="navlink" href="items.html">Items</a>
+  <a class="navlink" href="maintenance.html">Maintenance</a>
+  <a class="navlink" href="sell-scenario.html">Sell Scenario &amp; Compare</a>
+  <a class="navlink" href="settings.html">Settings</a>
+  <div class="sidebar__group-label">More</div>
+  <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
+  <a class="navlink active" href="support.html" aria-current="page">Support &amp; Contributing</a>
+  <div class="sidebar__footer">
+    <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
+  </div>
+</nav>
+<main id="main-content" tabindex="-1">
+  <div class="eyebrow">More</div>
+  <h1>💬 Support &amp; Contributing</h1>
+  <p class="lede">Sunk Cost is a free, independent, one-person project — support happens in the open, on GitHub.</p>
+
+  <h2>Found a bug, or have a question?</h2>
+  <p>
+    Post a GitHub Issue — it's the one place bugs, questions, and feature
+    ideas all get tracked, and it's free and doesn't require anything but
+    a GitHub account (also free) to post.
+  </p>
+  <a class="card" style="display:block" href="https://github.com/lisajill/sunk-cost/issues/new">
+    <strong>→ Open a new issue</strong><br>
+    <span style="color:var(--ink-secondary); font-size:14px">github.com/lisajill/sunk-cost/issues/new</span>
+  </a>
+  <p>When reporting a bug, it helps a lot to include:</p>
+  <ul>
+    <li>What you were doing right before it happened</li>
+    <li>What you expected vs. what actually happened</li>
+    <li>A screenshot, if it's something visual</li>
+  </ul>
+  <p>
+    Before posting, it's worth a quick look through
+    <a href="https://github.com/lisajill/sunk-cost/issues">existing issues</a>
+    in case someone's already reported the same thing.
+  </p>
+
+  <h2>Want to contribute code?</h2>
+  <p>Contributions are welcome. Sunk Cost is a plain Swift Package — no Xcode project to fight with, just the Swift toolchain that ships with Xcode.</p>
+  <pre><code>git clone https://github.com/lisajill/sunk-cost.git
+cd sunk-cost
+swift test                    # run the test suite
+./AppPackaging/build_app.sh   # build and package Sunk Cost.app</code></pre>
+  <p>
+    Before diving into the code, read
+    <a href="https://github.com/lisajill/sunk-cost/blob/main/CLAUDE.md">CLAUDE.md</a>
+    in the repo root — it covers the architecture, a handful of
+    non-obvious gotchas that have already been hit once (so you don't have
+    to hit them again), and the reasoning behind some deliberate design
+    choices (like why there's no network code anywhere, on purpose).
+  </p>
+
+  <h3>Sending a pull request</h3>
+  <p>
+    The <code>main</code> branch requires changes to come in through a
+    pull request rather than a direct push, so:
+  </p>
+  <ol>
+    <li>Fork the repo, or create a branch if you have write access</li>
+    <li>Make your change, with tests if it touches <code>SunkCostCore</code> (the testable logic layer — see CLAUDE.md's architecture section for what belongs there vs. the SwiftUI layer)</li>
+    <li>Run <code>swift test</code> and make sure everything still passes</li>
+    <li>Open a pull request against <code>main</code> describing what changed and why</li>
+  </ol>
+  <p>
+    Small, focused PRs are easier to review than big ones — if you're
+    thinking about a large change, opening an issue first to talk it
+    through is a good idea before writing a lot of code.
+  </p>
+
+  <div class="callout callout--tip">
+    <strong>New to the codebase?</strong> The project's own commit history
+    is a genuinely good way to see the reasoning behind past decisions —
+    commit messages here consistently explain <em>why</em>, not just
+    <em>what</em>.
+  </div>
+
+  <div class="next-prev">
+    <a href="privacy.html">← Privacy &amp; Your Data</a>
+    <span></span>
+  </div>
+</main>
+</body>
+</html>

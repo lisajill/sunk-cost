@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sell Scenario &amp; Compare — Sunk Cost</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="sidebar" aria-label="Documentation sections">
+  <div class="sidebar__brand">
+    <img src="assets/icon.png" width="26" height="26" alt="" style="border-radius:7px">
+    Sunk Cost
+  </div>
+  <div class="sidebar__group-label">Guide</div>
+  <a class="navlink" href="index.html">Home</a>
+  <a class="navlink" href="getting-started.html">Getting Started</a>
+  <div class="sidebar__group-label">The App</div>
+  <a class="navlink" href="overview.html">Overview</a>
+  <a class="navlink" href="items.html">Items</a>
+  <a class="navlink" href="maintenance.html">Maintenance</a>
+  <a class="navlink active" href="sell-scenario.html" aria-current="page">Sell Scenario &amp; Compare</a>
+  <a class="navlink" href="settings.html">Settings</a>
+  <div class="sidebar__group-label">More</div>
+  <a class="navlink" href="privacy.html">Privacy &amp; Your Data</a>
+  <a class="navlink" href="support.html">Support &amp; Contributing</a>
+  <div class="sidebar__footer">
+    <a href="https://github.com/lisajill/sunk-cost">View source on GitHub →</a>
+  </div>
+</nav>
+<main id="main-content" tabindex="-1">
+  <div class="eyebrow">The App</div>
+  <h1>💰 Sell Scenario &amp; Compare</h1>
+  <p class="lede">Two questions in one tab: what would you actually walk away with if you sold today, and — looking years ahead — is staying, renting, or buying somewhere else the better move?</p>
+
+  <h2>Net Proceeds If Sold Today</h2>
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_proceeds.png" alt="Net Proceeds card in light mode">
+    <img class="shot" src="assets/images/dark_proceeds.png" alt="Net Proceeds card in dark mode">
+  </div>
+  <p>This is a snapshot of right now, not a projection. The math:</p>
+  <p class="card">
+    Home Value <br>
+    − Mortgage Payoff <br>
+    − Selling Costs (realtor commission + closing costs) <br>
+    = <strong>Net Proceeds</strong>
+  </p>
+  <p>
+    Below that, <strong>Profit vs. Total Invested</strong> compares your Net
+    Proceeds against everything you've actually put into the house —
+    Purchase Price plus every <a href="items.html">Value-type Item</a>
+    you've logged. <strong>Selling Cost Assumptions</strong> lets you adjust
+    the realtor commission and closing cost percentages (defaults to 6%
+    and 2%, both just estimates you can edit anytime).
+  </p>
+
+  <h2>Compare: Stay vs. Rent vs. Buy Elsewhere</h2>
+  <p>
+    A real multi-year projection — not just today's numbers frozen in
+    place. It accounts for home appreciation over time, your mortgage
+    balance actually paying down, and investment growth on money that
+    isn't tied up in a house. Set how many <strong>Years</strong> ahead to
+    project, then fill in the assumptions for each of the three paths.
+  </p>
+
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_compare.png" alt="Comparison table in light mode">
+    <img class="shot" src="assets/images/dark_compare.png" alt="Comparison table in dark mode">
+  </div>
+  <p class="shot-caption">The results table: monthly costs and projected Ending Net Worth for each path.</p>
+
+  <h3>The three columns</h3>
+  <ul>
+    <li><strong>Keep</strong> — staying put in this house</li>
+    <li><strong>Rent</strong> — selling and renting somewhere instead</li>
+    <li><strong>Buy</strong> — selling and buying a different house</li>
+  </ul>
+
+  <div class="shot-pair">
+    <img class="shot" src="assets/images/light_assumptions.png" alt="Assumptions panel in light mode">
+    <img class="shot" src="assets/images/dark_assumptions.png" alt="Assumptions panel in dark mode">
+  </div>
+
+  <h3>Annual vs. Monthly entry</h3>
+  <p>
+    Property tax, insurance, HOA dues, and rent all have an
+    <strong>Annual / Monthly</strong> toggle at the top of the Assumptions
+    card. Flip it to match however your own paperwork quotes the number —
+    a mortgage statement usually shows monthly, a tax bill usually shows
+    annual. The app converts for you; nothing about your actual saved
+    numbers changes, only how you're currently typing them.
+  </p>
+
+  <h3>Paste from Listing</h3>
+  <p>
+    Looking at a real house on Redfin or Zillow? Copy the payment
+    calculator box straight off the listing page, click
+    <strong>Paste from Listing…</strong> under Buying Elsewhere, and paste
+    it in. The app reads the price, down payment, rate, term, tax,
+    insurance, and HOA straight out of that text and fills in the fields
+    for you.
+  </p>
+  <div class="callout callout--tip">
+    <strong>Nothing is fetched.</strong> This only reads text you've
+    already copied yourself from your own browser — the app still never
+    makes a network request of any kind. See <a href="privacy.html">Privacy &amp; Your Data</a>.
+  </div>
+
+  <h3>Saved scenarios</h3>
+  <p>
+    Click <strong>Save Scenario</strong> to name and store the current set
+    of assumptions, so you can flip between a few different what-ifs (a
+    cheaper house vs. a nicer one, a longer vs. shorter time horizon)
+    without retyping every number each time.
+  </p>
+
+  <h3>In Plain English</h3>
+  <p>Every number above gets translated into a plain-language summary underneath the table — no math required to understand what it's actually saying.</p>
+  <img class="shot" src="assets/images/dark_plain_english.png" alt="In Plain English summary section">
+
+  <div class="callout callout--note">
+    <strong>One honest limitation:</strong> Renting's Ending Net Worth only
+    reflects investing today's sale proceeds and letting them grow — it
+    doesn't subtract what you actually spend on rent along the way. That's
+    a deliberate simplification, not a bug.
+  </div>
+
+  <div class="next-prev">
+    <a href="maintenance.html">← Maintenance</a>
+    <a href="settings.html">Settings →</a>
+  </div>
+</main>
+</body>
+</html>

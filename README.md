@@ -15,6 +15,8 @@ iCloud Drive, Dropbox, etc. — if you want that. The app also keeps its own
 rolling 14-day local backup automatically, restorable from Settings if
 something gets edited or deleted by mistake.
 
+📖 **[Full documentation](https://lisajill.github.io/sunk-cost/)** — a guided walkthrough of every screen and feature, written for end users.
+
 ## Screenshots
 
 Light and Dark mode side by side. Dollar figures are blacked out below since
@@ -213,6 +215,12 @@ Not committed, no timeline — just ideas worth remembering:
   else: comparing the current loan against a hypothetical refinance
   (new rate/term/closing costs) the way Compare already does for
   Stay/Rent/Buy Elsewhere.
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for
+how to build/test the project and the pull request process (`main` is
+protected; changes come in through a PR).
 
 ## License
 
