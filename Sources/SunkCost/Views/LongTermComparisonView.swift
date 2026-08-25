@@ -218,8 +218,8 @@ struct LongTermComparisonView: View {
                     .frame(width: 160)
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
                     .help("Whether the Property Tax and Insurance fields below are typed as monthly or annual figures -- matches what a real estate listing or loan estimate shows.")
-                    .onChange(of: isEnteringMonthly) { _, _ in
-                        commit()
+                    .onChange(of: isEnteringMonthly) { oldValue, _ in
+                        commit(interpretTaxInsuranceAsMonthly: oldValue)
                     }
                 }
 
@@ -514,11 +514,20 @@ struct LongTermComparisonView: View {
         return NSDecimalNumber(decimal: displayed).stringValue
     }
 
-    /// The inverse: whatever's typed, interpreted in the active entry
-    /// mode, converted back to the annual figure that's actually stored.
-    private func displayTextToAnnual(_ text: String) -> Decimal? {
+    /// The inverse: whatever's typed, interpreted under `isMonthly`,
+    /// converted back to the annual figure that's actually stored. Takes
+    /// the mode explicitly (rather than reading `isEnteringMonthly`
+    /// directly) because the one caller that toggles the mode itself
+    /// needs to interpret already-typed text under the *old* mode, not
+    /// whatever `isEnteringMonthly` has already become by the time it
+    /// runs -- getting that backwards silently multiplied/divided the
+    /// stored value by 12 on every toggle, while the redisplayed text
+    /// coincidentally looked unchanged (X commits as X*12, then displays
+    /// back as (X*12)/12 = X), which is exactly why it looked like
+    /// toggling "did nothing" instead of visibly corrupting the value.
+    private func displayTextToAnnual(_ text: String, isMonthly: Bool) -> Decimal? {
         guard let value = decimal(text) else { return nil }
-        return isEnteringMonthly ? value * 12 : value
+        return isMonthly ? value * 12 : value
     }
 
     private func decimal(_ text: String) -> Decimal? {
@@ -580,7 +589,14 @@ struct LongTermComparisonView: View {
         commit()
     }
 
-    private func commit() {
+    /// `interpretTaxInsuranceAsMonthly` defaults to the live toggle state
+    /// for every normal call site (typing in a field, tabbing away, a
+    /// paste-import). The one exception is the toggle's own onChange,
+    /// which passes the *old* mode explicitly -- see
+    /// `displayTextToAnnual`'s doc comment for why that distinction is
+    /// the whole fix for the toggle-corrupts-the-value bug.
+    private func commit(interpretTaxInsuranceAsMonthly: Bool? = nil) {
+        let isMonthly = interpretTaxInsuranceAsMonthly ?? isEnteringMonthly
         store.setComparisonAssumptions(
             projectionYears: int(yearsText),
             homeAppreciationPercent: decimal(appreciationText),
@@ -594,10 +610,10 @@ struct LongTermComparisonView: View {
             newHomeDownPayment: decimal(newHomeDownPaymentText),
             newMortgageRatePercent: decimal(newMortgageRateText),
             newMortgageTermYears: int(newMortgageTermText),
-            propertyTaxAnnual: displayTextToAnnual(propertyTaxText),
-            homeownersInsuranceAnnual: displayTextToAnnual(insuranceText),
-            newPropertyTaxAnnual: displayTextToAnnual(newPropertyTaxText),
-            newHomeownersInsuranceAnnual: displayTextToAnnual(newInsuranceText),
+            propertyTaxAnnual: displayTextToAnnual(propertyTaxText, isMonthly: isMonthly),
+            homeownersInsuranceAnnual: displayTextToAnnual(insuranceText, isMonthly: isMonthly),
+            newPropertyTaxAnnual: displayTextToAnnual(newPropertyTaxText, isMonthly: isMonthly),
+            newHomeownersInsuranceAnnual: displayTextToAnnual(newInsuranceText, isMonthly: isMonthly),
             hoaMonthly: decimal(hoaText),
             newHoaMonthly: decimal(newHoaText)
         )
