@@ -41,28 +41,50 @@
     a company's server so it can sync across your devices. Sunk Cost has no
     account, no server, and no networking code anywhere in it — it is
     <strong>not capable</strong> of sending your data anywhere, even if it
-    wanted to. That's a real, checkable fact about the code, not a policy
-    promise: the app doesn't include the code needed to make an internet
-    connection at all.
+    wanted to. That's a real, checkable fact about <em>the app's own
+    code</em>, not a policy promise: the binary you download doesn't
+    include the code needed to make an internet connection at all.
+  </p>
+  <p>
+    That claim is specifically about the app itself, though — it's
+    <strong>not</strong> a guarantee that your data never touches the
+    internet in every configuration. See the next section.
   </p>
 
   <h2>Where your data actually lives</h2>
   <p>
     Everything you enter is saved to one plain file on your own Mac, in a
     private, sandboxed folder that only this app can touch, by default.
-    Want it backed up automatically, or shared across your own Macs? Point
-    the storage location (in <a href="settings.html">Settings</a>) at a
-    folder inside iCloud Drive or Dropbox — that's <em>your</em> existing
-    sync tool doing the work, the app just needs to be told where to save.
+    <strong>In that default setup, nothing about your data ever reaches
+    the internet, full stop.</strong>
+  </p>
+  <p>
+    You can instead point the storage location (in
+    <a href="settings.html">Settings</a>) at a folder inside iCloud Drive
+    or Dropbox, to get it backed up and synced across your own Macs
+    automatically. If you do that, your data <em>does</em> travel over the
+    internet — to Apple's or Dropbox's servers — the same as any other
+    file you'd drag into that folder. That upload is done entirely by
+    iCloud/Dropbox's own separate software running on your Mac, not by
+    Sunk Cost; the app has no idea that folder is being synced at all, and
+    still never makes a network connection of its own. But the practical
+    result for your data is the same either way: it leaves your Mac if,
+    and only if, <em>you</em> chose a synced folder to save it in.
   </p>
 
   <h2>Privacy mode — hiding numbers for a screenshot</h2>
   <p>
-    Click the 👁 eye icon in the toolbar and every dollar figure across
-    the app instantly turns into dots (<code>$•••,•••</code>) — useful for
-    screen-sharing, or sending a screenshot to someone without your actual
-    numbers in it. Click it again to bring them back. Every screenshot in
-    this documentation was taken with this on.
+    Click the 👁 eye icon in the toolbar and every dollar figure in
+    Overview, Items, Maintenance, and Sell Scenario &amp; Compare instantly
+    turns into dots (<code>$•••,•••</code>) — useful for screen-sharing, or
+    sending a screenshot to someone without your actual numbers in it.
+    Click it again to bring them back.
+  </p>
+  <p>
+    It doesn't reach <a href="settings.html">Settings</a>, though — Purchase
+    Price and Mortgage figures there are unaffected by the toggle. The
+    screenshots of those specific screens in this documentation had their
+    numbers blacked out by hand afterward, not by privacy mode itself.
   </p>
 
   <h2>"Paste from Listing" — still no network access</h2>
