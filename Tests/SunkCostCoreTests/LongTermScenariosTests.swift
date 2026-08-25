@@ -42,6 +42,30 @@ struct LongTermScenariosTests {
         #expect(netWorth == 121_000) // 100,000 * 1.1 * 1.1
     }
 
+    @Test("renting net worth subtracts upfront move-in costs (deposits) before investing the rest")
+    func rentingNetWorthSubtractsUpfrontCosts() {
+        // $100,000 proceeds minus $5,000 in deposits = $95,000 invested,
+        // compounded at 10% for 2 years.
+        let netWorth = projectRentingNetWorth(
+            netProceedsToday: 100_000,
+            investmentReturnPercent: 10,
+            projectionYears: 2,
+            upfrontCosts: 5_000
+        )
+        #expect(netWorth == 114_950) // 95,000 * 1.1 * 1.1
+    }
+
+    @Test("renting net worth floors at zero invested if upfront costs exceed the proceeds")
+    func rentingNetWorthFloorsAtZeroWhenCostsExceedProceeds() {
+        let netWorth = projectRentingNetWorth(
+            netProceedsToday: 3_000,
+            investmentReturnPercent: 10,
+            projectionYears: 2,
+            upfrontCosts: 5_000
+        )
+        #expect(netWorth == 0)
+    }
+
     @Test("buying elsewhere net worth: appreciated new home value minus remaining new mortgage balance")
     func buyingElsewhereNetWorth() {
         // $400,000 new home, $100,000 down -> $300,000 mortgage over 25

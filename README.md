@@ -72,6 +72,18 @@ all built at once:
    ending number in particular only reflects investing today's sale
    proceeds, not what you spend on rent along the way.
 
+   Property tax, insurance, and HOA dues are entered as real dollar
+   amounts (with a toggle for monthly vs. annual on tax/insurance) rather
+   than a percentage, since every real-world source for these numbers —
+   listings, loan estimates, tax bills — quotes a dollar figure, not a
+   rate. A **Paste from Listing** button on Buying Elsewhere reads a
+   copy-pasted Redfin/Zillow payment-calculator box and fills in price,
+   down payment, rate, term, tax, insurance, and HOA automatically —
+   parsing text you already copied yourself, no network request of any
+   kind. Renting also accounts for one-time move-in costs (security/pet
+   deposits, which reduce what's actually left to invest) and ongoing
+   pet rent.
+
    The Compare assumptions can be saved as a named scenario (with
    optional notes) and reloaded later — useful for flipping between a
    few different what-ifs without retyping. A toolbar **Copy Summary**

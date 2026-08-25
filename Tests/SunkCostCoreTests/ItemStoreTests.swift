@@ -173,4 +173,69 @@ struct ItemStoreTests {
             try ItemStore.load(from: url)
         }
     }
+
+    @Test("loading JSON with legacy propertyTaxPercent converts it to propertyTaxAnnual using homeValue")
+    func loadingLegacyPropertyTaxPercentConverts() throws {
+        let url = makeTempFileURL()
+        let json = """
+        {
+            "items": [],
+            "homeValue": 400000,
+            "propertyTaxPercent": 1.2
+        }
+        """
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.propertyTaxAnnual == 4800)
+    }
+
+    @Test("loading JSON with legacy newPropertyTaxPercent converts it using newHomePrice")
+    func loadingLegacyNewPropertyTaxPercentConverts() throws {
+        let url = makeTempFileURL()
+        let json = """
+        {
+            "items": [],
+            "newHomePrice": 500000,
+            "newPropertyTaxPercent": 1.5
+        }
+        """
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.newPropertyTaxAnnual == 7500)
+    }
+
+    @Test("propertyTaxAnnual round-trips directly when already present, ignoring any legacy percent")
+    func propertyTaxAnnualRoundTrips() throws {
+        let url = makeTempFileURL()
+        let original = AppData(propertyTaxAnnual: 3600, newPropertyTaxAnnual: 4200)
+
+        try ItemStore.save(original, to: url)
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.propertyTaxAnnual == 3600)
+        #expect(loaded.newPropertyTaxAnnual == 4200)
+    }
+
+    @Test("legacy propertyTaxPercent is ignored when homeValue is missing, since there's nothing to convert against")
+    func loadingLegacyPropertyTaxPercentWithoutHomeValueGivesNil() throws {
+        let url = makeTempFileURL()
+        let json = """
+        {
+            "items": [],
+            "propertyTaxPercent": 1.2
+        }
+        """
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+
+        let loaded = try ItemStore.load(from: url)
+
+        #expect(loaded.propertyTaxAnnual == nil)
+    }
 }

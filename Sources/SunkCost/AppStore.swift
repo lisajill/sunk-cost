@@ -25,14 +25,19 @@ final class AppStore {
     var investmentReturnPercent: Decimal?
     var monthlyRent: Decimal?
     var rentAnnualIncreasePercent: Decimal?
+    var securityDeposit: Decimal?
+    var petDeposit: Decimal?
+    var petRentMonthly: Decimal?
     var newHomePrice: Decimal?
     var newHomeDownPayment: Decimal?
     var newMortgageRatePercent: Decimal?
     var newMortgageTermYears: Int?
-    var propertyTaxPercent: Decimal?
+    var propertyTaxAnnual: Decimal?
     var homeownersInsuranceAnnual: Decimal?
-    var newPropertyTaxPercent: Decimal?
+    var newPropertyTaxAnnual: Decimal?
     var newHomeownersInsuranceAnnual: Decimal?
+    var hoaMonthly: Decimal?
+    var newHoaMonthly: Decimal?
     var savedComparisonScenarios: [ComparisonScenario] = []
     var filter = ItemFilter()
     var sortOption: SortOption {
@@ -205,14 +210,19 @@ final class AppStore {
             investmentReturnPercent = data.investmentReturnPercent
             monthlyRent = data.monthlyRent
             rentAnnualIncreasePercent = data.rentAnnualIncreasePercent
+            securityDeposit = data.securityDeposit
+            petDeposit = data.petDeposit
+            petRentMonthly = data.petRentMonthly
             newHomePrice = data.newHomePrice
             newHomeDownPayment = data.newHomeDownPayment
             newMortgageRatePercent = data.newMortgageRatePercent
             newMortgageTermYears = data.newMortgageTermYears
-            propertyTaxPercent = data.propertyTaxPercent
+            propertyTaxAnnual = data.propertyTaxAnnual
             homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
-            newPropertyTaxPercent = data.newPropertyTaxPercent
+            newPropertyTaxAnnual = data.newPropertyTaxAnnual
             newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
+            hoaMonthly = data.hoaMonthly
+            newHoaMonthly = data.newHoaMonthly
             savedComparisonScenarios = data.savedComparisonScenarios
             loadError = nil
         } catch {
@@ -407,14 +417,19 @@ final class AppStore {
         investmentReturnPercent = data.investmentReturnPercent
         monthlyRent = data.monthlyRent
         rentAnnualIncreasePercent = data.rentAnnualIncreasePercent
+        securityDeposit = data.securityDeposit
+        petDeposit = data.petDeposit
+        petRentMonthly = data.petRentMonthly
         newHomePrice = data.newHomePrice
         newHomeDownPayment = data.newHomeDownPayment
         newMortgageRatePercent = data.newMortgageRatePercent
         newMortgageTermYears = data.newMortgageTermYears
-        propertyTaxPercent = data.propertyTaxPercent
+        propertyTaxAnnual = data.propertyTaxAnnual
         homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
-        newPropertyTaxPercent = data.newPropertyTaxPercent
+        newPropertyTaxAnnual = data.newPropertyTaxAnnual
         newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
+        hoaMonthly = data.hoaMonthly
+        newHoaMonthly = data.newHoaMonthly
         savedComparisonScenarios = data.savedComparisonScenarios
         save()
     }
@@ -438,14 +453,19 @@ final class AppStore {
             investmentReturnPercent: investmentReturnPercent,
             monthlyRent: monthlyRent,
             rentAnnualIncreasePercent: rentAnnualIncreasePercent,
+            securityDeposit: securityDeposit,
+            petDeposit: petDeposit,
+            petRentMonthly: petRentMonthly,
             newHomePrice: newHomePrice,
             newHomeDownPayment: newHomeDownPayment,
             newMortgageRatePercent: newMortgageRatePercent,
             newMortgageTermYears: newMortgageTermYears,
-            propertyTaxPercent: propertyTaxPercent,
+            propertyTaxAnnual: propertyTaxAnnual,
             homeownersInsuranceAnnual: homeownersInsuranceAnnual,
-            newPropertyTaxPercent: newPropertyTaxPercent,
+            newPropertyTaxAnnual: newPropertyTaxAnnual,
             newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual,
+            hoaMonthly: hoaMonthly,
+            newHoaMonthly: newHoaMonthly,
             savedComparisonScenarios: savedComparisonScenarios
         )
     }

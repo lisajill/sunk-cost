@@ -14,14 +14,19 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
     public var investmentReturnPercent: Decimal?
     public var monthlyRent: Decimal?
     public var rentAnnualIncreasePercent: Decimal?
+    public var securityDeposit: Decimal?
+    public var petDeposit: Decimal?
+    public var petRentMonthly: Decimal?
     public var newHomePrice: Decimal?
     public var newHomeDownPayment: Decimal?
     public var newMortgageRatePercent: Decimal?
     public var newMortgageTermYears: Int?
-    public var propertyTaxPercent: Decimal?
+    public var propertyTaxAnnual: Decimal?
     public var homeownersInsuranceAnnual: Decimal?
-    public var newPropertyTaxPercent: Decimal?
+    public var newPropertyTaxAnnual: Decimal?
     public var newHomeownersInsuranceAnnual: Decimal?
+    public var hoaMonthly: Decimal?
+    public var newHoaMonthly: Decimal?
     public var notes: String?
 
     public init(
@@ -32,14 +37,19 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
         investmentReturnPercent: Decimal? = nil,
         monthlyRent: Decimal? = nil,
         rentAnnualIncreasePercent: Decimal? = nil,
+        securityDeposit: Decimal? = nil,
+        petDeposit: Decimal? = nil,
+        petRentMonthly: Decimal? = nil,
         newHomePrice: Decimal? = nil,
         newHomeDownPayment: Decimal? = nil,
         newMortgageRatePercent: Decimal? = nil,
         newMortgageTermYears: Int? = nil,
-        propertyTaxPercent: Decimal? = nil,
+        propertyTaxAnnual: Decimal? = nil,
         homeownersInsuranceAnnual: Decimal? = nil,
-        newPropertyTaxPercent: Decimal? = nil,
+        newPropertyTaxAnnual: Decimal? = nil,
         newHomeownersInsuranceAnnual: Decimal? = nil,
+        hoaMonthly: Decimal? = nil,
+        newHoaMonthly: Decimal? = nil,
         notes: String? = nil
     ) {
         self.id = id
@@ -49,14 +59,19 @@ public struct ComparisonScenario: Identifiable, Codable, Equatable, Sendable {
         self.investmentReturnPercent = investmentReturnPercent
         self.monthlyRent = monthlyRent
         self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+        self.securityDeposit = securityDeposit
+        self.petDeposit = petDeposit
+        self.petRentMonthly = petRentMonthly
         self.newHomePrice = newHomePrice
         self.newHomeDownPayment = newHomeDownPayment
         self.newMortgageRatePercent = newMortgageRatePercent
         self.newMortgageTermYears = newMortgageTermYears
-        self.propertyTaxPercent = propertyTaxPercent
+        self.propertyTaxAnnual = propertyTaxAnnual
         self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
-        self.newPropertyTaxPercent = newPropertyTaxPercent
+        self.newPropertyTaxAnnual = newPropertyTaxAnnual
         self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+        self.hoaMonthly = hoaMonthly
+        self.newHoaMonthly = newHoaMonthly
         self.notes = notes
     }
 }

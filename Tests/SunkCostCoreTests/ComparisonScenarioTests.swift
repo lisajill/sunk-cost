@@ -17,9 +17,9 @@ struct ComparisonScenarioTests {
             newHomeDownPayment: 100_000,
             newMortgageRatePercent: 7,
             newMortgageTermYears: 30,
-            propertyTaxPercent: 1.3,
+            propertyTaxAnnual: 3600,
             homeownersInsuranceAnnual: 1500,
-            newPropertyTaxPercent: 1.2,
+            newPropertyTaxAnnual: 4200,
             newHomeownersInsuranceAnnual: 3000,
             notes: "Assumes we refinance the new place at close."
         )

@@ -37,18 +37,35 @@ public struct AppData: Codable, Equatable, Sendable {
     public var investmentReturnPercent: Decimal?
     public var monthlyRent: Decimal?
     public var rentAnnualIncreasePercent: Decimal?
+    /// One-time move-in costs -- come off the sale proceeds before the
+    /// rest is invested, the same way a down payment reduces the leftover
+    /// cash invested in Buying Elsewhere. Ongoing pet rent, unlike the
+    /// deposits, is monthly and only affects the displayed cost, not the
+    /// Ending Net Worth figure -- consistent with Monthly Rent itself.
+    public var securityDeposit: Decimal?
+    public var petDeposit: Decimal?
+    public var petRentMonthly: Decimal?
     public var newHomePrice: Decimal?
     public var newHomeDownPayment: Decimal?
     public var newMortgageRatePercent: Decimal?
     public var newMortgageTermYears: Int?
 
-    /// PITI's Taxes and Insurance -- property tax as %/year of home value
-    /// (scales with the assumed home value), insurance as a flat $/year.
-    /// Separate figures for the current home and the hypothetical new one.
-    public var propertyTaxPercent: Decimal?
+    /// PITI's Taxes and Insurance -- both flat $/year (property tax used to
+    /// be a %-of-home-value so it would auto-scale with the assumed value,
+    /// but every real-world source for this number -- listings, loan
+    /// estimates, tax bills -- quotes a dollar figure, never a rate, so
+    /// that auto-scaling wasn't worth the friction of converting a real
+    /// number into a percent by hand every time. Separate figures for the
+    /// current home and the hypothetical new one.
+    public var propertyTaxAnnual: Decimal?
     public var homeownersInsuranceAnnual: Decimal?
-    public var newPropertyTaxPercent: Decimal?
+    public var newPropertyTaxAnnual: Decimal?
     public var newHomeownersInsuranceAnnual: Decimal?
+    /// HOA dues, already monthly (unlike tax/insurance above) since that's
+    /// how every real-world source already quotes it -- no annual/monthly
+    /// ambiguity to resolve for this one.
+    public var hoaMonthly: Decimal?
+    public var newHoaMonthly: Decimal?
 
     /// Named, saved snapshots of the Compare assumptions -- lets the user
     /// flip between several what-ifs without retyping.
@@ -72,14 +89,19 @@ public struct AppData: Codable, Equatable, Sendable {
         investmentReturnPercent: Decimal? = nil,
         monthlyRent: Decimal? = nil,
         rentAnnualIncreasePercent: Decimal? = nil,
+        securityDeposit: Decimal? = nil,
+        petDeposit: Decimal? = nil,
+        petRentMonthly: Decimal? = nil,
         newHomePrice: Decimal? = nil,
         newHomeDownPayment: Decimal? = nil,
         newMortgageRatePercent: Decimal? = nil,
         newMortgageTermYears: Int? = nil,
-        propertyTaxPercent: Decimal? = nil,
+        propertyTaxAnnual: Decimal? = nil,
         homeownersInsuranceAnnual: Decimal? = nil,
-        newPropertyTaxPercent: Decimal? = nil,
+        newPropertyTaxAnnual: Decimal? = nil,
         newHomeownersInsuranceAnnual: Decimal? = nil,
+        hoaMonthly: Decimal? = nil,
+        newHoaMonthly: Decimal? = nil,
         savedComparisonScenarios: [ComparisonScenario] = []
     ) {
         self.items = items
@@ -99,14 +121,19 @@ public struct AppData: Codable, Equatable, Sendable {
         self.investmentReturnPercent = investmentReturnPercent
         self.monthlyRent = monthlyRent
         self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+        self.securityDeposit = securityDeposit
+        self.petDeposit = petDeposit
+        self.petRentMonthly = petRentMonthly
         self.newHomePrice = newHomePrice
         self.newHomeDownPayment = newHomeDownPayment
         self.newMortgageRatePercent = newMortgageRatePercent
         self.newMortgageTermYears = newMortgageTermYears
-        self.propertyTaxPercent = propertyTaxPercent
+        self.propertyTaxAnnual = propertyTaxAnnual
         self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
-        self.newPropertyTaxPercent = newPropertyTaxPercent
+        self.newPropertyTaxAnnual = newPropertyTaxAnnual
         self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+        self.hoaMonthly = hoaMonthly
+        self.newHoaMonthly = newHoaMonthly
         self.savedComparisonScenarios = savedComparisonScenarios
     }
 
@@ -115,10 +142,22 @@ public struct AppData: Codable, Equatable, Sendable {
              mortgageStartDate, mortgageBalance, mortgageTermYears, monthlyPaymentOverride,
              maintenanceCategories, realtorCommissionPercent, closingCostsPercent,
              comparisonProjectionYears, homeAppreciationPercent, investmentReturnPercent,
-             monthlyRent, rentAnnualIncreasePercent, newHomePrice, newHomeDownPayment,
-             newMortgageRatePercent, newMortgageTermYears, propertyTaxPercent,
-             homeownersInsuranceAnnual, newPropertyTaxPercent, newHomeownersInsuranceAnnual,
-             savedComparisonScenarios
+             monthlyRent, rentAnnualIncreasePercent, securityDeposit, petDeposit, petRentMonthly,
+             newHomePrice, newHomeDownPayment,
+             newMortgageRatePercent, newMortgageTermYears, propertyTaxAnnual,
+             homeownersInsuranceAnnual, newPropertyTaxAnnual, newHomeownersInsuranceAnnual,
+             hoaMonthly, newHoaMonthly, savedComparisonScenarios
+    }
+
+    /// Read-only keys for a schema that no longer exists on the write side
+    /// -- property tax used to be stored as a %/year of home value. Kept
+    /// only so a JSON file saved before this change still loads with a
+    /// sensible number instead of silently losing the assumption; every
+    /// save from here on writes `propertyTaxAnnual`/`newPropertyTaxAnnual`
+    /// instead, so this enum (deliberately separate from `CodingKeys`,
+    /// which also drives the synthesized `encode(to:)`) never gets written.
+    private enum LegacyCodingKeys: String, CodingKey {
+        case propertyTaxPercent, newPropertyTaxPercent
     }
 
     // Manual decode so JSON saved before Maintenance existed (every data
@@ -143,14 +182,39 @@ public struct AppData: Codable, Equatable, Sendable {
         investmentReturnPercent = try container.decodeIfPresent(Decimal.self, forKey: .investmentReturnPercent)
         monthlyRent = try container.decodeIfPresent(Decimal.self, forKey: .monthlyRent)
         rentAnnualIncreasePercent = try container.decodeIfPresent(Decimal.self, forKey: .rentAnnualIncreasePercent)
+        securityDeposit = try container.decodeIfPresent(Decimal.self, forKey: .securityDeposit)
+        petDeposit = try container.decodeIfPresent(Decimal.self, forKey: .petDeposit)
+        petRentMonthly = try container.decodeIfPresent(Decimal.self, forKey: .petRentMonthly)
         newHomePrice = try container.decodeIfPresent(Decimal.self, forKey: .newHomePrice)
         newHomeDownPayment = try container.decodeIfPresent(Decimal.self, forKey: .newHomeDownPayment)
         newMortgageRatePercent = try container.decodeIfPresent(Decimal.self, forKey: .newMortgageRatePercent)
         newMortgageTermYears = try container.decodeIfPresent(Int.self, forKey: .newMortgageTermYears)
-        propertyTaxPercent = try container.decodeIfPresent(Decimal.self, forKey: .propertyTaxPercent)
         homeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .homeownersInsuranceAnnual)
-        newPropertyTaxPercent = try container.decodeIfPresent(Decimal.self, forKey: .newPropertyTaxPercent)
         newHomeownersInsuranceAnnual = try container.decodeIfPresent(Decimal.self, forKey: .newHomeownersInsuranceAnnual)
+
+        if let annual = try container.decodeIfPresent(Decimal.self, forKey: .propertyTaxAnnual) {
+            propertyTaxAnnual = annual
+        } else {
+            let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
+            if let legacyPercent = try legacy.decodeIfPresent(Decimal.self, forKey: .propertyTaxPercent), let homeValue {
+                propertyTaxAnnual = homeValue * legacyPercent / 100
+            } else {
+                propertyTaxAnnual = nil
+            }
+        }
+
+        if let annual = try container.decodeIfPresent(Decimal.self, forKey: .newPropertyTaxAnnual) {
+            newPropertyTaxAnnual = annual
+        } else {
+            let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
+            if let legacyPercent = try legacy.decodeIfPresent(Decimal.self, forKey: .newPropertyTaxPercent), let newHomePrice {
+                newPropertyTaxAnnual = newHomePrice * legacyPercent / 100
+            } else {
+                newPropertyTaxAnnual = nil
+            }
+        }
+        hoaMonthly = try container.decodeIfPresent(Decimal.self, forKey: .hoaMonthly)
+        newHoaMonthly = try container.decodeIfPresent(Decimal.self, forKey: .newHoaMonthly)
         savedComparisonScenarios = try container.decodeIfPresent([ComparisonScenario].self, forKey: .savedComparisonScenarios) ?? []
     }
 }

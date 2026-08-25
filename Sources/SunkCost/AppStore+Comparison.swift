@@ -9,8 +9,9 @@ struct MonthlyCostBreakdown {
     var principalAndInterest: Decimal = 0
     var propertyTax: Decimal = 0
     var insurance: Decimal = 0
+    var hoa: Decimal = 0
     var maintenanceOrRent: Decimal = 0
-    var total: Decimal { principalAndInterest + propertyTax + insurance + maintenanceOrRent }
+    var total: Decimal { principalAndInterest + propertyTax + insurance + hoa + maintenanceOrRent }
 }
 
 /// Sell Scenario ("Cost to leave") and the Compare: Stay vs. Rent vs. Buy
@@ -68,7 +69,8 @@ extension AppStore {
         return projectRentingNetWorth(
             netProceedsToday: netProceeds,
             investmentReturnPercent: investmentReturnPercent ?? 6,
-            projectionYears: projectionYears
+            projectionYears: projectionYears,
+            upfrontCosts: (securityDeposit ?? 0) + (petDeposit ?? 0)
         )
     }
 
@@ -98,15 +100,16 @@ extension AppStore {
         guard let homeValue, let principalAndInterest = monthlyPayment else { return nil }
         return MonthlyCostBreakdown(
             principalAndInterest: principalAndInterest,
-            propertyTax: monthlyPropertyTax(homeValue: homeValue, annualTaxPercent: propertyTaxPercent ?? 1.2),
+            propertyTax: (propertyTaxAnnual ?? homeValue * 0.012) / 12,
             insurance: (homeownersInsuranceAnnual ?? 1500) / 12,
+            hoa: hoaMonthly ?? 0,
             maintenanceOrRent: costToKeep
         )
     }
 
     var rentingMonthlyBreakdown: MonthlyCostBreakdown? {
         guard let monthlyRent else { return nil }
-        return MonthlyCostBreakdown(maintenanceOrRent: monthlyRent)
+        return MonthlyCostBreakdown(maintenanceOrRent: monthlyRent + (petRentMonthly ?? 0))
     }
 
     /// Maintenance reuses today's `costToKeep` as a stand-in for the new
@@ -122,8 +125,9 @@ extension AppStore {
         ) ?? 0
         return MonthlyCostBreakdown(
             principalAndInterest: principalAndInterest,
-            propertyTax: monthlyPropertyTax(homeValue: newHomePrice, annualTaxPercent: newPropertyTaxPercent ?? 1.2),
+            propertyTax: (newPropertyTaxAnnual ?? newHomePrice * 0.012) / 12,
             insurance: (newHomeownersInsuranceAnnual ?? 1500) / 12,
+            hoa: newHoaMonthly ?? 0,
             maintenanceOrRent: costToKeep
         )
     }
@@ -170,9 +174,9 @@ extension AppStore {
 
         lines.append("STAYING")
         lines.append("Home Appreciation: \(pct(homeAppreciationPercent ?? 3))/yr")
-        lines.append("Property Tax: \(pct(propertyTaxPercent ?? 1.2))/yr, Insurance: \(fmt(homeownersInsuranceAnnual ?? 1500))/yr")
+        lines.append("Property Tax: \(fmt(propertyTaxAnnual ?? (homeValue.map { $0 * 0.012 })))/yr, Insurance: \(fmt(homeownersInsuranceAnnual ?? 1500))/yr")
         if let breakdown = stayingMonthlyBreakdown {
-            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
+            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), HOA \(fmt(breakdown.hoa)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
         }
         lines.append("Ending Net Worth: \(stayingNetWorthProjection.map(fmt) ?? "needs full mortgage details (original amount, rate, term, start date) in Settings")")
         lines.append("")
@@ -193,9 +197,9 @@ extension AppStore {
             lines.append("Loan Amount: \(fmt(max(newHomePrice - min(downPayment, newHomePrice), 0)))")
         }
         lines.append("Mortgage Rate: \(pct(newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6)), Term: \(newMortgageTermYears ?? 30) years")
-        lines.append("Property Tax: \(pct(newPropertyTaxPercent ?? 1.2))/yr, Insurance: \(fmt(newHomeownersInsuranceAnnual ?? 1500))/yr")
+        lines.append("Property Tax: \(fmt(newPropertyTaxAnnual ?? (newHomePrice.map { $0 * 0.012 })))/yr, Insurance: \(fmt(newHomeownersInsuranceAnnual ?? 1500))/yr")
         if let breakdown = buyingElsewhereMonthlyBreakdown {
-            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
+            lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), HOA \(fmt(breakdown.hoa)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
         }
         lines.append("Ending Net Worth: \(buyingElsewhereNetWorthProjection.map(fmt) ?? "needs a new home price")")
 
@@ -220,28 +224,38 @@ extension AppStore {
         investmentReturnPercent: Decimal?,
         monthlyRent: Decimal?,
         rentAnnualIncreasePercent: Decimal?,
+        securityDeposit: Decimal?,
+        petDeposit: Decimal?,
+        petRentMonthly: Decimal?,
         newHomePrice: Decimal?,
         newHomeDownPayment: Decimal?,
         newMortgageRatePercent: Decimal?,
         newMortgageTermYears: Int?,
-        propertyTaxPercent: Decimal?,
+        propertyTaxAnnual: Decimal?,
         homeownersInsuranceAnnual: Decimal?,
-        newPropertyTaxPercent: Decimal?,
-        newHomeownersInsuranceAnnual: Decimal?
+        newPropertyTaxAnnual: Decimal?,
+        newHomeownersInsuranceAnnual: Decimal?,
+        hoaMonthly: Decimal?,
+        newHoaMonthly: Decimal?
     ) {
         self.comparisonProjectionYears = projectionYears
         self.homeAppreciationPercent = homeAppreciationPercent
         self.investmentReturnPercent = investmentReturnPercent
         self.monthlyRent = monthlyRent
         self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+        self.securityDeposit = securityDeposit
+        self.petDeposit = petDeposit
+        self.petRentMonthly = petRentMonthly
         self.newHomePrice = newHomePrice
         self.newHomeDownPayment = newHomeDownPayment
         self.newMortgageRatePercent = newMortgageRatePercent
         self.newMortgageTermYears = newMortgageTermYears
-        self.propertyTaxPercent = propertyTaxPercent
+        self.propertyTaxAnnual = propertyTaxAnnual
         self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
-        self.newPropertyTaxPercent = newPropertyTaxPercent
+        self.newPropertyTaxAnnual = newPropertyTaxAnnual
         self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+        self.hoaMonthly = hoaMonthly
+        self.newHoaMonthly = newHoaMonthly
         save()
     }
 
@@ -260,14 +274,19 @@ extension AppStore {
             investmentReturnPercent: investmentReturnPercent,
             monthlyRent: monthlyRent,
             rentAnnualIncreasePercent: rentAnnualIncreasePercent,
+            securityDeposit: securityDeposit,
+            petDeposit: petDeposit,
+            petRentMonthly: petRentMonthly,
             newHomePrice: newHomePrice,
             newHomeDownPayment: newHomeDownPayment,
             newMortgageRatePercent: newMortgageRatePercent,
             newMortgageTermYears: newMortgageTermYears,
-            propertyTaxPercent: propertyTaxPercent,
+            propertyTaxAnnual: propertyTaxAnnual,
             homeownersInsuranceAnnual: homeownersInsuranceAnnual,
-            newPropertyTaxPercent: newPropertyTaxPercent,
+            newPropertyTaxAnnual: newPropertyTaxAnnual,
             newHomeownersInsuranceAnnual: newHomeownersInsuranceAnnual,
+            hoaMonthly: hoaMonthly,
+            newHoaMonthly: newHoaMonthly,
             notes: notes
         )
         savedComparisonScenarios.append(scenario)
@@ -293,14 +312,19 @@ extension AppStore {
         investmentReturnPercent = scenario.investmentReturnPercent
         monthlyRent = scenario.monthlyRent
         rentAnnualIncreasePercent = scenario.rentAnnualIncreasePercent
+        securityDeposit = scenario.securityDeposit
+        petDeposit = scenario.petDeposit
+        petRentMonthly = scenario.petRentMonthly
         newHomePrice = scenario.newHomePrice
         newHomeDownPayment = scenario.newHomeDownPayment
         newMortgageRatePercent = scenario.newMortgageRatePercent
         newMortgageTermYears = scenario.newMortgageTermYears
-        propertyTaxPercent = scenario.propertyTaxPercent
+        propertyTaxAnnual = scenario.propertyTaxAnnual
         homeownersInsuranceAnnual = scenario.homeownersInsuranceAnnual
-        newPropertyTaxPercent = scenario.newPropertyTaxPercent
+        newPropertyTaxAnnual = scenario.newPropertyTaxAnnual
         newHomeownersInsuranceAnnual = scenario.newHomeownersInsuranceAnnual
+        hoaMonthly = scenario.hoaMonthly
+        newHoaMonthly = scenario.newHoaMonthly
         save()
     }
 

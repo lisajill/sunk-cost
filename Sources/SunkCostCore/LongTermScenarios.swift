@@ -24,12 +24,19 @@ public func projectStayingNetWorth(
 
 /// Ending investment balance after `projectionYears`, if today's net sale
 /// proceeds were invested instead of buying or renting.
+/// `upfrontCosts` -- a security deposit, pet deposit(s), anything paid out
+/// of pocket to move in -- comes off the top before the rest is invested,
+/// the same way a down payment reduces what's left over to invest in the
+/// Buying Elsewhere scenario. Floors at zero rather than going negative if
+/// costs happen to exceed the proceeds.
 public func projectRentingNetWorth(
     netProceedsToday: Decimal,
     investmentReturnPercent: Decimal,
-    projectionYears: Int
+    projectionYears: Int,
+    upfrontCosts: Decimal = 0
 ) -> Decimal {
-    compoundedValue(principal: netProceedsToday, annualRatePercent: investmentReturnPercent, years: projectionYears)
+    let investedPrincipal = max(netProceedsToday - upfrontCosts, 0)
+    return compoundedValue(principal: investedPrincipal, annualRatePercent: investmentReturnPercent, years: projectionYears)
 }
 
 /// Ending home equity in a new home after `projectionYears`, bought today
