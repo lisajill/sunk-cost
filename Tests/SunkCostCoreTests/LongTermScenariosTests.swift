@@ -73,15 +73,31 @@ struct LongTermScenariosTests {
         #expect(netWorth == 114_950) // 95,000 * 1.1 * 1.1
     }
 
-    @Test("renting net worth floors at zero invested if upfront costs exceed the proceeds")
-    func rentingNetWorthFloorsAtZeroWhenCostsExceedProceeds() {
+    @Test("renting net worth charges deposits paid from savings beyond the sale proceeds")
+    func rentingNetWorthChargesDepositsFromSavings() {
+        // $3,000 proceeds, $5,000 in deposits: nothing left to invest, and
+        // the $2,000 gap comes out of savings -- carried as a compounding
+        // negative balance, not floored away.
         let netWorth = projectRentingNetWorth(
             netProceedsToday: 3_000,
             investmentReturnPercent: 10,
             projectionYears: 2,
             upfrontCosts: 5_000
         )
-        #expect(netWorth == 0)
+        #expect(netWorth == -2_420) // -2,000 * 1.1 * 1.1
+    }
+
+    @Test("renting net worth stacks an underwater sale and deposits both paid from savings")
+    func rentingNetWorthStacksUnderwaterSaleAndDeposits() {
+        // -$5,000 proceeds (cash to closing) plus $3,000 deposits, all from
+        // savings: an $8,000 hole, compounded at 10% for 2 years.
+        let netWorth = projectRentingNetWorth(
+            netProceedsToday: -5_000,
+            investmentReturnPercent: 10,
+            projectionYears: 2,
+            upfrontCosts: 3_000
+        )
+        #expect(netWorth == -9_680) // -8,000 * 1.1 * 1.1
     }
 
     @Test("renting net worth carries an underwater sale as a compounding negative balance")
@@ -140,12 +156,12 @@ struct LongTermScenariosTests {
         #expect(netWorth == 305_500)
     }
 
-    @Test("no leftover credited when the down payment uses outside cash beyond the sale proceeds")
-    func buyingElsewhereNetWorthNoLeftoverWhenDownPaymentExceedsProceeds() {
-        // Same house/mortgage numbers as the first test, but net proceeds
-        // available ($80,000) are less than the $100,000 down payment --
-        // she topped it up from savings, so there's nothing left of the
-        // sale proceeds specifically to credit.
+    @Test("buying elsewhere charges the part of the down payment topped up from savings")
+    func buyingElsewhereNetWorthChargesDownPaymentToppedUpFromSavings() {
+        // Same house/mortgage as the first test, but the sale nets only
+        // $80,000 against a $100,000 down payment -- the $20,000 gap comes
+        // from savings, so it's carried as a compounding negative balance
+        // ($20,000 * 1.1 * 1.1 = $24,200) rather than appearing for free.
         let netWorth = projectBuyingElsewhereNetWorth(
             newHomePrice: 400_000,
             downPayment: 100_000,
@@ -156,7 +172,16 @@ struct LongTermScenariosTests {
             projectionYears: 2,
             leftoverCashInvestmentReturnPercent: 10
         )
-        #expect(netWorth == 124_000)
+        #expect(netWorth == 99_800) // 124,000 - 24,200
+    }
+
+    @Test("outsideCashUsed: zero when the sale covers what's committed, negative for any gap")
+    func outsideCashUsedCases() {
+        #expect(outsideCashUsed(netProceeds: 100_000, committed: 20_000) == 0)
+        #expect(outsideCashUsed(netProceeds: 100_000, committed: 100_000) == 0)
+        #expect(outsideCashUsed(netProceeds: 80_000, committed: 100_000) == -20_000)
+        #expect(outsideCashUsed(netProceeds: -5_000, committed: 0) == -5_000)
+        #expect(outsideCashUsed(netProceeds: -5_000, committed: 3_000) == -8_000)
     }
 
     @Test("buying elsewhere clamps a negative down payment and carries the closing shortfall")

@@ -64,21 +64,24 @@ enum StorageLocation {
         return panel.url
     }
 
-    /// Persists `url` as a security-scoped bookmark so future launches can
-    /// reopen it. Returns `false` -- and stores nothing -- if the bookmark
-    /// can't be created, since switching to a folder the app can't get
-    /// back to next launch would silently strand the data.
-    @discardableResult
-    static func commitFolder(_ url: URL) -> Bool {
-        guard let bookmarkData = try? url.bookmarkData(
+    /// Builds the security-scoped bookmark for `url` *without* persisting
+    /// it -- so a caller can confirm the bookmark can be made (the only
+    /// fallible step) before committing to a switch. Returns nil if it
+    /// can't: switching to a folder the app can't reopen next launch would
+    /// silently strand the data.
+    static func makeBookmark(for url: URL) -> Data? {
+        try? url.bookmarkData(
             options: .withSecurityScope,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
-        ) else {
-            return false
-        }
-        UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
-        return true
+        )
+    }
+
+    /// Stores a bookmark built earlier by `makeBookmark`. Writing to
+    /// `UserDefaults` doesn't fail, so this is the safe final step of a
+    /// storage-folder switch.
+    static func persistBookmark(_ data: Data) {
+        UserDefaults.standard.set(data, forKey: bookmarkKey)
     }
 
     static func resetToDefault() {

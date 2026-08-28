@@ -104,17 +104,21 @@ over Apple's iCloud-container API: a container is invisible/hard to find in
 Finder and ties the data to one specific app identity, whereas a
 user-chosen folder is ordinary and portable.
 
-Switching folders is **two-phase, confirm-first** (same shape as
-`pickFileToImport` → `applyImportedData`), because the naive version
-silently overwrote whatever data was already in the destination.
-`StorageLocation.pickFolder()` only shows the panel; `commitFolder`
-writes the bookmark and *returns false* if it can't (never switch to a
-folder you can't reopen next launch). `AppStore.pickNewStorageFolder()` /
-`prepareResetToDefaultStorageFolder()` return a `PendingStorageChange`
-describing what's already in the target; the UI then calls
-`adoptStorageFolder` (load what's there) or `replaceDataAtStorageFolder`
-(write current data in). An unreadable file in the target aborts the
-switch. Empty target → straight to replace, no prompt.
+Switching folders is **two-phase and transactional** (same confirm-first
+shape as `pickFileToImport` → `applyImportedData`), because the naive
+version silently overwrote whatever data was already in the destination
+*and* committed the switch before the load/save succeeded.
+`StorageLocation.pickFolder()` only shows the panel;
+`makeBookmark`/`persistBookmark` are split so the fallible step (building
+the security-scoped bookmark) happens before anything is committed.
+`AppStore.pickNewStorageFolder()` / `prepareResetToDefaultStorageFolder()`
+return a `PendingStorageChange` describing the target; the UI then calls
+`adoptStorageFolder` (re-reads the target now, then switches + `apply`s)
+or `replaceDataAtStorageFolder` (builds the bookmark, writes to the
+*candidate* URL, and only then commits via `finishStorageSwitch`). Any
+failure leaves the store pointed exactly where it was. Unreadable target
+file aborts; empty target → straight to replace, no prompt; "Use Default
+Location" is disabled when already there (`isUsingDefaultStorageFolder`).
 
 **Sell scenario / long-term projections** (`SunkCostCore`,
 `AppStore+Comparison.swift`): `SellScenario.netProfitOrLoss` is
@@ -125,9 +129,16 @@ loan. `projectStayingNetWorth` amortizes forward from a *current* balance
 (passed in), not a reconstructed schedule, so a hand-updated
 `mortgageBalance` is respected; `AppStore.stayingBalanceBasis` (a
 `UserDefaults` view pref) picks recorded vs. modeled, and the UI only
-offers the choice when the two disagree. Underwater sales (negative net
-proceeds) are carried as a compounding negative balance in the Rent/Buy
-projections, and an inferred down payment is clamped to `[0, price]`.
+offers the choice when the two disagree by more than $1. A zero starting
+balance short-circuits to just the appreciated home value (no rate or
+payment needed). `outsideCashUsed(netProceeds:committed:)` is the shared
+rule for cash that has to come from savings — an underwater sale, or
+deposits/down-payment beyond the sale's usable proceeds — carried as a
+compounding negative balance in the Rent/Buy projections. It's surfaced
+explicitly (`rentingOutsideCashFromSavings` /
+`buyingElsewhereOutsideCashFromSavings`, shown in the plain-English notes
+and a table footnote) rather than left as a silently lower number. An
+inferred down payment is clamped to `[0, price]`.
 
 **Theming (`Theme.swift`)**: no asset catalog (there's no Xcode project to
 hold one), so colors are built by hand via

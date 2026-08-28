@@ -86,30 +86,59 @@ extension AppStore {
     }
 
     /// True only when both the recorded and the modeled balance exist and
-    /// differ -- i.e. when offering the user a choice between them is
-    /// actually meaningful.
+    /// differ by more than a dollar -- i.e. when offering the user a choice
+    /// between them is actually meaningful. (The modeled figure carries
+    /// many fractional cents; a statement balance is rounded, so an exact
+    /// comparison would fire on essentially every loan.)
     var stayingBalanceBasisIsSelectable: Bool {
         guard let recorded = mortgageBalance, let modeled = modeledCurrentMortgageBalance else { return false }
-        return recorded != modeled
+        return abs(recorded - modeled) >= 1
     }
 
     /// Ending home equity if she stays -- the home appreciates while the
     /// mortgage amortizes forward from `stayingProjectionStartBalance`.
-    /// nil until there's a balance to start from, a monthly payment, and a
-    /// rate (there's no sensible default for someone's real loan the way
-    /// there is for a general assumption like appreciation rate).
+    /// nil until there's a balance to start from; a paid-off balance needs
+    /// nothing more, otherwise a monthly payment and rate are required too
+    /// (there's no sensible default for someone's real loan the way there
+    /// is for a general assumption like appreciation rate).
     var stayingNetWorthProjection: Decimal? {
-        guard let homeValue, let mortgageInterestRatePercent,
-              let startBalance = stayingProjectionStartBalance,
-              let monthlyPayment else { return nil }
+        guard let homeValue, let startBalance = stayingProjectionStartBalance else { return nil }
+        let appreciation = homeAppreciationPercent ?? 3
+        guard startBalance > 0 else {
+            // Paid off: ending net worth is just the appreciated home value.
+            return compoundedValue(principal: homeValue, annualRatePercent: appreciation, years: projectionYears)
+        }
+        guard let mortgageInterestRatePercent, let monthlyPayment else { return nil }
         return projectStayingNetWorth(
             homeValue: homeValue,
-            appreciationPercent: homeAppreciationPercent ?? 3,
+            appreciationPercent: appreciation,
             currentMortgageBalance: startBalance,
             monthlyPayment: monthlyPayment,
             mortgageAnnualRatePercent: mortgageInterestRatePercent,
             projectionYears: projectionYears
         )
+    }
+
+    /// Cash a scenario would need from savings -- an underwater sale, or
+    /// deposits/down payment beyond the sale's usable proceeds -- shown as
+    /// a positive figure, nil when there's no gap. The projections already
+    /// charge this (see `outsideCashUsed`); these expose it so the UI can
+    /// say so out loud rather than just showing a quietly lower number.
+    var rentingOutsideCashFromSavings: Decimal? {
+        guard rentingNetWorthProjection != nil else { return nil }
+        let gap = -outsideCashUsed(
+            netProceeds: sellScenario?.netProceeds ?? 0,
+            committed: (securityDeposit ?? 0) + (petDeposit ?? 0)
+        )
+        return gap > 0 ? gap : nil
+    }
+
+    var buyingElsewhereOutsideCashFromSavings: Decimal? {
+        guard buyingElsewhereNetWorthProjection != nil, let newHomePrice else { return nil }
+        let netProceeds = sellScenario?.netProceeds ?? 0
+        let downPayment = min(max(newHomeDownPayment ?? max(netProceeds, 0), 0), newHomePrice)
+        let gap = -outsideCashUsed(netProceeds: netProceeds, committed: downPayment)
+        return gap > 0 ? gap : nil
     }
 
     /// Ending investment balance if she sells and rents -- nil until a
@@ -151,7 +180,15 @@ extension AppStore {
     /// same gating as the net-worth projections above (this is about
     /// *today's* monthly cost, so it doesn't need the projection horizon).
     var stayingMonthlyBreakdown: MonthlyCostBreakdown? {
-        guard let homeValue, let principalAndInterest = monthlyPayment else { return nil }
+        guard let homeValue else { return nil }
+        let principalAndInterest: Decimal
+        if let startBalance = stayingProjectionStartBalance, startBalance <= 0 {
+            principalAndInterest = 0 // paid off -- no P&I, but tax/insurance/upkeep still apply
+        } else if let payment = monthlyPayment {
+            principalAndInterest = payment
+        } else {
+            return nil
+        }
         return MonthlyCostBreakdown(
             principalAndInterest: principalAndInterest,
             propertyTax: (propertyTaxAnnual ?? homeValue * 0.012) / 12,
@@ -232,7 +269,10 @@ extension AppStore {
         if let breakdown = stayingMonthlyBreakdown {
             lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), HOA \(fmt(breakdown.hoa)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
         }
-        lines.append("Ending Net Worth: \(stayingNetWorthProjection.map(fmt) ?? "needs full mortgage details (original amount, rate, term, start date) in Settings")")
+        if stayingBalanceBasisIsSelectable {
+            lines.append("Mortgage Balance Basis: \(stayingBalanceBasis.label) (recorded \(fmt(mortgageBalance)) vs. modeled \(fmt(modeledCurrentMortgageBalance)))")
+        }
+        lines.append("Ending Net Worth: \(stayingNetWorthProjection.map(fmt) ?? "needs Home Value plus a mortgage balance, monthly payment, and rate (or the original loan amount, rate, term, and start date) in Settings")")
         lines.append("")
 
         lines.append("RENTING")
@@ -240,6 +280,9 @@ extension AppStore {
         lines.append("Monthly Rent: \(fmt(monthlyRent)), Rent Increase: \(pct(rentAnnualIncreasePercent ?? 3))/yr")
         if let breakdown = rentingMonthlyBreakdown {
             lines.append("Monthly Total: \(fmt(breakdown.total))/mo")
+        }
+        if let fromSavings = rentingOutsideCashFromSavings {
+            lines.append("Deposits paid from savings (beyond sale proceeds): \(fmt(fromSavings)) — charged to Ending Net Worth with the investment growth it would have earned")
         }
         lines.append("Ending Net Worth: \(rentingNetWorthProjection.map(fmt) ?? "needs a monthly rent figure")")
         lines.append("")
@@ -255,6 +298,9 @@ extension AppStore {
         lines.append("Property Tax: \(fmt(newPropertyTaxAnnual ?? (newHomePrice.map { $0 * 0.012 })))/yr, Insurance: \(fmt(newHomeownersInsuranceAnnual ?? 1500))/yr")
         if let breakdown = buyingElsewhereMonthlyBreakdown {
             lines.append("Monthly: P&I \(fmt(breakdown.principalAndInterest)), Tax \(fmt(breakdown.propertyTax)), Insurance \(fmt(breakdown.insurance)), HOA \(fmt(breakdown.hoa)), Maintenance \(fmt(breakdown.maintenanceOrRent)) → Total \(fmt(breakdown.total))/mo")
+        }
+        if let fromSavings = buyingElsewhereOutsideCashFromSavings {
+            lines.append("Down payment paid from savings (beyond sale proceeds): \(fmt(fromSavings)) — charged to Ending Net Worth with the investment growth it would have earned")
         }
         lines.append("Ending Net Worth: \(buyingElsewhereNetWorthProjection.map(fmt) ?? "needs a new home price")")
 

@@ -89,6 +89,9 @@ struct LongTermComparisonView: View {
         if store.rentingNetWorthProjection != nil {
             lines.append("Renting doesn't build any home equity — all of its growth comes from investing today's sale proceeds and letting that grow instead.")
         }
+        if let fromSavings = store.rentingOutsideCashFromSavings {
+            lines.append("Renting here needs \(formatted(fromSavings)) more than your sale nets to cover deposits — topped up from savings. The projection subtracts that from Renting's ending net worth, plus the investment growth it would have earned.")
+        }
 
         if store.buyingElsewhereNetWorthProjection != nil {
             let netProceeds = store.sellScenario?.netProceeds ?? 0
@@ -100,6 +103,9 @@ struct LongTermComparisonView: View {
             } else {
                 lines.append("Buying elsewhere grows the same way Staying does — home appreciation plus mortgage paydown — just on a different home and a different loan.")
             }
+        }
+        if let fromSavings = store.buyingElsewhereOutsideCashFromSavings {
+            lines.append("Buying elsewhere here needs \(formatted(fromSavings)) more than your sale nets for the down payment — topped up from savings. The projection subtracts that from Buying's ending net worth, plus the investment growth it would have earned, so a bigger down payment isn't free.")
         }
 
         return lines
@@ -401,6 +407,10 @@ struct LongTermComparisonView: View {
                 }
                 Text("Buy's Maintenance/Rent reuses today's Maintenance total as a stand-in for the new home's upkeep.")
                 Text("Buy's Ending Net Worth also invests any of today's sale proceeds not put toward the down payment, same as Rent does with its own proceeds.")
+                if store.rentingOutsideCashFromSavings != nil || store.buyingElsewhereOutsideCashFromSavings != nil {
+                    Text("Any cash you'd add from savings to cover a down payment or deposits beyond your sale proceeds is subtracted from that scenario's Ending Net Worth, along with the investment growth it would have earned.")
+                        .foregroundStyle(Theme.gold)
+                }
             }
             .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
             .foregroundStyle(Theme.inkSecondary)

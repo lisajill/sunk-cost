@@ -97,11 +97,13 @@ public enum CSVCodec {
         return rows.dropFirst().compactMap { row -> Item? in
             guard row.count > maxRequiredIndex, !(row.count == 1 && row[0].isEmpty) else { return nil }
 
-            let name = row[indices["name"]!]
-            let category = row[indices["category"]!]
-            let costText = row[indices["cost"]!]
-            let statusText = row[indices["status"]!].lowercased()
-            let dateText = row[indices["date"]!]
+            // Trim the scalar cells -- a stray space (e.g. "Planned ") must
+            // not silently coerce to a different enum case or fail to parse.
+            let name = row[indices["name"]!].trimmingCharacters(in: .whitespaces)
+            let category = row[indices["category"]!].trimmingCharacters(in: .whitespaces)
+            let costText = row[indices["cost"]!].trimmingCharacters(in: .whitespaces)
+            let statusText = row[indices["status"]!].trimmingCharacters(in: .whitespaces).lowercased()
+            let dateText = row[indices["date"]!].trimmingCharacters(in: .whitespaces)
 
             let cost = costText.isEmpty ? nil : Decimal(string: costText)
             let status = Status(rawValue: statusText) ?? .owned
@@ -128,7 +130,7 @@ public enum CSVCodec {
                 $0.label.lowercased() == dispositionText || $0.rawValue.lowercased() == dispositionText
             }
 
-            let amountRecoveredText = optionalCell("amount recovered")
+            let amountRecoveredText = optionalCell("amount recovered")?.trimmingCharacters(in: .whitespaces)
             let amountRecovered = (amountRecoveredText?.isEmpty ?? true) ? nil : Decimal(string: amountRecoveredText!)
 
             return Item(

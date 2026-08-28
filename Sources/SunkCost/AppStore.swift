@@ -383,42 +383,88 @@ final class AppStore {
     /// Phase 2a: switch to the folder and load whatever data is already
     /// there, discarding the current in-memory data (it stays on disk in
     /// the old location).
+    ///
+    /// Transactional: the target is re-read *now* (the inspection may be
+    /// stale) and the bookmark is built before anything is committed, so a
+    /// failure at either step leaves the store pointed exactly where it
+    /// was.
     func adoptStorageFolder(_ pending: PendingStorageChange) {
-        guard commitStorageLocation(pending) else { return }
-        load()
+        let candidateFileURL = StorageLocation.itemsFileURL(in: pending.folder)
+        let data: AppData
+        if FileManager.default.fileExists(atPath: candidateFileURL.path) {
+            guard let loaded = try? ItemStore.load(from: candidateFileURL) else {
+                loadError = "\"\(pending.folder.lastPathComponent)\" has a Sunk Cost data file that can't be read, so it wasn't switched to. Move or fix that file first."
+                return
+            }
+            data = loaded
+        } else {
+            data = AppData()
+        }
+
+        guard let bookmark = bookmarkIfNeeded(for: pending) else { return }
+        finishStorageSwitch(to: pending, bookmark: bookmark)
+        apply(data)
+        loadError = nil
     }
 
     /// Phase 2b: switch to the folder and write the current in-memory data
     /// into it, replacing anything that was there.
+    ///
+    /// Transactional: the bookmark is built, then the data is written to
+    /// the *candidate* location, and only then is the switch committed --
+    /// so a failed write never turns "replace" into a silent "adopt" and
+    /// leaves the store where it started.
     func replaceDataAtStorageFolder(_ pending: PendingStorageChange) {
-        guard commitStorageLocation(pending) else { return }
-        if !save() {
-            // The location already moved but the write failed -- resync
-            // in-memory state with whatever is actually on disk there.
-            load()
-        }
-    }
-
-    /// Commits the bookmark/default-location change and repoints the store
-    /// at the new folder. Returns false (and sets `loadError`) without
-    /// switching if the destination holds an unreadable file or a lasting
-    /// bookmark can't be made.
-    private func commitStorageLocation(_ pending: PendingStorageChange) -> Bool {
         if pending.hasUnreadableFile {
             loadError = "\"\(pending.folder.lastPathComponent)\" already has a Sunk Cost data file that can't be read, so it wasn't switched to. Move or fix that file first."
-            return false
+            return
         }
+
+        guard let bookmark = bookmarkIfNeeded(for: pending) else { return }
+
+        let candidateFileURL = StorageLocation.itemsFileURL(in: pending.folder)
+        do {
+            try ItemStore.save(currentAppData(), to: candidateFileURL)
+        } catch {
+            loadError = "Couldn't write your data to \"\(pending.folder.lastPathComponent)\", so the storage location wasn't changed. (\(error.localizedDescription))"
+            return
+        }
+
+        finishStorageSwitch(to: pending, bookmark: bookmark)
+        loadError = nil
+    }
+
+    /// The security-scoped bookmark for a pending switch, or nil (having
+    /// set `loadError`) if one can't be made. `.some(nil)` for the default
+    /// location, which needs no bookmark.
+    private func bookmarkIfNeeded(for pending: PendingStorageChange) -> Data?? {
+        guard !pending.isDefaultLocation else { return .some(nil) }
+        guard let bookmark = StorageLocation.makeBookmark(for: pending.folder) else {
+            loadError = "Couldn't get lasting permission to \"\(pending.folder.lastPathComponent)\", so the storage location wasn't changed. Try a different folder."
+            return nil
+        }
+        return .some(bookmark)
+    }
+
+    /// Final, non-failing step: persist the bookmark (or clear it for the
+    /// default location) and repoint the store at the new folder. Call
+    /// only once the load or write against the candidate has succeeded.
+    private func finishStorageSwitch(to pending: PendingStorageChange, bookmark: Data?) {
         if pending.isDefaultLocation {
             StorageLocation.resetToDefault()
-        } else if !StorageLocation.commitFolder(pending.folder) {
-            loadError = "Couldn't get lasting permission to \"\(pending.folder.lastPathComponent)\", so it wasn't switched to. Try a different folder."
-            return false
+        } else if let bookmark {
+            StorageLocation.persistBookmark(bookmark)
         }
         stopAccessingCurrentFolder?()
         let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
         storageFolderURL = folder
         stopAccessingCurrentFolder = stopAccessing
-        return true
+    }
+
+    /// Whether the store is already using the built-in default folder --
+    /// lets the UI disable a redundant "Use Default Location" action.
+    var isUsingDefaultStorageFolder: Bool {
+        storageFolderURL.standardizedFileURL == StorageLocation.defaultFolderURL().standardizedFileURL
     }
 
     /// Saves a standalone copy of the current data to a file the user picks

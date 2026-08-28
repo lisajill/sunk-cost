@@ -262,6 +262,7 @@ struct SettingsView: View {
                 Button("Use Default Location") {
                     handleStoragePending(store.prepareResetToDefaultStorageFolder())
                 }
+                .disabled(store.isUsingDefaultStorageFolder)
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
         }

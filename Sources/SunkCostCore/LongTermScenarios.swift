@@ -31,6 +31,21 @@ public func projectStayingNetWorth(
     return appreciatedValue - max(balance, 0)
 }
 
+/// Cash that has to come from outside the home sale, returned as a
+/// non-positive number so it can be compounded as a negative balance
+/// alongside a scenario's invested principal.
+///
+/// Two things put you in the hole: an underwater sale (`netProceeds`
+/// negative -- you bring cash to closing), and `committed` spending
+/// (move-in deposits, or a down payment) that's larger than the sale's
+/// usable proceeds -- the excess is topped up from savings. Either way
+/// that's money that would otherwise have stayed invested, so every
+/// scenario charges it the same opportunity cost.
+public func outsideCashUsed(netProceeds: Decimal, committed: Decimal) -> Decimal {
+    let usableProceeds = max(netProceeds, 0)
+    return min(netProceeds, 0) - max(committed - usableProceeds, 0)
+}
+
 /// Ending investment balance after `projectionYears`, if today's net sale
 /// proceeds were invested instead of buying or renting.
 /// `upfrontCosts` -- a security deposit, pet deposit(s), anything paid out
@@ -39,12 +54,11 @@ public func projectStayingNetWorth(
 /// Buying Elsewhere scenario. The invested principal floors at zero rather
 /// than going negative if move-in costs exceed the proceeds.
 ///
-/// If the *sale itself* is underwater -- `netProceedsToday` is negative,
-/// i.e. cash has to be brought to closing -- that shortfall is carried as
-/// a separate negative balance compounding at the same investment return,
-/// on the reasoning that the cash would otherwise have stayed invested.
-/// (This is a modeling choice; a flat, non-compounding shortfall would
-/// also be defensible.)
+/// Any cash that has to come from savings -- an underwater sale, or
+/// deposits beyond the usable proceeds -- is carried as a separate
+/// negative balance compounding at the same investment return (see
+/// `outsideCashUsed`), on the reasoning that it would otherwise have
+/// stayed invested.
 public func projectRentingNetWorth(
     netProceedsToday: Decimal,
     investmentReturnPercent: Decimal,
@@ -53,9 +67,9 @@ public func projectRentingNetWorth(
 ) -> Decimal {
     let usableProceeds = max(netProceedsToday, 0)
     let investedPrincipal = max(usableProceeds - upfrontCosts, 0)
-    let closingShortfall = min(netProceedsToday, 0)
+    let outsideCash = outsideCashUsed(netProceeds: netProceedsToday, committed: upfrontCosts)
     return compoundedValue(principal: investedPrincipal, annualRatePercent: investmentReturnPercent, years: projectionYears)
-        + compoundedValue(principal: closingShortfall, annualRatePercent: investmentReturnPercent, years: projectionYears)
+        + compoundedValue(principal: outsideCash, annualRatePercent: investmentReturnPercent, years: projectionYears)
 }
 
 /// Ending home equity in a new home after `projectionYears`, bought today
@@ -84,10 +98,11 @@ public func projectBuyingElsewhereNetWorth(
     let actualDownPayment = min(max(downPayment, 0), newHomePrice)
     let usableProceeds = max(netProceedsAvailable, 0)
     let leftoverCash = max(usableProceeds - actualDownPayment, 0)
-    // Underwater sale: cash brought to closing, carried as a negative
-    // balance compounding at the investment return -- same treatment as
-    // the Renting scenario. See `projectRentingNetWorth`.
-    let closingShortfall = min(netProceedsAvailable, 0)
+    // Cash from savings: an underwater sale, and/or a down payment bigger
+    // than the sale's usable proceeds. Carried as a negative balance
+    // compounding at the investment return -- same treatment as the
+    // Renting scenario. See `outsideCashUsed`.
+    let outsideCash = outsideCashUsed(netProceeds: netProceedsAvailable, committed: actualDownPayment)
 
     let appreciatedValue = compoundedValue(principal: newHomePrice, annualRatePercent: appreciationPercent, years: projectionYears)
     let balance = MortgageMath.remainingBalance(
@@ -97,7 +112,7 @@ public func projectBuyingElsewhereNetWorth(
         monthsElapsed: projectionYears * 12
     )
     let compoundedLeftoverCash = compoundedValue(principal: leftoverCash, annualRatePercent: leftoverCashInvestmentReturnPercent, years: projectionYears)
-    let compoundedShortfall = compoundedValue(principal: closingShortfall, annualRatePercent: leftoverCashInvestmentReturnPercent, years: projectionYears)
+    let compoundedOutsideCash = compoundedValue(principal: outsideCash, annualRatePercent: leftoverCashInvestmentReturnPercent, years: projectionYears)
 
-    return appreciatedValue - balance + compoundedLeftoverCash + compoundedShortfall
+    return appreciatedValue - balance + compoundedLeftoverCash + compoundedOutsideCash
 }
