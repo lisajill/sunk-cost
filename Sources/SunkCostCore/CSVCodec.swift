@@ -2,11 +2,14 @@ import Foundation
 
 public enum CSVCodecError: Error, LocalizedError {
     case missingColumns([String])
+    case duplicateColumns([String])
 
     public var errorDescription: String? {
         switch self {
         case .missingColumns(let columns):
             return "This file is missing required column(s): \(columns.joined(separator: ", "))."
+        case .duplicateColumns(let columns):
+            return "This file has more than one column named: \(columns.joined(separator: ", ")). Give each column a distinct header."
         }
     }
 }
@@ -15,12 +18,17 @@ public enum CSVCodecError: Error, LocalizedError {
 /// Excel, Numbers, and Google Sheets, all of which open and save CSV
 /// natively without needing a real binary .xlsx reader/writer.
 public enum CSVCodec {
-    public static let header = ["Name", "Category", "Cost", "Status", "Date", "Notes", "Type"]
+    public static let header = ["Name", "Category", "Cost", "Status", "Date", "Notes", "Type", "Disposition", "Amount Recovered"]
 
     private static func makeDateFormatter() -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")
+        // Local calendar date, not UTC: a CSV date is a plain calendar day
+        // ("2026-08-28"), and the app creates and displays `dateAdded` in
+        // local time. A UTC formatter here shifts an evening date to the
+        // previous/next day when written or read (e.g. anything past ~8pm
+        // US-Eastern lands on the wrong day).
+        formatter.timeZone = TimeZone.current
         return formatter
     }
 
@@ -31,6 +39,7 @@ public enum CSVCodec {
         for item in items {
             let costField = item.cost.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
             let dateField = item.dateAdded.map { dateFormatter.string(from: $0) } ?? ""
+            let amountRecoveredField = item.amountRecovered.map { NSDecimalNumber(decimal: $0).stringValue } ?? ""
             let fields = [
                 item.name,
                 item.category,
@@ -39,6 +48,8 @@ public enum CSVCodec {
                 dateField,
                 item.notes ?? "",
                 item.type.label,
+                item.disposition?.label ?? "",
+                amountRecoveredField,
             ]
             lines.append(fields.map(escapeField).joined(separator: ","))
         }
@@ -50,19 +61,41 @@ public enum CSVCodec {
         let rows = parseRows(csv)
         guard let headerRow = rows.first else { return [] }
 
-        let indices: [String: Int] = Dictionary(
-            uniqueKeysWithValues: headerRow.enumerated().map { ($1.lowercased(), $0) }
-        )
+        // Build the column map by hand rather than with
+        // `Dictionary(uniqueKeysWithValues:)`, which *traps* on a repeated
+        // key -- a duplicate header in a hand-edited file should be a
+        // catchable error, not a crash.
+        var indices: [String: Int] = [:]
+        var duplicates: [String] = []
+        for (offset, cell) in headerRow.enumerated() {
+            let key = cell.trimmingCharacters(in: .whitespaces).lowercased()
+            guard !key.isEmpty else { continue }
+            if indices[key] != nil {
+                if !duplicates.contains(key) { duplicates.append(key) }
+            } else {
+                indices[key] = offset
+            }
+        }
+        guard duplicates.isEmpty else {
+            throw CSVCodecError.duplicateColumns(duplicates.map { $0.capitalized })
+        }
+
         let required = ["name", "category", "cost", "status", "date"]
         let missing = required.filter { indices[$0] == nil }
         guard missing.isEmpty else {
             throw CSVCodecError.missingColumns(missing.map { $0.capitalized })
         }
 
+        // A required column can sit at any position (columns may be
+        // reordered), so a row is only usable if it actually has a cell at
+        // every required index -- `row.count >= required.count` doesn't
+        // guarantee that and would index out of bounds on a short row.
+        let maxRequiredIndex = required.compactMap { indices[$0] }.max() ?? 0
+
         let dateFormatter = makeDateFormatter()
 
         return rows.dropFirst().compactMap { row -> Item? in
-            guard row.count >= required.count, !(row.count == 1 && row[0].isEmpty) else { return nil }
+            guard row.count > maxRequiredIndex, !(row.count == 1 && row[0].isEmpty) else { return nil }
 
             let name = row[indices["name"]!]
             let category = row[indices["category"]!]
@@ -74,14 +107,41 @@ public enum CSVCodec {
             let status = Status(rawValue: statusText) ?? .owned
             let date = dateText.isEmpty ? nil : dateFormatter.date(from: dateText)
 
-            // Notes and Type are optional -- older exported CSVs won't have these columns.
-            let notesText = indices["notes"].flatMap { index in row.indices.contains(index) ? row[index] : nil }
+            // Notes, Type, Disposition, Amount Recovered are all optional --
+            // older exported CSVs won't have these columns, and each index
+            // is bounds-checked in case a given row is short.
+            func optionalCell(_ column: String) -> String? {
+                indices[column].flatMap { index in row.indices.contains(index) ? row[index] : nil }
+            }
+
+            let notesText = optionalCell("notes")
             let notes = (notesText?.isEmpty ?? true) ? nil : notesText
 
-            let typeText = indices["type"].flatMap { index in row.indices.contains(index) ? row[index] : nil }
-            let type = typeText.flatMap { ItemType(rawValue: $0.lowercased()) } ?? .moveable
+            let typeText = optionalCell("type")
+            let type = typeText.flatMap { ItemType(rawValue: $0.trimmingCharacters(in: .whitespaces).lowercased()) } ?? .moveable
 
-            return Item(name: name, category: category, cost: cost, status: status, dateAdded: date, notes: notes, type: type)
+            // Accept either the human label ("Given Away") or the raw value
+            // ("givenAway"), case-insensitively, so a spreadsheet-edited
+            // file round-trips.
+            let dispositionText = optionalCell("disposition")?.trimmingCharacters(in: .whitespaces).lowercased()
+            let disposition = (dispositionText?.isEmpty ?? true) ? nil : Disposition.allCases.first {
+                $0.label.lowercased() == dispositionText || $0.rawValue.lowercased() == dispositionText
+            }
+
+            let amountRecoveredText = optionalCell("amount recovered")
+            let amountRecovered = (amountRecoveredText?.isEmpty ?? true) ? nil : Decimal(string: amountRecoveredText!)
+
+            return Item(
+                name: name,
+                category: category,
+                cost: cost,
+                status: status,
+                dateAdded: date,
+                notes: notes,
+                type: type,
+                disposition: disposition,
+                amountRecovered: amountRecovered
+            )
         }
     }
 

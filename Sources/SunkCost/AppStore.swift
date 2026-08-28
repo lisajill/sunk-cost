@@ -44,6 +44,14 @@ final class AppStore {
         didSet { UserDefaults.standard.set(sortOption.rawValue, forKey: AppStore.sortOptionKey) }
     }
     private static let sortOptionKey = "SunkCost.SortOption"
+
+    /// Which mortgage balance the Staying long-term projection amortizes
+    /// forward from. A view preference (not in the data file), like
+    /// `sortOption`.
+    var stayingBalanceBasis: StayingBalanceBasis {
+        didSet { UserDefaults.standard.set(stayingBalanceBasis.rawValue, forKey: AppStore.stayingBalanceBasisKey) }
+    }
+    private static let stayingBalanceBasisKey = "SunkCost.StayingBalanceBasis"
     private(set) var storageFolderURL: URL
     var loadError: String?
 
@@ -164,6 +172,8 @@ final class AppStore {
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: AppStore.onboardingKey)
         self.sortOption = UserDefaults.standard.string(forKey: AppStore.sortOptionKey)
             .flatMap(SortOption.init(rawValue:)) ?? .dateNewest
+        self.stayingBalanceBasis = UserDefaults.standard.string(forKey: AppStore.stayingBalanceBasisKey)
+            .flatMap(StayingBalanceBasis.init(rawValue:)) ?? .recorded
         load()
         // A pre-existing install (real items or a home value already on
         // disk) never saw an onboarding flag get set -- treat that as
@@ -217,7 +227,7 @@ final class AppStore {
             loadError = nil
             return true
         } catch {
-            loadError = "Couldn't save your last change — it's still shown here but hasn't been written to disk. (\(error.localizedDescription))"
+            loadError = "Couldn't write your data to disk, so your last change wasn't saved. (\(error.localizedDescription))"
             return false
         }
     }
@@ -329,22 +339,86 @@ final class AppStore {
         }
     }
 
-    func chooseNewStorageFolder() {
-        guard StorageLocation.chooseNewFolder() != nil else { return }
-        stopAccessingCurrentFolder?()
-        let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
-        storageFolderURL = folder
-        stopAccessingCurrentFolder = stopAccessing
-        save()
+    /// A storage-folder switch the user has picked but not yet confirmed --
+    /// the same read-then-confirm shape as `pickFileToImport`, so switching
+    /// folders can never silently overwrite a data file that's already
+    /// sitting in the destination.
+    struct PendingStorageChange {
+        let folder: URL
+        let isDefaultLocation: Bool
+        /// The decoded contents of an `items.json` already in `folder`, if
+        /// one is there and readable.
+        let existingData: AppData?
+        /// An `items.json` is in `folder` but couldn't be decoded -- the
+        /// switch is refused rather than risk clobbering unknown data.
+        let hasUnreadableFile: Bool
     }
 
-    func resetToDefaultStorageFolder() {
+    /// Phase 1 (custom folder): show the picker and report what's already
+    /// in the chosen folder, changing nothing yet. Returns nil if the user
+    /// cancels the picker.
+    func pickNewStorageFolder() -> PendingStorageChange? {
+        guard let folder = StorageLocation.pickFolder() else { return nil }
+        return inspectStorageTarget(folder: folder, isDefault: false)
+    }
+
+    /// Phase 1 (default location): report what's already in the default
+    /// folder so "Use Default Location" gets the same confirm-first
+    /// treatment as picking a custom one.
+    func prepareResetToDefaultStorageFolder() -> PendingStorageChange {
+        inspectStorageTarget(folder: StorageLocation.defaultFolderURL(), isDefault: true)
+    }
+
+    private func inspectStorageTarget(folder: URL, isDefault: Bool) -> PendingStorageChange {
+        let candidateFileURL = StorageLocation.itemsFileURL(in: folder)
+        guard FileManager.default.fileExists(atPath: candidateFileURL.path) else {
+            return PendingStorageChange(folder: folder, isDefaultLocation: isDefault, existingData: nil, hasUnreadableFile: false)
+        }
+        if let data = try? ItemStore.load(from: candidateFileURL) {
+            return PendingStorageChange(folder: folder, isDefaultLocation: isDefault, existingData: data, hasUnreadableFile: false)
+        }
+        return PendingStorageChange(folder: folder, isDefaultLocation: isDefault, existingData: nil, hasUnreadableFile: true)
+    }
+
+    /// Phase 2a: switch to the folder and load whatever data is already
+    /// there, discarding the current in-memory data (it stays on disk in
+    /// the old location).
+    func adoptStorageFolder(_ pending: PendingStorageChange) {
+        guard commitStorageLocation(pending) else { return }
+        load()
+    }
+
+    /// Phase 2b: switch to the folder and write the current in-memory data
+    /// into it, replacing anything that was there.
+    func replaceDataAtStorageFolder(_ pending: PendingStorageChange) {
+        guard commitStorageLocation(pending) else { return }
+        if !save() {
+            // The location already moved but the write failed -- resync
+            // in-memory state with whatever is actually on disk there.
+            load()
+        }
+    }
+
+    /// Commits the bookmark/default-location change and repoints the store
+    /// at the new folder. Returns false (and sets `loadError`) without
+    /// switching if the destination holds an unreadable file or a lasting
+    /// bookmark can't be made.
+    private func commitStorageLocation(_ pending: PendingStorageChange) -> Bool {
+        if pending.hasUnreadableFile {
+            loadError = "\"\(pending.folder.lastPathComponent)\" already has a Sunk Cost data file that can't be read, so it wasn't switched to. Move or fix that file first."
+            return false
+        }
+        if pending.isDefaultLocation {
+            StorageLocation.resetToDefault()
+        } else if !StorageLocation.commitFolder(pending.folder) {
+            loadError = "Couldn't get lasting permission to \"\(pending.folder.lastPathComponent)\", so it wasn't switched to. Try a different folder."
+            return false
+        }
         stopAccessingCurrentFolder?()
-        StorageLocation.resetToDefault()
         let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
         storageFolderURL = folder
         stopAccessingCurrentFolder = stopAccessing
-        save()
+        return true
     }
 
     /// Saves a standalone copy of the current data to a file the user picks

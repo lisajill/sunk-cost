@@ -46,28 +46,39 @@ enum StorageLocation {
         folder.appendingPathComponent(fileName)
     }
 
-    /// Shows a folder picker and, if the user chooses one, remembers it via a
-    /// security-scoped bookmark so future launches can find it again.
+    /// Shows a folder picker and returns the chosen folder. Persists
+    /// nothing -- the caller inspects what's already in that folder and
+    /// confirms with the user before `commitFolder` makes the switch
+    /// permanent.
     @MainActor
-    static func chooseNewFolder() -> URL? {
+    static func pickFolder() -> URL? {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
         panel.prompt = "Choose Folder"
-        panel.message = "Choose a folder where The Money Pit should store its data file. This can be anywhere — including a folder in iCloud Drive if you want it backed up and synced."
+        panel.message = "Choose a folder where Sunk Cost should store its data file. This can be anywhere — including a folder in iCloud Drive if you want it backed up and synced."
 
-        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
+    }
 
-        if let bookmarkData = try? url.bookmarkData(
+    /// Persists `url` as a security-scoped bookmark so future launches can
+    /// reopen it. Returns `false` -- and stores nothing -- if the bookmark
+    /// can't be created, since switching to a folder the app can't get
+    /// back to next launch would silently strand the data.
+    @discardableResult
+    static func commitFolder(_ url: URL) -> Bool {
+        guard let bookmarkData = try? url.bookmarkData(
             options: .withSecurityScope,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
-        ) {
-            UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
+        ) else {
+            return false
         }
-        return url
+        UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
+        return true
     }
 
     static func resetToDefault() {

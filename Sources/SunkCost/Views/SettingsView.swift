@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var pendingImport: (url: URL, data: AppData)?
     @State private var pendingCSVImport: (url: URL, items: [Item])?
     @State private var pendingRestore: (date: Date, data: AppData)?
+    @State private var pendingStorageChange: AppStore.PendingStorageChange?
 
     private static let backupDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -254,13 +255,51 @@ struct SettingsView: View {
 
             HStack {
                 Button("Choose a Different Folder…") {
-                    store.chooseNewStorageFolder()
+                    if let pending = store.pickNewStorageFolder() {
+                        handleStoragePending(pending)
+                    }
                 }
                 Button("Use Default Location") {
-                    store.resetToDefaultStorageFolder()
+                    handleStoragePending(store.prepareResetToDefaultStorageFolder())
                 }
             }
             .font(Theme.scaledFont(Theme.FontSize.body, scale: store.textScale))
+        }
+        .alert(
+            "This Folder Already Has Data",
+            isPresented: Binding(
+                get: { pendingStorageChange != nil },
+                set: { if !$0 { pendingStorageChange = nil } }
+            ),
+            presenting: pendingStorageChange
+        ) { pending in
+            Button("Use the Data That's There") {
+                store.adoptStorageFolder(pending)
+                pendingStorageChange = nil
+            }
+            Button("Replace It With My Current Data", role: .destructive) {
+                store.replaceDataAtStorageFolder(pending)
+                pendingStorageChange = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingStorageChange = nil
+            }
+        } message: { pending in
+            let there = pending.existingData?.items.count ?? 0
+            Text("\"\(pending.folder.lastPathComponent)\" already has a Sunk Cost data file with \(there) item\(there == 1 ? "" : "s"). Use that data (your current \(store.items.count) stay in the old location), or replace it with your current data? Replacing can't be undone.")
+        }
+    }
+
+    /// Routes a picked storage-folder change: switch straight to an empty
+    /// folder, prompt before touching one that already has data, and let
+    /// `AppStore` surface the error for an unreadable one.
+    private func handleStoragePending(_ pending: AppStore.PendingStorageChange) {
+        if pending.hasUnreadableFile {
+            store.adoptStorageFolder(pending) // refused inside; sets loadError
+        } else if pending.existingData != nil {
+            pendingStorageChange = pending
+        } else {
+            store.replaceDataAtStorageFolder(pending)
         }
     }
 

@@ -3,8 +3,14 @@ import Foundation
 public struct SellScenario: Equatable, Sendable {
     public let sellingCosts: Decimal
     public let netProceeds: Decimal
-    /// nil when `totalInvested` (purchase price + Value spending) isn't
-    /// known yet -- net proceeds can still be shown without it.
+    /// Gain/loss on the house *as an asset*: `homeValue - sellingCosts -
+    /// totalInvested`. Deliberately mortgage-independent -- how the
+    /// purchase was financed doesn't change whether the property itself
+    /// made or lost money, and folding the payoff in here would
+    /// double-count it (it's already netted out of `netProceeds`). Matches
+    /// `AppStore.netHouseGain`'s definition, just with selling costs taken
+    /// out. nil when `totalInvested` (purchase price + Value spending)
+    /// isn't known yet -- net proceeds can still be shown without it.
     public let netProfitOrLoss: Decimal?
 }
 
@@ -22,6 +28,6 @@ public func computeSellScenario(
     guard let homeValue, let mortgageBalance else { return nil }
     let sellingCosts = homeValue * (realtorCommissionPercent + closingCostsPercent) / 100
     let netProceeds = homeValue - sellingCosts - mortgageBalance
-    let netProfitOrLoss = totalInvested.map { netProceeds - $0 }
+    let netProfitOrLoss = totalInvested.map { homeValue - sellingCosts - $0 }
     return SellScenario(sellingCosts: sellingCosts, netProceeds: netProceeds, netProfitOrLoss: netProfitOrLoss)
 }

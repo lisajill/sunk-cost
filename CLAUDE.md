@@ -90,6 +90,9 @@ from a previously-loaded file.
 best-effort and swallows its own errors). Order matters: snapshotting
 after the write would make the day's backup mirror that write, defeating
 the "undo the whole day" recovery path. Don't reorder it.
+`BackupManager`'s daily filename uses **local** time (`TimeZone.current`),
+so "one backup per day" tracks the user's calendar day and the Restore
+menu shows the right date — a UTC formatter rolled the day over mid-evening.
 
 **Storage location** (`Storage/StorageLocation.swift`): defaults to a folder
 inside the app's own sandboxed Application Support directory, no prompts.
@@ -100,6 +103,31 @@ sync" work without any app-specific sync code. This was a deliberate choice
 over Apple's iCloud-container API: a container is invisible/hard to find in
 Finder and ties the data to one specific app identity, whereas a
 user-chosen folder is ordinary and portable.
+
+Switching folders is **two-phase, confirm-first** (same shape as
+`pickFileToImport` → `applyImportedData`), because the naive version
+silently overwrote whatever data was already in the destination.
+`StorageLocation.pickFolder()` only shows the panel; `commitFolder`
+writes the bookmark and *returns false* if it can't (never switch to a
+folder you can't reopen next launch). `AppStore.pickNewStorageFolder()` /
+`prepareResetToDefaultStorageFolder()` return a `PendingStorageChange`
+describing what's already in the target; the UI then calls
+`adoptStorageFolder` (load what's there) or `replaceDataAtStorageFolder`
+(write current data in). An unreadable file in the target aborts the
+switch. Empty target → straight to replace, no prompt.
+
+**Sell scenario / long-term projections** (`SunkCostCore`,
+`AppStore+Comparison.swift`): `SellScenario.netProfitOrLoss` is
+`homeValue − sellingCosts − totalInvested` — **mortgage-independent** on
+purpose. The payoff is already netted out of `netProceeds`; subtracting a
+gross purchase-price basis from a post-payoff figure double-counts the
+loan. `projectStayingNetWorth` amortizes forward from a *current* balance
+(passed in), not a reconstructed schedule, so a hand-updated
+`mortgageBalance` is respected; `AppStore.stayingBalanceBasis` (a
+`UserDefaults` view pref) picks recorded vs. modeled, and the UI only
+offers the choice when the two disagree. Underwater sales (negative net
+proceeds) are carried as a compounding negative balance in the Rent/Buy
+projections, and an inferred down payment is clamped to `[0, price]`.
 
 **Theming (`Theme.swift`)**: no asset catalog (there's no Xcode project to
 hold one), so colors are built by hand via
@@ -153,9 +181,16 @@ library. The one non-obvious gotcha already hit once: Swift's `Character`
 (grapheme cluster) model treats `"\r\n"` as a *single* `Character`, not two
 — a naive per-character switch on `'\r'`/`'\n'` silently fails to split
 rows on Windows-style line endings. The parser normalizes line endings to
-`"\n"` first before iterating characters. The `Notes` column is optional
-(not in the `required` column list) so CSVs exported before that field
-existed still import fine.
+`"\n"` first before iterating characters. `Notes`, `Type`, `Disposition`,
+and `Amount Recovered` are all optional (not in the `required` column
+list) so older exports still import fine; each optional cell is
+bounds-checked per row. The column map is built by hand, not with
+`Dictionary(uniqueKeysWithValues:)` — that *traps* on a duplicate header;
+decode throws `CSVCodecError.duplicateColumns` instead. Rows must have a
+cell at every *required* column index (`row.count > maxRequiredIndex`, not
+`>= required.count`) or a reordered short row indexes out of bounds.
+Dates are **local** calendar days (`TimeZone.current`), matching how the
+app stores/shows `dateAdded`.
 
 **Item dates and costs are both optional** (`Decimal?`, `Date?`), and
 consistently sort last regardless of direction (see `SortOption.swift`'s

@@ -106,7 +106,7 @@ struct SellScenarioView: View {
                         .monospacedDigit()
                         .foregroundStyle(netProfitOrLoss >= 0 ? Theme.positive : Theme.ledgerRed)
                 }
-                .help("Net Proceeds if Sold Today minus everything actually invested in the house (Purchase Price plus Value-type item spending).")
+                .help("Home Value minus Selling Costs minus everything actually invested in the house (Purchase Price plus Value-type item spending). Independent of the mortgage — that only affects the cash you walk away with, not whether the house itself gained or lost value.")
             } else {
                 Text("Add your Purchase Price in Settings to see profit or loss vs. what you put in")
                     .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))

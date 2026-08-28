@@ -93,7 +93,7 @@ struct LongTermComparisonView: View {
         if store.buyingElsewhereNetWorthProjection != nil {
             let netProceeds = store.sellScenario?.netProceeds ?? 0
             let newHomePrice = store.newHomePrice ?? 0
-            let downPaymentUsed = min(store.newHomeDownPayment ?? netProceeds, newHomePrice)
+            let downPaymentUsed = min(max(store.newHomeDownPayment ?? netProceeds, 0), newHomePrice)
             let leftover = max(netProceeds - downPaymentUsed, 0)
             if leftover > 0 {
                 lines.append("Buying elsewhere grows two ways too: the new home's own equity, plus \(formatted(leftover)) of today's sale proceeds that isn't going toward the down payment — invested right alongside it, the same way Renting invests its proceeds. That leftover cash can end up doing more of the work than the new mortgage itself.")
@@ -114,8 +114,8 @@ struct LongTermComparisonView: View {
 
     private var newLoanAmount: Decimal? {
         guard let newHomePrice = store.newHomePrice else { return nil }
-        let downPayment = store.newHomeDownPayment ?? store.sellScenario?.netProceeds ?? 0
-        return max(newHomePrice - min(downPayment, newHomePrice), 0)
+        let downPayment = min(max(store.newHomeDownPayment ?? store.sellScenario?.netProceeds ?? 0, 0), newHomePrice)
+        return newHomePrice - downPayment
     }
 
     private var principalAndInterestTooltip: String? {
@@ -257,9 +257,37 @@ struct LongTermComparisonView: View {
         }
     }
 
+    /// Shown only when the hand-maintained balance and the balance modeled
+    /// from the original loan schedule disagree -- lets the user pick which
+    /// one the Staying projection amortizes forward from.
+    private var mortgageBalanceBasisControl: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("MORTGAGE BALANCE BASIS")
+                .font(Theme.ledgerLabel(scale: store.textScale))
+                .tracking(0.6)
+                .foregroundStyle(Theme.inkSecondary)
+            Picker("Mortgage balance basis", selection: Binding(
+                get: { store.stayingBalanceBasis },
+                set: { store.stayingBalanceBasis = $0 }
+            )) {
+                Text("Recorded — \(formatted(store.mortgageBalance ?? 0))").tag(StayingBalanceBasis.recorded)
+                Text("Modeled — \(formatted(store.modeledCurrentMortgageBalance ?? 0))").tag(StayingBalanceBasis.modeled)
+            }
+            .pickerStyle(.radioGroup)
+            .labelsHidden()
+            .font(Theme.scaledFont(Theme.FontSize.caption, scale: store.textScale))
+            Text("Recorded is the balance you keep updated in Settings. Modeled is what the original loan's schedule predicts for today. They differ here — extra payments, a recast, or a missed payment will do that.")
+                .font(Theme.scaledFont(Theme.FontSize.caption2, scale: store.textScale))
+                .foregroundStyle(Theme.inkSecondary)
+        }
+    }
+
     private var assumptionColumns: some View {
         HStack(alignment: .top, spacing: 24) {
             assumptionGroup("Staying") {
+                if store.stayingBalanceBasisIsSelectable {
+                    mortgageBalanceBasisControl
+                }
                 percentField("Home Appreciation", text: $appreciationText, field: .appreciation)
                 dollarField("Property Tax \(entryUnitLabel)", text: $propertyTaxText, placeholder: "e.g. 5000", field: .propertyTax)
                 dollarField("Insurance \(entryUnitLabel)", text: $insuranceText, placeholder: "e.g. 1500", field: .insurance)
@@ -363,7 +391,7 @@ struct LongTermComparisonView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 if keep == nil {
-                    Text("Keep needs your full mortgage details (original amount, rate, term, start date) in Settings.")
+                    Text("Keep needs Home Value plus a mortgage balance, monthly payment, and rate — either entered directly in Settings, or derived from the original loan amount, rate, term, and start date.")
                 }
                 if rent == nil {
                     Text("Rent needs an assumed monthly rent below.")

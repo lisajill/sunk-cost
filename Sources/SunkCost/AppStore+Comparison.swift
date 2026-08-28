@@ -2,6 +2,23 @@ import Foundation
 import AppKit
 import SunkCostCore
 
+/// Which mortgage balance the "Staying" long-term projection amortizes
+/// forward from: the figure the user keeps current in Settings, or one
+/// reconstructed from the original loan's amortization schedule. A view
+/// preference (persisted in `UserDefaults`, like sort order), not part of
+/// the data file.
+enum StayingBalanceBasis: String, CaseIterable, Sendable {
+    case recorded
+    case modeled
+
+    var label: String {
+        switch self {
+        case .recorded: return "Recorded"
+        case .modeled: return "Modeled from loan"
+        }
+    }
+}
+
 /// PITI-style monthly cost breakdown for one Compare scenario -- Renting
 /// only ever populates `maintenanceOrRent`, since it has no mortgage, tax,
 /// or insurance of its own.
@@ -43,20 +60,54 @@ extension AppStore {
         return max(months, 0)
     }
 
-    /// Ending home equity if she stays -- nil until the *actual* mortgage
-    /// details (not just the balance) are on record, since there's no
-    /// sensible default for someone's real loan terms the way there is for
-    /// a general assumption like appreciation rate.
-    var stayingNetWorthProjection: Decimal? {
-        guard let homeValue, let mortgageOriginalAmount, let mortgageInterestRatePercent,
+    /// Today's balance reconstructed from the original loan's amortization
+    /// schedule -- what the balance "should" be if every payment landed
+    /// exactly on schedule. nil until the full original loan details are
+    /// on record.
+    var modeledCurrentMortgageBalance: Decimal? {
+        guard let mortgageOriginalAmount, let mortgageInterestRatePercent,
               let mortgageTermYears, let monthsSinceMortgageStart else { return nil }
+        return MortgageMath.remainingBalance(
+            principal: mortgageOriginalAmount,
+            annualRatePercent: mortgageInterestRatePercent,
+            termYears: mortgageTermYears,
+            monthsElapsed: monthsSinceMortgageStart
+        )
+    }
+
+    /// The balance the Staying projection amortizes forward from, per
+    /// `stayingBalanceBasis` -- falling back to whichever figure is
+    /// available when the preferred one isn't.
+    var stayingProjectionStartBalance: Decimal? {
+        switch stayingBalanceBasis {
+        case .recorded: return mortgageBalance ?? modeledCurrentMortgageBalance
+        case .modeled: return modeledCurrentMortgageBalance ?? mortgageBalance
+        }
+    }
+
+    /// True only when both the recorded and the modeled balance exist and
+    /// differ -- i.e. when offering the user a choice between them is
+    /// actually meaningful.
+    var stayingBalanceBasisIsSelectable: Bool {
+        guard let recorded = mortgageBalance, let modeled = modeledCurrentMortgageBalance else { return false }
+        return recorded != modeled
+    }
+
+    /// Ending home equity if she stays -- the home appreciates while the
+    /// mortgage amortizes forward from `stayingProjectionStartBalance`.
+    /// nil until there's a balance to start from, a monthly payment, and a
+    /// rate (there's no sensible default for someone's real loan the way
+    /// there is for a general assumption like appreciation rate).
+    var stayingNetWorthProjection: Decimal? {
+        guard let homeValue, let mortgageInterestRatePercent,
+              let startBalance = stayingProjectionStartBalance,
+              let monthlyPayment else { return nil }
         return projectStayingNetWorth(
             homeValue: homeValue,
             appreciationPercent: homeAppreciationPercent ?? 3,
-            mortgageOriginalAmount: mortgageOriginalAmount,
+            currentMortgageBalance: startBalance,
+            monthlyPayment: monthlyPayment,
             mortgageAnnualRatePercent: mortgageInterestRatePercent,
-            mortgageTermYears: mortgageTermYears,
-            monthsAlreadyPaid: monthsSinceMortgageStart,
             projectionYears: projectionYears
         )
     }
@@ -83,7 +134,10 @@ extension AppStore {
         let netProceeds = sellScenario?.netProceeds ?? 0
         return projectBuyingElsewhereNetWorth(
             newHomePrice: newHomePrice,
-            downPayment: newHomeDownPayment ?? netProceeds,
+            // Default the down payment to the sale proceeds, but never a
+            // negative one (an underwater sale) -- the projection clamps
+            // it too, this just keeps the suggested figure sane.
+            downPayment: newHomeDownPayment ?? max(netProceeds, 0),
             netProceedsAvailable: netProceeds,
             appreciationPercent: homeAppreciationPercent ?? 3,
             newMortgageAnnualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
@@ -117,7 +171,7 @@ extension AppStore {
     /// hasn't picked wasn't part of what was scoped.
     var buyingElsewhereMonthlyBreakdown: MonthlyCostBreakdown? {
         guard let newHomePrice else { return nil }
-        let downPayment = newHomeDownPayment ?? sellScenario?.netProceeds ?? 0
+        let downPayment = min(max(newHomeDownPayment ?? sellScenario?.netProceeds ?? 0, 0), newHomePrice)
         let principalAndInterest = MortgageMath.monthlyPayment(
             principal: newHomePrice - downPayment,
             annualRatePercent: newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6,
@@ -191,10 +245,11 @@ extension AppStore {
         lines.append("")
 
         lines.append("BUYING ELSEWHERE")
-        lines.append("New Home Price: \(fmt(newHomePrice)), Down Payment: \(fmt(newHomeDownPayment ?? sellScenario?.netProceeds))")
+        let buyDownPayment = newHomeDownPayment ?? sellScenario.map { max($0.netProceeds, 0) }
+        lines.append("New Home Price: \(fmt(newHomePrice)), Down Payment: \(fmt(buyDownPayment))")
         if let newHomePrice {
-            let downPayment = newHomeDownPayment ?? sellScenario?.netProceeds ?? 0
-            lines.append("Loan Amount: \(fmt(max(newHomePrice - min(downPayment, newHomePrice), 0)))")
+            let downPayment = min(max(buyDownPayment ?? 0, 0), newHomePrice)
+            lines.append("Loan Amount: \(fmt(newHomePrice - downPayment))")
         }
         lines.append("Mortgage Rate: \(pct(newMortgageRatePercent ?? mortgageInterestRatePercent ?? 6)), Term: \(newMortgageTermYears ?? 30) years")
         lines.append("Property Tax: \(fmt(newPropertyTaxAnnual ?? (newHomePrice.map { $0 * 0.012 })))/yr, Insurance: \(fmt(newHomeownersInsuranceAnnual ?? 1500))/yr")

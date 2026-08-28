@@ -13,7 +13,11 @@ enum BackupManager {
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")
+        // Local time, not UTC: "one backup per day" should mean the user's
+        // calendar day, and the date parsed back out of a filename is
+        // shown in the Restore menu in local time -- a UTC formatter here
+        // made an evening backup show as (and roll over on) the wrong day.
+        formatter.timeZone = .current
         return formatter
     }()
 

@@ -4,36 +4,54 @@ import Foundation
 
 @Suite("Long-term scenario projections")
 struct LongTermScenariosTests {
-    @Test("staying net worth: appreciated home value minus remaining mortgage balance")
+    @Test("staying net worth: appreciated home value minus the mortgage amortized forward")
     func stayingNetWorth() {
-        // $360,000 principal over 30 years (360 months) at 0% is exactly
-        // $1,000/mo. 12 months already paid + a 1-year projection = 24
-        // months elapsed -> $24,000 paid off, $336,000 remaining.
-        // 0% appreciation keeps the home value flat at $360,000.
+        // $348,000 balance today, $1,000/mo at 0% -> after a 1-year
+        // projection (12 payments) $336,000 remains. 0% appreciation keeps
+        // the home value flat at $360,000.
         let netWorth = projectStayingNetWorth(
             homeValue: 360_000,
             appreciationPercent: 0,
-            mortgageOriginalAmount: 360_000,
+            currentMortgageBalance: 348_000,
+            monthlyPayment: 1_000,
             mortgageAnnualRatePercent: 0,
-            mortgageTermYears: 30,
-            monthsAlreadyPaid: 12,
             projectionYears: 1
         )
         #expect(netWorth == 24_000) // 360,000 - 336,000
     }
 
-    @Test("staying net worth reflects a fully paid-off mortgage once the horizon exceeds the term")
+    @Test("staying net worth reflects a fully paid-off mortgage once the horizon exceeds the payoff")
     func stayingNetWorthMortgagePaidOff() {
+        // $360,000 balance at $6,000/mo (0%) is paid off in 60 months; a
+        // 10-year projection runs well past that, so the balance floors at
+        // zero rather than going negative.
         let netWorth = projectStayingNetWorth(
             homeValue: 360_000,
             appreciationPercent: 0,
-            mortgageOriginalAmount: 360_000,
+            currentMortgageBalance: 360_000,
+            monthlyPayment: 6_000,
             mortgageAnnualRatePercent: 0,
-            mortgageTermYears: 5,
-            monthsAlreadyPaid: 0,
             projectionYears: 10
         )
         #expect(netWorth == 360_000) // mortgage long paid off, full home value
+    }
+
+    @Test("staying net worth amortizes from the passed-in balance, not a reconstructed schedule")
+    func stayingNetWorthRespectsCurrentBalance() {
+        // Two identical loans except the second has had extra principal
+        // thrown at it -- a lower current balance -> higher ending equity.
+        let onSchedule = projectStayingNetWorth(
+            homeValue: 400_000, appreciationPercent: 0,
+            currentMortgageBalance: 200_000, monthlyPayment: 2_000,
+            mortgageAnnualRatePercent: 0, projectionYears: 1
+        )
+        let paidAhead = projectStayingNetWorth(
+            homeValue: 400_000, appreciationPercent: 0,
+            currentMortgageBalance: 170_000, monthlyPayment: 2_000,
+            mortgageAnnualRatePercent: 0, projectionYears: 1
+        )
+        #expect(onSchedule == 224_000) // 400k - (200k - 24k)
+        #expect(paidAhead == 254_000) // 400k - (170k - 24k)
     }
 
     @Test("renting net worth is the sale proceeds compounded at the investment return")
@@ -64,6 +82,19 @@ struct LongTermScenariosTests {
             upfrontCosts: 5_000
         )
         #expect(netWorth == 0)
+    }
+
+    @Test("renting net worth carries an underwater sale as a compounding negative balance")
+    func rentingNetWorthCarriesUnderwaterSale() {
+        // Selling costs $20,000 more than the house is worth -- that cash
+        // goes to closing instead of staying invested, so it drags the
+        // ending balance down, compounded at the investment return.
+        let netWorth = projectRentingNetWorth(
+            netProceedsToday: -20_000,
+            investmentReturnPercent: 10,
+            projectionYears: 2
+        )
+        #expect(netWorth == -24_200) // -20,000 * 1.1 * 1.1
     }
 
     @Test("buying elsewhere net worth: appreciated new home value minus remaining new mortgage balance")
@@ -126,6 +157,37 @@ struct LongTermScenariosTests {
             leftoverCashInvestmentReturnPercent: 10
         )
         #expect(netWorth == 124_000)
+    }
+
+    @Test("buying elsewhere clamps a negative down payment and carries the closing shortfall")
+    func buyingElsewhereNetWorthUnderwaterSale() {
+        // The caller can hand this an underwater default (down payment ==
+        // negative sale proceeds). The down payment must clamp to 0 (so the
+        // new mortgage is the full home price, not more), and the negative
+        // proceeds ride along as a compounding shortfall.
+        let underwater = projectBuyingElsewhereNetWorth(
+            newHomePrice: 300_000,
+            downPayment: -25_000,
+            netProceedsAvailable: -25_000,
+            appreciationPercent: 0,
+            newMortgageAnnualRatePercent: 0,
+            newMortgageTermYears: 30,
+            projectionYears: 2,
+            leftoverCashInvestmentReturnPercent: 10
+        )
+        let baseline = projectBuyingElsewhereNetWorth(
+            newHomePrice: 300_000,
+            downPayment: 0,
+            netProceedsAvailable: 0,
+            appreciationPercent: 0,
+            newMortgageAnnualRatePercent: 0,
+            newMortgageTermYears: 30,
+            projectionYears: 2,
+            leftoverCashInvestmentReturnPercent: 10
+        )
+        // Same home, same (zero) down payment, same mortgage -- the only
+        // difference is the $25,000 brought to closing, compounded at 10%.
+        #expect(baseline - underwater == 30_250) // 25,000 * 1.1 * 1.1
     }
 
     @Test("buying elsewhere credits leftover cash when the down payment exceeds the new home's price")
