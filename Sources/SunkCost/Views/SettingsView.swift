@@ -279,9 +279,15 @@ struct SettingsView: View {
                 pendingStorageChange = nil
             }
             Button("Replace It With My Current Data", role: .destructive) {
-                // A non-nil return means the destination changed while the
-                // dialog was open -- re-present with the fresh state.
-                pendingStorageChange = store.replaceDataAtStorageFolder(pending)
+                let refreshed = store.replaceDataAtStorageFolder(pending)
+                pendingStorageChange = nil
+                // If the destination changed while this alert was open, the
+                // switch aborted -- re-present with the fresh state, but on
+                // the next turn so it doesn't collide with this alert's own
+                // dismissal writing the binding back to nil.
+                if let refreshed {
+                    Task { pendingStorageChange = refreshed }
+                }
             }
             Button("Cancel", role: .cancel) {
                 pendingStorageChange = nil

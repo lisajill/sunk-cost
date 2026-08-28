@@ -161,10 +161,19 @@ final class AppStore {
     }
     var isMonthlyPaymentCalculated: Bool { monthlyPaymentOverride == nil && monthlyPayment != nil }
 
+    /// When set, the store starts at this folder and every storage-folder
+    /// operation skips the real security-scoped-bookmark machinery
+    /// (creating one needs a URL that came from `NSOpenPanel`, which a test
+    /// can't produce) -- it just repoints `storageFolderURL` directly. The
+    /// switch *logic* (re-inspect, ordering, rollback) is unchanged; only
+    /// the OS bookmark call is stubbed out. Production leaves this nil.
+    private let bypassStorageBookmarks: Bool
+
     /// `storageOverrideForTesting` points the store at an explicit folder
-    /// and skips the security-scoped-bookmark resolution -- for tests only;
-    /// production always calls `AppStore()`.
+    /// and skips bookmark resolution -- for tests only; production always
+    /// calls `AppStore()`.
     init(storageOverrideForTesting: URL? = nil) {
+        self.bypassStorageBookmarks = storageOverrideForTesting != nil
         let (folder, stopAccessing): (URL, (() -> Void)?)
         if let storageOverrideForTesting {
             (folder, stopAccessing) = (storageOverrideForTesting, nil)
@@ -186,8 +195,9 @@ final class AppStore {
         // A pre-existing install (real items or a home value already on
         // disk) never saw an onboarding flag get set -- treat that as
         // already onboarded rather than surprising a returning user with
-        // the Welcome sheet on their next launch.
-        if !hasCompletedOnboarding, !items.isEmpty || homeValue != nil {
+        // the Welcome sheet on their next launch. (Skipped for a test
+        // store so it never writes shared UserDefaults.)
+        if !bypassStorageBookmarks, !hasCompletedOnboarding, !items.isEmpty || homeValue != nil {
             hasCompletedOnboarding = true
         }
     }
@@ -470,6 +480,7 @@ final class AppStore {
     /// set `loadError`) if one can't be made. `.some(nil)` for the default
     /// location, which needs no bookmark.
     private func bookmarkIfNeeded(for pending: PendingStorageChange) -> Data?? {
+        guard !bypassStorageBookmarks else { return .some(nil) }
         guard !pending.isDefaultLocation else { return .some(nil) }
         guard let bookmark = StorageLocation.makeBookmark(for: pending.folder) else {
             loadError = "Couldn't get lasting permission to \"\(pending.folder.lastPathComponent)\", so the storage location wasn't changed. Try a different folder."
@@ -482,12 +493,21 @@ final class AppStore {
     /// default location) and repoint the store at the new folder. Call
     /// only once the load or write against the candidate has succeeded.
     private func finishStorageSwitch(to pending: PendingStorageChange, bookmark: Data?) {
+        stopAccessingCurrentFolder?()
+        stopAccessingCurrentFolder = nil
+
+        guard !bypassStorageBookmarks else {
+            // Test store: no bookmark, no UserDefaults, no re-resolve --
+            // just point at the folder the switch logic settled on.
+            storageFolderURL = pending.folder
+            return
+        }
+
         if pending.isDefaultLocation {
             StorageLocation.resetToDefault()
         } else if let bookmark {
             StorageLocation.persistBookmark(bookmark)
         }
-        stopAccessingCurrentFolder?()
         let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
         storageFolderURL = folder
         stopAccessingCurrentFolder = stopAccessing

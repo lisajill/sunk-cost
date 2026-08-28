@@ -3,36 +3,15 @@ import Foundation
 @testable import SunkCost
 @testable import SunkCostCore
 
-/// `final class` so `init`/`deinit` can snapshot and restore the real
-/// `UserDefaults` keys that a folder switch writes -- these tests exercise
-/// the custom-folder commit path, which persists a bookmark.
-private let onboardingDefaultsKey = "SunkCost.HasCompletedOnboarding"
-
+/// Drives the folder-switch state machine end to end. `AppStore` built
+/// with `storageOverrideForTesting:` stubs out the security-scoped
+/// bookmark call (which needs an `NSOpenPanel` grant a test can't make)
+/// and never touches shared `UserDefaults`; the switch *logic* --
+/// re-inspect, ordering, rollback, return value -- is the real thing.
+/// `.serialized` regardless, since these hammer the filesystem.
 @MainActor
-final class StorageSwitchTests {
-    private let savedBookmark: Data?
-    private let hadOnboardingKey: Bool
-    private let onboardingValue: Bool
-
-    init() {
-        savedBookmark = UserDefaults.standard.data(forKey: StorageLocation.bookmarkKey)
-        hadOnboardingKey = UserDefaults.standard.object(forKey: onboardingDefaultsKey) != nil
-        onboardingValue = UserDefaults.standard.bool(forKey: onboardingDefaultsKey)
-        UserDefaults.standard.removeObject(forKey: StorageLocation.bookmarkKey)
-    }
-
-    deinit {
-        if let savedBookmark {
-            UserDefaults.standard.set(savedBookmark, forKey: StorageLocation.bookmarkKey)
-        } else {
-            UserDefaults.standard.removeObject(forKey: StorageLocation.bookmarkKey)
-        }
-        if hadOnboardingKey {
-            UserDefaults.standard.set(onboardingValue, forKey: onboardingDefaultsKey)
-        } else {
-            UserDefaults.standard.removeObject(forKey: onboardingDefaultsKey)
-        }
-    }
+@Suite(.serialized)
+struct StorageSwitchTests {
 
     // MARK: inspect
 

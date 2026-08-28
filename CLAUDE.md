@@ -215,10 +215,13 @@ cell at every *required* column index (`row.count > maxRequiredIndex`, not
 Dates are **local** calendar days (`TimeZone.current`), matching how the
 app stores/shows `dateAdded` (a CSV exported by an older UTC-formatter
 build may carry an already-shifted day — unfixable without a tz marker).
-`decode` is lenient (skips too-short rows, defaults unknown enums, blanks
-unparseable numbers/dates); `decodeReporting` returns the same items plus
-`skippedRowCount` / `coercedValueCount` so the import dialog can say what
-was lost rather than replacing the list silently.
+`decode` is lenient about *values* (skips too-short rows, defaults
+unknown/blank required enums, blanks unparseable numbers/dates) but
+*structural* damage throws — a duplicate header, or (via `parseRows`) an
+unterminated quoted field that would otherwise swallow the rest of the
+file. `decodeReporting` returns the items plus `skippedRowCount` /
+`coercedValueCount` so the import dialog can say what was lost rather than
+replacing the list silently.
 
 **Item dates and costs are both optional** (`Decimal?`, `Date?`), and
 consistently sort last regardless of direction (see `SortOption.swift`'s

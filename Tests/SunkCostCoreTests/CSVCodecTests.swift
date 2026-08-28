@@ -220,6 +220,33 @@ struct CSVCodecTests {
         #expect(result.coercedValueCount == 4)
     }
 
+    @Test("an unterminated quoted field is a hard error, not a silent one-item import")
+    func unterminatedQuoteThrows() {
+        // Without the EOF check this parses as a single item whose Notes
+        // swallow every following row -- and decodeReporting would report
+        // 0 skipped / 0 coerced.
+        let csv = """
+        Name,Category,Cost,Status,Date,Notes\r
+        Desk,Furniture,100,owned,2025-01-01,"open quote never closed\r
+        Chair,Furniture,50,owned,2025-02-02,fine
+        """
+
+        #expect(throws: CSVCodecError.self) {
+            try CSVCodec.decodeReporting(csv)
+        }
+    }
+
+    @Test("a blank required Status counts as a coerced value")
+    func blankStatusIsCounted() throws {
+        let csv = "Name,Category,Cost,Status,Date\r\nDesk,Furniture,100,,2025-01-01"
+
+        let result = try CSVCodec.decodeReporting(csv)
+
+        #expect(result.items.count == 1)
+        #expect(result.items[0].status == .owned)
+        #expect(result.coercedValueCount == 1)
+    }
+
     @Test("decodeReporting reports zero for a clean file")
     func decodeReportingCleanFile() throws {
         let csv = "Name,Category,Cost,Status,Date\r\nDesk,Furniture,100,owned,2025-01-01"

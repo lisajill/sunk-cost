@@ -3,6 +3,7 @@ import Foundation
 public enum CSVCodecError: Error, LocalizedError {
     case missingColumns([String])
     case duplicateColumns([String])
+    case malformedQuoting
 
     public var errorDescription: String? {
         switch self {
@@ -10,6 +11,8 @@ public enum CSVCodecError: Error, LocalizedError {
             return "This file is missing required column(s): \(columns.joined(separator: ", "))."
         case .duplicateColumns(let columns):
             return "This file has more than one column named: \(columns.joined(separator: ", ")). Give each column a distinct header."
+        case .malformedQuoting:
+            return "This file has a quoted field that's never closed — a stray \" somewhere is swallowing the rest of the file."
         }
     }
 }
@@ -83,7 +86,7 @@ public enum CSVCodec {
     }
 
     public static func decodeReporting(_ csv: String) throws -> DecodeResult {
-        let rows = parseRows(csv)
+        let rows = try parseRows(csv)
         guard let headerRow = rows.first else {
             return DecodeResult(items: [], skippedRowCount: 0, coercedValueCount: 0)
         }
@@ -155,8 +158,11 @@ public enum CSVCodec {
             if let parsed = Status(rawValue: statusText) {
                 status = parsed
             } else {
+                // Status is a required column -- a blank or unrecognized
+                // value is a data problem worth reporting, not a silent
+                // default like a missing optional.
                 status = .owned
-                if !statusText.isEmpty { coercedValueCount += 1 }
+                coercedValueCount += 1
             }
 
             let date: Date?
@@ -245,7 +251,10 @@ public enum CSVCodec {
 
     /// Parses CSV text into rows of fields, respecting quoted fields that may
     /// contain commas, embedded newlines, or escaped ("") quote characters.
-    private static func parseRows(_ csv: String) -> [[String]] {
+    /// Throws `.malformedQuoting` if a quoted field is never closed -- left
+    /// unchecked, one stray `"` silently swallows every following row into
+    /// a single field and the import looks clean.
+    private static func parseRows(_ csv: String) throws -> [[String]] {
         var rows: [[String]] = []
         var currentRow: [String] = []
         var currentField = ""
@@ -292,6 +301,8 @@ public enum CSVCodec {
             }
             i += 1
         }
+
+        guard !isInsideQuotes else { throw CSVCodecError.malformedQuoting }
 
         if !currentField.isEmpty || !currentRow.isEmpty {
             currentRow.append(currentField)
