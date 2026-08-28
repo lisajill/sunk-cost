@@ -161,8 +161,16 @@ final class AppStore {
     }
     var isMonthlyPaymentCalculated: Bool { monthlyPaymentOverride == nil && monthlyPayment != nil }
 
-    init() {
-        let (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
+    /// `storageOverrideForTesting` points the store at an explicit folder
+    /// and skips the security-scoped-bookmark resolution -- for tests only;
+    /// production always calls `AppStore()`.
+    init(storageOverrideForTesting: URL? = nil) {
+        let (folder, stopAccessing): (URL, (() -> Void)?)
+        if let storageOverrideForTesting {
+            (folder, stopAccessing) = (storageOverrideForTesting, nil)
+        } else {
+            (folder, stopAccessing) = StorageLocation.resolveCurrentFolder()
+        }
         self.storageFolderURL = folder
         self.stopAccessingCurrentFolder = stopAccessing
         self.textSizeIndex = UserDefaults.standard.object(forKey: TextSizeControl.userDefaultsKey) as? Int
@@ -369,7 +377,10 @@ final class AppStore {
         inspectStorageTarget(folder: StorageLocation.defaultFolderURL(), isDefault: true)
     }
 
-    private func inspectStorageTarget(folder: URL, isDefault: Bool) -> PendingStorageChange {
+    /// Internal (not private) so the storage-switch tests can build a
+    /// `PendingStorageChange` the way `pickNewStorageFolder` would, without
+    /// a file panel.
+    func inspectStorageTarget(folder: URL, isDefault: Bool) -> PendingStorageChange {
         let candidateFileURL = StorageLocation.itemsFileURL(in: folder)
         guard FileManager.default.fileExists(atPath: candidateFileURL.path) else {
             return PendingStorageChange(folder: folder, isDefaultLocation: isDefault, existingData: nil, hasUnreadableFile: false)
@@ -578,7 +589,9 @@ final class AppStore {
         apply(AppData())
     }
 
-    private func currentAppData() -> AppData {
+    /// Internal (not private) so a test can assert the `apply` /
+    /// `currentAppData` pair round-trips every field.
+    func currentAppData() -> AppData {
         AppData(
             items: items,
             homeValue: homeValue,

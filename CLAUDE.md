@@ -21,7 +21,7 @@ scriptable/non-interactive.
 
 ```
 swift build                          # debug build
-swift test                           # run the whole test suite (Core only — no UI tests)
+swift test                           # whole suite: SunkCostCore + a narrow SunkCostTests (no view tests)
 swift test --filter SuiteName        # run one suite, e.g. `swift test --filter CSVCodecTests`
 swift test --filter "SuiteName/testMethodName"   # run one test
 ./AppPackaging/build_app.sh          # release build + assemble build/"Sunk Cost.app"
@@ -57,6 +57,13 @@ SwiftUI app: views, the `AppStore` observable, storage/appearance/text-size
 plumbing. When adding logic, ask whether it belongs in Core (if it can be
 expressed as a pure function over `Item`/`AppData`, it almost always
 should) — that's what makes it testable without a UI harness.
+
+`Tests/SunkCostTests/` is a deliberately narrow exception: it covers only
+the non-view `AppStore` logic that has actually had bugs — the
+storage-folder-switch state machine and the save/rollback/`apply`
+plumbing — via `AppStore(storageOverrideForTesting:)` pointed at a temp
+dir. No view tests. New app-target logic still belongs in Core if it can;
+this suite is for the parts that genuinely can't be.
 
 **`AppStore` is the single source of truth**, an `@Observable @MainActor`
 class constructed once in `SunkCostApp` and injected via `.environment(store)`.

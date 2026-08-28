@@ -18,6 +18,13 @@ let package = Package(
         .testTarget(
             name: "SunkCostCoreTests",
             dependencies: ["SunkCostCore"]
+        ),
+        // Narrow coverage for the app target: only the non-UI logic that
+        // has actually had bugs -- the storage-folder switch state machine
+        // and AppStore's save/rollback/apply plumbing. Not views.
+        .testTarget(
+            name: "SunkCostTests",
+            dependencies: ["SunkCost"]
         )
     ]
 )
