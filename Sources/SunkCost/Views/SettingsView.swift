@@ -19,7 +19,7 @@ struct SettingsView: View {
     @State private var categoryBeingDeleted: String?
 
     @State private var pendingImport: (url: URL, data: AppData)?
-    @State private var pendingCSVImport: (url: URL, items: [Item])?
+    @State private var pendingCSVImport: (url: URL, result: CSVCodec.DecodeResult)?
     @State private var pendingRestore: (date: Date, data: AppData)?
     @State private var pendingStorageChange: AppStore.PendingStorageChange?
 
@@ -203,14 +203,14 @@ struct SettingsView: View {
             presenting: pendingCSVImport
         ) { pending in
             Button("Replace", role: .destructive) {
-                store.applyImportedCSVItems(pending.items)
+                store.applyImportedCSVItems(pending.result.items)
                 pendingCSVImport = nil
             }
             Button("Cancel", role: .cancel) {
                 pendingCSVImport = nil
             }
         } message: { pending in
-            Text("This replaces your current \(store.items.count) item\(store.items.count == 1 ? "" : "s") with \(pending.items.count) from \"\(pending.url.lastPathComponent)\". Home value and mortgage info are untouched. This can't be undone.")
+            Text(csvImportMessage(pending))
         }
         .alert(
             "Restore This Backup?",
@@ -279,8 +279,9 @@ struct SettingsView: View {
                 pendingStorageChange = nil
             }
             Button("Replace It With My Current Data", role: .destructive) {
-                store.replaceDataAtStorageFolder(pending)
-                pendingStorageChange = nil
+                // A non-nil return means the destination changed while the
+                // dialog was open -- re-present with the fresh state.
+                pendingStorageChange = store.replaceDataAtStorageFolder(pending)
             }
             Button("Cancel", role: .cancel) {
                 pendingStorageChange = nil
@@ -299,9 +300,30 @@ struct SettingsView: View {
             store.adoptStorageFolder(pending) // refused inside; sets loadError
         } else if pending.existingData != nil {
             pendingStorageChange = pending
-        } else {
-            store.replaceDataAtStorageFolder(pending)
+        } else if let refreshed = store.replaceDataAtStorageFolder(pending) {
+            // The folder looked empty, but a file showed up (e.g. iCloud
+            // finished syncing) before the write -- confirm now.
+            pendingStorageChange = refreshed
         }
+    }
+
+    private func csvImportMessage(_ pending: (url: URL, result: CSVCodec.DecodeResult)) -> String {
+        let current = store.items.count
+        let incoming = pending.result.items.count
+        var text = "This replaces your current \(current) item\(current == 1 ? "" : "s") with \(incoming) from \"\(pending.url.lastPathComponent)\". Home value and mortgage info are untouched. This can't be undone."
+        var notes: [String] = []
+        if pending.result.skippedRowCount > 0 {
+            let n = pending.result.skippedRowCount
+            notes.append("\(n) row\(n == 1 ? "" : "s") had too few columns and \(n == 1 ? "was" : "were") skipped")
+        }
+        if pending.result.coercedValueCount > 0 {
+            let n = pending.result.coercedValueCount
+            notes.append("\(n) value\(n == 1 ? " wasn't" : "s weren't") recognized and \(n == 1 ? "was" : "were") left blank or set to a default")
+        }
+        if !notes.isEmpty {
+            text += "\n\nHeads up: " + notes.joined(separator: "; ") + "."
+        }
+        return text
     }
 
     private var categoriesSection: some View {

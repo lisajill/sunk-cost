@@ -202,6 +202,35 @@ struct CSVCodecTests {
         }
     }
 
+    @Test("decodeReporting counts skipped rows and coerced values")
+    func decodeReportingCountsLossAndCoercion() throws {
+        let csv = """
+        Name,Category,Cost,Status,Date,Type\r
+        Desk,Furniture,100,owned,2025-01-01,value\r
+        Chair,Furniture,abc,Planed,not-a-date,spaceship\r
+        Lamp,Furniture\r
+        Rug,Furniture,50,gone,2025-02-02,moveable
+        """
+
+        let result = try CSVCodec.decodeReporting(csv)
+
+        #expect(result.items.count == 3) // Desk, Chair (coerced), Rug -- Lamp row dropped
+        #expect(result.skippedRowCount == 1) // Lamp: only 2 cells
+        // Chair: bad cost + unknown status + bad date + unknown type = 4
+        #expect(result.coercedValueCount == 4)
+    }
+
+    @Test("decodeReporting reports zero for a clean file")
+    func decodeReportingCleanFile() throws {
+        let csv = "Name,Category,Cost,Status,Date\r\nDesk,Furniture,100,owned,2025-01-01"
+
+        let result = try CSVCodec.decodeReporting(csv)
+
+        #expect(result.items.count == 1)
+        #expect(result.skippedRowCount == 0)
+        #expect(result.coercedValueCount == 0)
+    }
+
     @Test("a short row with a reordered required column is skipped, not a crash")
     func shortRowWithReorderedRequiredColumnIsSkipped() throws {
         // Date is the last (index 6) required column; the second data row

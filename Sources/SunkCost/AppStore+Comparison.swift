@@ -75,10 +75,16 @@ extension AppStore {
         )
     }
 
-    /// The balance the Staying projection amortizes forward from, per
-    /// `stayingBalanceBasis` -- falling back to whichever figure is
-    /// available when the preferred one isn't.
+    /// The balance the Staying projection amortizes forward from. The
+    /// `stayingBalanceBasis` preference only applies while the picker is
+    /// actually offered (`stayingBalanceBasisIsSelectable`); otherwise the
+    /// recorded balance wins, so a stale hidden `.modeled` choice can't,
+    /// say, keep a paid-off ($0 recorded) home showing its old payment
+    /// because the modeled figure still has a sub-dollar residue.
     var stayingProjectionStartBalance: Decimal? {
+        guard stayingBalanceBasisIsSelectable else {
+            return mortgageBalance ?? modeledCurrentMortgageBalance
+        }
         switch stayingBalanceBasis {
         case .recorded: return mortgageBalance ?? modeledCurrentMortgageBalance
         case .modeled: return modeledCurrentMortgageBalance ?? mortgageBalance

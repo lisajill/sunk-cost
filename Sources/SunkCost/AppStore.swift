@@ -410,28 +410,49 @@ final class AppStore {
     /// Phase 2b: switch to the folder and write the current in-memory data
     /// into it, replacing anything that was there.
     ///
-    /// Transactional: the bookmark is built, then the data is written to
-    /// the *candidate* location, and only then is the switch committed --
-    /// so a failed write never turns "replace" into a silent "adopt" and
-    /// leaves the store where it started.
-    func replaceDataAtStorageFolder(_ pending: PendingStorageChange) {
+    /// Transactional: the destination is re-checked, the bookmark is built,
+    /// the data is written to the *candidate* location, and only then is
+    /// the switch committed -- so a failed write never turns "replace" into
+    /// a silent "adopt" and leaves the store where it started.
+    ///
+    /// Returns a fresh `PendingStorageChange` if the destination changed
+    /// since it was inspected/confirmed (e.g. iCloud finished syncing a
+    /// file in) -- the caller should re-confirm with the user rather than
+    /// overwrite something they never saw. Returns nil when the switch
+    /// completed (or failed with `loadError` set).
+    func replaceDataAtStorageFolder(_ pending: PendingStorageChange) -> PendingStorageChange? {
         if pending.hasUnreadableFile {
             loadError = "\"\(pending.folder.lastPathComponent)\" already has a Sunk Cost data file that can't be read, so it wasn't switched to. Move or fix that file first."
-            return
+            return nil
         }
 
-        guard let bookmark = bookmarkIfNeeded(for: pending) else { return }
+        // Re-inspect right before overwriting: the folder may have looked
+        // empty (no prompt) or held different data (prompt already shown)
+        // when it was checked, and an iCloud folder can finish downloading
+        // a file in the gap. Hand the fresh state back if it no longer
+        // matches what the user was shown.
+        let fresh = inspectStorageTarget(folder: pending.folder, isDefault: pending.isDefaultLocation)
+        if fresh.hasUnreadableFile {
+            loadError = "\"\(pending.folder.lastPathComponent)\" now has a Sunk Cost data file that can't be read, so it wasn't switched to. Move or fix that file first."
+            return nil
+        }
+        if fresh.existingData != pending.existingData {
+            return fresh
+        }
+
+        guard let bookmark = bookmarkIfNeeded(for: pending) else { return nil }
 
         let candidateFileURL = StorageLocation.itemsFileURL(in: pending.folder)
         do {
             try ItemStore.save(currentAppData(), to: candidateFileURL)
         } catch {
             loadError = "Couldn't write your data to \"\(pending.folder.lastPathComponent)\", so the storage location wasn't changed. (\(error.localizedDescription))"
-            return
+            return nil
         }
 
         finishStorageSwitch(to: pending, bookmark: bookmark)
         loadError = nil
+        return nil
     }
 
     /// The security-scoped bookmark for a pending switch, or nil (having
@@ -611,7 +632,7 @@ final class AppStore {
     /// -- the caller should confirm with the user (importing replaces every
     /// item currently loaded; home value/mortgage info are untouched, since
     /// CSV only carries items) before calling `applyImportedCSVItems`.
-    func pickCSVFileToImport() -> (url: URL, items: [Item])? {
+    func pickCSVFileToImport() -> (url: URL, result: CSVCodec.DecodeResult)? {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.commaSeparatedText]
         panel.canChooseDirectories = false
@@ -619,7 +640,7 @@ final class AppStore {
         guard panel.runModal() == .OK, let url = panel.url else { return nil }
         do {
             let csvText = try String(contentsOf: url, encoding: .utf8)
-            return (url, try CSVCodec.decode(csvText))
+            return (url, try CSVCodec.decodeReporting(csvText))
         } catch {
             loadError = "Couldn't read that CSV: \(error.localizedDescription)"
             return nil

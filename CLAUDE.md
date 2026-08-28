@@ -114,11 +114,16 @@ the security-scoped bookmark) happens before anything is committed.
 `AppStore.pickNewStorageFolder()` / `prepareResetToDefaultStorageFolder()`
 return a `PendingStorageChange` describing the target; the UI then calls
 `adoptStorageFolder` (re-reads the target now, then switches + `apply`s)
-or `replaceDataAtStorageFolder` (builds the bookmark, writes to the
-*candidate* URL, and only then commits via `finishStorageSwitch`). Any
-failure leaves the store pointed exactly where it was. Unreadable target
-file aborts; empty target → straight to replace, no prompt; "Use Default
-Location" is disabled when already there (`isUsingDefaultStorageFolder`).
+or `replaceDataAtStorageFolder` (re-inspects the target, builds the
+bookmark, writes to the *candidate* URL, and only then commits via
+`finishStorageSwitch`). Any failure leaves the store pointed exactly
+where it was. `replaceDataAtStorageFolder` re-reads the destination right
+before writing and *returns a fresh `PendingStorageChange`* if it no
+longer matches what the user was shown (an iCloud folder can sync a file
+in after inspection) — the caller re-confirms rather than overwrite it.
+Unreadable target file aborts; empty target → straight to replace, no
+prompt; "Use Default Location" is disabled when already there
+(`isUsingDefaultStorageFolder`).
 
 **Sell scenario / long-term projections** (`SunkCostCore`,
 `AppStore+Comparison.swift`): `SellScenario.netProfitOrLoss` is
@@ -201,7 +206,12 @@ decode throws `CSVCodecError.duplicateColumns` instead. Rows must have a
 cell at every *required* column index (`row.count > maxRequiredIndex`, not
 `>= required.count`) or a reordered short row indexes out of bounds.
 Dates are **local** calendar days (`TimeZone.current`), matching how the
-app stores/shows `dateAdded`.
+app stores/shows `dateAdded` (a CSV exported by an older UTC-formatter
+build may carry an already-shifted day — unfixable without a tz marker).
+`decode` is lenient (skips too-short rows, defaults unknown enums, blanks
+unparseable numbers/dates); `decodeReporting` returns the same items plus
+`skippedRowCount` / `coercedValueCount` so the import dialog can say what
+was lost rather than replacing the list silently.
 
 **Item dates and costs are both optional** (`Decimal?`, `Date?`), and
 consistently sort last regardless of direction (see `SortOption.swift`'s

@@ -28,6 +28,11 @@ public enum CSVCodec {
         // local time. A UTC formatter here shifts an evening date to the
         // previous/next day when written or read (e.g. anything past ~8pm
         // US-Eastern lands on the wrong day).
+        //
+        // Caveat: a CSV *exported* by an older build (which used a UTC
+        // formatter) may already carry a date string that was shifted a
+        // day; there's no timezone marker in the file to detect and undo
+        // that. New exports round-trip correctly.
         formatter.timeZone = TimeZone.current
         return formatter
     }
@@ -57,9 +62,31 @@ public enum CSVCodec {
         return lines.joined(separator: "\r\n")
     }
 
+    /// Result of a lenient decode: the items that parsed, plus counts of
+    /// what was quietly lost or changed so the caller can tell the user
+    /// instead of importing damage silently. (`decode` is kept as the
+    /// items-only convenience.)
+    public struct DecodeResult: Equatable, Sendable {
+        public let items: [Item]
+        /// Rows that had content but too few cells to fill the required
+        /// columns -- dropped.
+        public let skippedRowCount: Int
+        /// Non-blank cells whose value wasn't recognized and fell back to a
+        /// default (unknown status -> Owned, unknown type -> Moveable,
+        /// unparseable cost/date/amount -> blank, unknown disposition ->
+        /// none).
+        public let coercedValueCount: Int
+    }
+
     public static func decode(_ csv: String) throws -> [Item] {
+        try decodeReporting(csv).items
+    }
+
+    public static func decodeReporting(_ csv: String) throws -> DecodeResult {
         let rows = parseRows(csv)
-        guard let headerRow = rows.first else { return [] }
+        guard let headerRow = rows.first else {
+            return DecodeResult(items: [], skippedRowCount: 0, coercedValueCount: 0)
+        }
 
         // Build the column map by hand rather than with
         // `Dictionary(uniqueKeysWithValues:)`, which *traps* on a repeated
@@ -94,8 +121,17 @@ public enum CSVCodec {
 
         let dateFormatter = makeDateFormatter()
 
-        return rows.dropFirst().compactMap { row -> Item? in
-            guard row.count > maxRequiredIndex, !(row.count == 1 && row[0].isEmpty) else { return nil }
+        var items: [Item] = []
+        var skippedRowCount = 0
+        var coercedValueCount = 0
+
+        for row in rows.dropFirst() {
+            // A lone empty cell is a blank line, not a damaged row.
+            if row.count == 1, row[0].isEmpty { continue }
+            guard row.count > maxRequiredIndex else {
+                skippedRowCount += 1
+                continue
+            }
 
             // Trim the scalar cells -- a stray space (e.g. "Planned ") must
             // not silently coerce to a different enum case or fail to parse.
@@ -105,9 +141,33 @@ public enum CSVCodec {
             let statusText = row[indices["status"]!].trimmingCharacters(in: .whitespaces).lowercased()
             let dateText = row[indices["date"]!].trimmingCharacters(in: .whitespaces)
 
-            let cost = costText.isEmpty ? nil : Decimal(string: costText)
-            let status = Status(rawValue: statusText) ?? .owned
-            let date = dateText.isEmpty ? nil : dateFormatter.date(from: dateText)
+            let cost: Decimal?
+            if costText.isEmpty {
+                cost = nil
+            } else if let parsed = Decimal(string: costText) {
+                cost = parsed
+            } else {
+                cost = nil
+                coercedValueCount += 1
+            }
+
+            let status: Status
+            if let parsed = Status(rawValue: statusText) {
+                status = parsed
+            } else {
+                status = .owned
+                if !statusText.isEmpty { coercedValueCount += 1 }
+            }
+
+            let date: Date?
+            if dateText.isEmpty {
+                date = nil
+            } else if let parsed = dateFormatter.date(from: dateText) {
+                date = parsed
+            } else {
+                date = nil
+                coercedValueCount += 1
+            }
 
             // Notes, Type, Disposition, Amount Recovered are all optional --
             // older exported CSVs won't have these columns, and each index
@@ -119,21 +179,48 @@ public enum CSVCodec {
             let notesText = optionalCell("notes")
             let notes = (notesText?.isEmpty ?? true) ? nil : notesText
 
-            let typeText = optionalCell("type")
-            let type = typeText.flatMap { ItemType(rawValue: $0.trimmingCharacters(in: .whitespaces).lowercased()) } ?? .moveable
+            let typeTextRaw = optionalCell("type")?.trimmingCharacters(in: .whitespaces)
+            let type: ItemType
+            if let typeTextRaw, !typeTextRaw.isEmpty {
+                if let parsed = ItemType(rawValue: typeTextRaw.lowercased()) {
+                    type = parsed
+                } else {
+                    type = .moveable
+                    coercedValueCount += 1
+                }
+            } else {
+                type = .moveable
+            }
 
             // Accept either the human label ("Given Away") or the raw value
             // ("givenAway"), case-insensitively, so a spreadsheet-edited
             // file round-trips.
-            let dispositionText = optionalCell("disposition")?.trimmingCharacters(in: .whitespaces).lowercased()
-            let disposition = (dispositionText?.isEmpty ?? true) ? nil : Disposition.allCases.first {
-                $0.label.lowercased() == dispositionText || $0.rawValue.lowercased() == dispositionText
+            let dispositionTextRaw = optionalCell("disposition")?.trimmingCharacters(in: .whitespaces).lowercased()
+            let disposition: Disposition?
+            if let dispositionTextRaw, !dispositionTextRaw.isEmpty {
+                let matched = Disposition.allCases.first {
+                    $0.label.lowercased() == dispositionTextRaw || $0.rawValue.lowercased() == dispositionTextRaw
+                }
+                disposition = matched
+                if matched == nil { coercedValueCount += 1 }
+            } else {
+                disposition = nil
             }
 
             let amountRecoveredText = optionalCell("amount recovered")?.trimmingCharacters(in: .whitespaces)
-            let amountRecovered = (amountRecoveredText?.isEmpty ?? true) ? nil : Decimal(string: amountRecoveredText!)
+            let amountRecovered: Decimal?
+            if let amountRecoveredText, !amountRecoveredText.isEmpty {
+                if let parsed = Decimal(string: amountRecoveredText) {
+                    amountRecovered = parsed
+                } else {
+                    amountRecovered = nil
+                    coercedValueCount += 1
+                }
+            } else {
+                amountRecovered = nil
+            }
 
-            return Item(
+            items.append(Item(
                 name: name,
                 category: category,
                 cost: cost,
@@ -143,8 +230,10 @@ public enum CSVCodec {
                 type: type,
                 disposition: disposition,
                 amountRecovered: amountRecovered
-            )
+            ))
         }
+
+        return DecodeResult(items: items, skippedRowCount: skippedRowCount, coercedValueCount: coercedValueCount)
     }
 
     private static func escapeField(_ field: String) -> String {
