@@ -69,6 +69,28 @@ It draws a hard line between two kinds of state:
   `UserDefaults`, independent of the data file, so switching data files or
   storage folders doesn't touch them.
 
+Every domain-data mutation goes through `mutate { ... }`, which snapshots
+the pre-change state, runs the closure, calls `save()`, and rolls the
+in-memory state back via `apply(_:)` if the write fails — so the UI never
+shows data that isn't on disk (`ItemStore.save` is atomic, so a failed
+save leaves the old file intact and the rollback fully reconciles the
+two). Don't hand-write `field = x; save()` in a new mutator; wrap it.
+Keep the guard (`firstIndex` etc.) *outside* the closure so a no-op
+mutation doesn't trigger a pointless save.
+
+`apply(_:)` (AppData → store) and `currentAppData()` (store → AppData) are
+a matched pair listing every domain field; `load()`, import, and rollback
+all route through `apply`, and `resetToEmpty()` is `apply(AppData())`.
+When you add a field to `AppData`, update *both* — they sit adjacent for
+that reason. A load failure calls `resetToEmpty()` so nothing lingers
+from a previously-loaded file.
+
+`save()` snapshots the *existing* on-disk file into the daily backup
+*before* `ItemStore.save` overwrites it (`BackupManager.snapshot` is
+best-effort and swallows its own errors). Order matters: snapshotting
+after the write would make the day's backup mirror that write, defeating
+the "undo the whole day" recovery path. Don't reorder it.
+
 **Storage location** (`Storage/StorageLocation.swift`): defaults to a folder
 inside the app's own sandboxed Application Support directory, no prompts.
 The user can instead point it at literally any folder via `NSOpenPanel`,

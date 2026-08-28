@@ -213,9 +213,10 @@ extension AppStore {
     }
 
     func setSellingCostAssumptions(commissionPercent: Decimal?, closingPercent: Decimal?) {
-        realtorCommissionPercent = commissionPercent
-        closingCostsPercent = closingPercent
-        save()
+        mutate {
+            realtorCommissionPercent = commissionPercent
+            closingCostsPercent = closingPercent
+        }
     }
 
     func setComparisonAssumptions(
@@ -238,25 +239,26 @@ extension AppStore {
         hoaMonthly: Decimal?,
         newHoaMonthly: Decimal?
     ) {
-        self.comparisonProjectionYears = projectionYears
-        self.homeAppreciationPercent = homeAppreciationPercent
-        self.investmentReturnPercent = investmentReturnPercent
-        self.monthlyRent = monthlyRent
-        self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
-        self.securityDeposit = securityDeposit
-        self.petDeposit = petDeposit
-        self.petRentMonthly = petRentMonthly
-        self.newHomePrice = newHomePrice
-        self.newHomeDownPayment = newHomeDownPayment
-        self.newMortgageRatePercent = newMortgageRatePercent
-        self.newMortgageTermYears = newMortgageTermYears
-        self.propertyTaxAnnual = propertyTaxAnnual
-        self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
-        self.newPropertyTaxAnnual = newPropertyTaxAnnual
-        self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
-        self.hoaMonthly = hoaMonthly
-        self.newHoaMonthly = newHoaMonthly
-        save()
+        mutate {
+            self.comparisonProjectionYears = projectionYears
+            self.homeAppreciationPercent = homeAppreciationPercent
+            self.investmentReturnPercent = investmentReturnPercent
+            self.monthlyRent = monthlyRent
+            self.rentAnnualIncreasePercent = rentAnnualIncreasePercent
+            self.securityDeposit = securityDeposit
+            self.petDeposit = petDeposit
+            self.petRentMonthly = petRentMonthly
+            self.newHomePrice = newHomePrice
+            self.newHomeDownPayment = newHomeDownPayment
+            self.newMortgageRatePercent = newMortgageRatePercent
+            self.newMortgageTermYears = newMortgageTermYears
+            self.propertyTaxAnnual = propertyTaxAnnual
+            self.homeownersInsuranceAnnual = homeownersInsuranceAnnual
+            self.newPropertyTaxAnnual = newPropertyTaxAnnual
+            self.newHomeownersInsuranceAnnual = newHomeownersInsuranceAnnual
+            self.hoaMonthly = hoaMonthly
+            self.newHoaMonthly = newHoaMonthly
+        }
     }
 
     /// Saves the 13 live Compare assumption fields as a named, reloadable
@@ -289,8 +291,7 @@ extension AppStore {
             newHoaMonthly: newHoaMonthly,
             notes: notes
         )
-        savedComparisonScenarios.append(scenario)
-        save()
+        mutate { savedComparisonScenarios.append(scenario) }
     }
 
     /// Renames a saved scenario and/or replaces its notes -- the 13
@@ -299,37 +300,38 @@ extension AppStore {
     func updateScenarioMetadata(_ scenario: ComparisonScenario, name: String, notes: String?) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty, let index = savedComparisonScenarios.firstIndex(where: { $0.id == scenario.id }) else { return }
-        savedComparisonScenarios[index].name = trimmedName
-        savedComparisonScenarios[index].notes = notes
-        save()
+        mutate {
+            savedComparisonScenarios[index].name = trimmedName
+            savedComparisonScenarios[index].notes = notes
+        }
     }
 
     /// Overwrites the 13 live Compare assumption fields from a saved
     /// scenario, so the table/results update immediately.
     func loadScenario(_ scenario: ComparisonScenario) {
-        comparisonProjectionYears = scenario.projectionYears
-        homeAppreciationPercent = scenario.homeAppreciationPercent
-        investmentReturnPercent = scenario.investmentReturnPercent
-        monthlyRent = scenario.monthlyRent
-        rentAnnualIncreasePercent = scenario.rentAnnualIncreasePercent
-        securityDeposit = scenario.securityDeposit
-        petDeposit = scenario.petDeposit
-        petRentMonthly = scenario.petRentMonthly
-        newHomePrice = scenario.newHomePrice
-        newHomeDownPayment = scenario.newHomeDownPayment
-        newMortgageRatePercent = scenario.newMortgageRatePercent
-        newMortgageTermYears = scenario.newMortgageTermYears
-        propertyTaxAnnual = scenario.propertyTaxAnnual
-        homeownersInsuranceAnnual = scenario.homeownersInsuranceAnnual
-        newPropertyTaxAnnual = scenario.newPropertyTaxAnnual
-        newHomeownersInsuranceAnnual = scenario.newHomeownersInsuranceAnnual
-        hoaMonthly = scenario.hoaMonthly
-        newHoaMonthly = scenario.newHoaMonthly
-        save()
+        mutate {
+            comparisonProjectionYears = scenario.projectionYears
+            homeAppreciationPercent = scenario.homeAppreciationPercent
+            investmentReturnPercent = scenario.investmentReturnPercent
+            monthlyRent = scenario.monthlyRent
+            rentAnnualIncreasePercent = scenario.rentAnnualIncreasePercent
+            securityDeposit = scenario.securityDeposit
+            petDeposit = scenario.petDeposit
+            petRentMonthly = scenario.petRentMonthly
+            newHomePrice = scenario.newHomePrice
+            newHomeDownPayment = scenario.newHomeDownPayment
+            newMortgageRatePercent = scenario.newMortgageRatePercent
+            newMortgageTermYears = scenario.newMortgageTermYears
+            propertyTaxAnnual = scenario.propertyTaxAnnual
+            homeownersInsuranceAnnual = scenario.homeownersInsuranceAnnual
+            newPropertyTaxAnnual = scenario.newPropertyTaxAnnual
+            newHomeownersInsuranceAnnual = scenario.newHomeownersInsuranceAnnual
+            hoaMonthly = scenario.hoaMonthly
+            newHoaMonthly = scenario.newHoaMonthly
+        }
     }
 
     func deleteScenario(_ scenario: ComparisonScenario) {
-        savedComparisonScenarios.removeAll { $0.id == scenario.id }
-        save()
+        mutate { savedComparisonScenarios.removeAll { $0.id == scenario.id } }
     }
 }

@@ -192,54 +192,49 @@ final class AppStore {
 
     func load() {
         do {
-            let data = try ItemStore.load(from: fileURL)
-            items = data.items
-            homeValue = data.homeValue
-            purchasePrice = data.purchasePrice
-            mortgageOriginalAmount = data.mortgageOriginalAmount
-            mortgageInterestRatePercent = data.mortgageInterestRatePercent
-            mortgageStartDate = data.mortgageStartDate
-            mortgageBalance = data.mortgageBalance
-            mortgageTermYears = data.mortgageTermYears
-            monthlyPaymentOverride = data.monthlyPaymentOverride
-            maintenanceCategories = data.maintenanceCategories
-            realtorCommissionPercent = data.realtorCommissionPercent
-            closingCostsPercent = data.closingCostsPercent
-            comparisonProjectionYears = data.comparisonProjectionYears
-            homeAppreciationPercent = data.homeAppreciationPercent
-            investmentReturnPercent = data.investmentReturnPercent
-            monthlyRent = data.monthlyRent
-            rentAnnualIncreasePercent = data.rentAnnualIncreasePercent
-            securityDeposit = data.securityDeposit
-            petDeposit = data.petDeposit
-            petRentMonthly = data.petRentMonthly
-            newHomePrice = data.newHomePrice
-            newHomeDownPayment = data.newHomeDownPayment
-            newMortgageRatePercent = data.newMortgageRatePercent
-            newMortgageTermYears = data.newMortgageTermYears
-            propertyTaxAnnual = data.propertyTaxAnnual
-            homeownersInsuranceAnnual = data.homeownersInsuranceAnnual
-            newPropertyTaxAnnual = data.newPropertyTaxAnnual
-            newHomeownersInsuranceAnnual = data.newHomeownersInsuranceAnnual
-            hoaMonthly = data.hoaMonthly
-            newHoaMonthly = data.newHoaMonthly
-            savedComparisonScenarios = data.savedComparisonScenarios
+            apply(try ItemStore.load(from: fileURL))
             loadError = nil
         } catch {
             loadError = "Couldn't read the data file at \(fileURL.path) — starting with an empty list so nothing gets overwritten. (\(error.localizedDescription))"
-            items = []
-            homeValue = nil
+            resetToEmpty()
         }
     }
 
-    func save() {
+    /// Persists the current in-memory state. Returns whether the write
+    /// succeeded so callers (`mutate`) can roll back a mutation the disk
+    /// didn't accept.
+    @discardableResult
+    func save() -> Bool {
+        // Snapshot the *existing* on-disk file before overwriting it, so
+        // the day's backup preserves the state from before today's first
+        // edit rather than the state that edit produced. `ItemStore.save`
+        // writes atomically, so the file this copies is still the last
+        // good one; `BackupManager.snapshot` swallows its own errors, so a
+        // backup problem can't block or fail the real save.
+        BackupManager.snapshot(dataFileURL: fileURL, storageFolder: storageFolderURL)
         do {
             try ItemStore.save(currentAppData(), to: fileURL)
-            BackupManager.snapshot(dataFileURL: fileURL, storageFolder: storageFolderURL)
             loadError = nil
+            return true
         } catch {
-            loadError = "Couldn't save your changes: \(error.localizedDescription)"
+            loadError = "Couldn't save your last change — it's still shown here but hasn't been written to disk. (\(error.localizedDescription))"
+            return false
         }
+    }
+
+    /// Runs a domain-data mutation and persists it, restoring the previous
+    /// in-memory state if the save fails so the UI never shows changes
+    /// that aren't on disk. Returns whether the save succeeded.
+    /// (`ItemStore.save` is atomic — a failed save leaves the old file
+    /// intact, so replaying the pre-mutation snapshot fully reconciles
+    /// memory with disk.)
+    @discardableResult
+    func mutate(_ change: () -> Void) -> Bool {
+        let restorePoint = currentAppData()
+        change()
+        if save() { return true }
+        apply(restorePoint)
+        return false
     }
 
     /// Opens Finder to the folder of silent daily backups (Settings ->
@@ -268,25 +263,21 @@ final class AppStore {
     }
 
     func addItem(_ item: Item) {
-        items.append(item)
-        save()
+        mutate { items.append(item) }
     }
 
     func updateItem(_ item: Item) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[index] = item
-        save()
+        mutate { items[index] = item }
     }
 
     func deleteItem(_ item: Item) {
-        items.removeAll { $0.id == item.id }
-        save()
+        mutate { items.removeAll { $0.id == item.id } }
     }
 
     func cycleStatus(for item: Item) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[index].status = items[index].status.next()
-        save()
+        mutate { items[index].status = items[index].status.next() }
     }
 
     func toggleStatusFilter(_ status: Status) {
@@ -306,21 +297,18 @@ final class AppStore {
     func renameCategory(from oldName: String, to newName: String) {
         let trimmedNewName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedNewName.isEmpty, trimmedNewName != oldName else { return }
-        items = items.renamingCategory(from: oldName, to: trimmedNewName)
+        guard mutate({ items = items.renamingCategory(from: oldName, to: trimmedNewName) }) else { return }
         if filter.category == oldName {
             filter.category = trimmedNewName
         }
-        save()
     }
 
     func setHomeValue(_ value: Decimal?) {
-        homeValue = value
-        save()
+        mutate { homeValue = value }
     }
 
     func setPurchasePrice(_ value: Decimal?) {
-        purchasePrice = value
-        save()
+        mutate { purchasePrice = value }
     }
 
     func setMortgage(
@@ -331,13 +319,14 @@ final class AppStore {
         termYears: Int?,
         monthlyPaymentOverride: Decimal?
     ) {
-        mortgageOriginalAmount = originalAmount
-        mortgageInterestRatePercent = interestRatePercent
-        mortgageStartDate = startDate
-        mortgageBalance = balance
-        mortgageTermYears = termYears
-        self.monthlyPaymentOverride = monthlyPaymentOverride
-        save()
+        mutate {
+            mortgageOriginalAmount = originalAmount
+            mortgageInterestRatePercent = interestRatePercent
+            mortgageStartDate = startDate
+            mortgageBalance = balance
+            mortgageTermYears = termYears
+            self.monthlyPaymentOverride = monthlyPaymentOverride
+        }
     }
 
     func chooseNewStorageFolder() {
@@ -400,6 +389,15 @@ final class AppStore {
     }
 
     func applyImportedData(_ data: AppData) {
+        mutate { apply(data) }
+    }
+
+    /// The one place `AppData`'s fields are copied *into* the store —
+    /// `load`, import, and the save-failure rollback all route through
+    /// here so a field added to the model can't be wired into one path
+    /// and silently forgotten in another. Kept field-for-field in sync
+    /// with `currentAppData()` below (the reverse direction).
+    private func apply(_ data: AppData) {
         items = data.items
         homeValue = data.homeValue
         purchasePrice = data.purchasePrice
@@ -431,7 +429,12 @@ final class AppStore {
         hoaMonthly = data.hoaMonthly
         newHoaMonthly = data.newHoaMonthly
         savedComparisonScenarios = data.savedComparisonScenarios
-        save()
+    }
+
+    /// Clears every domain field back to empty — used when a load fails,
+    /// so nothing lingers from a file that was loaded before.
+    private func resetToEmpty() {
+        apply(AppData())
     }
 
     private func currentAppData() -> AppData {
@@ -504,25 +507,21 @@ final class AppStore {
     }
 
     func applyImportedCSVItems(_ importedItems: [Item]) {
-        items = importedItems
-        save()
+        mutate { items = importedItems }
     }
 
     func addMaintenanceCategory(name: String, monthlyAmount: Decimal, notes: String? = nil, isRequired: Bool = true) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
-        maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: notes, isRequired: isRequired))
-        save()
+        mutate { maintenanceCategories.append(MaintenanceCategory(name: trimmedName, monthlyAmount: monthlyAmount, notes: notes, isRequired: isRequired)) }
     }
 
     func updateMaintenanceCategory(_ category: MaintenanceCategory) {
         guard let index = maintenanceCategories.firstIndex(where: { $0.id == category.id }) else { return }
-        maintenanceCategories[index] = category
-        save()
+        mutate { maintenanceCategories[index] = category }
     }
 
     func deleteMaintenanceCategory(_ category: MaintenanceCategory) {
-        maintenanceCategories.removeAll { $0.id == category.id }
-        save()
+        mutate { maintenanceCategories.removeAll { $0.id == category.id } }
     }
 }
